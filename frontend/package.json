@@ -1,0 +1,35 @@
+{
+    "name": "itas-tax-education-system",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@mui/icons-material": "^5.18.0",
+        "@mui/material": "^5.14.20",
+        "@mui/x-date-pickers": "^8.26.0",
+        "@types/yup": "^0.29.14",
+        "antd": "^6.2.3",
+        "axios": "^1.13.5",
+        "date-fns": "^4.1.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-router-dom": "^6.20.1",
+        "yup": "^1.7.1"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.37",
+        "@types/react-dom": "^18.2.15",
+        "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.24",
+        "postcss": "^8.5.6",
+        "typescript": "^5.2.2",
+        "vite": "^5.0.8"
+    }
+}

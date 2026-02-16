@@ -1,0 +1,10 @@
+com\itas\controller\HelpControllerTest.class
+com\itas\controller\ResourceControllerTest.class
+com\itas\security\JwtTokenProviderTest.class
+com\itas\controller\CourseControllerTest.class
+com\itas\ItasApplicationTests.class
+com\itas\controller\AuthControllerTest.class
+com\itas\service\CertificateServiceTest.class
+com\itas\controller\WebinarControllerTest.class
+com\itas\controller\NotificationControllerTest.class
+com\itas\service\AssessmentServiceTest.class

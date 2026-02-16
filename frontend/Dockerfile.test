@@ -1,0 +1,9 @@
+﻿FROM node:18-alpine
+WORKDIR /app
+RUN echo "Creating test configs..." && \
+    echo "Looking for PostCSS files:" && \
+    find /app -name "*postcss*" -type f 2>/dev/null && \
+    echo "Checking if postcss.config.json exists:" && \
+    if [ -f postcss.config.json ]; then echo "Exists, content:" && cat postcss.config.json; else echo "Does not exist"; fi && \
+    echo "Checking if postcss.config.cjs exists:" && \
+    if [ -f postcss.config.cjs ]; then echo "Exists, content:" && cat postcss.config.cjs; else echo "Does not exist"; fi
