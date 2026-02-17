@@ -98,48 +98,31 @@ const UploadResource: React.FC = () => {
         throw new Error('Please select a file to upload');
       }
 
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
       const resourceData = {
         title: formData.title,
         description: formData.description,
         resourceType: formData.resourceType,
         category: formData.category,
         audience: formData.audience,
-        fileUrl: `/uploads/${formData.file.name}`,
-        fileType: formData.file.type,
-        fileSize: formData.file.size,
       };
 
-      await resourcesAPI.uploadResource(resourceData);
+      await resourcesAPI.uploadResource(formData.file, resourceData, (progress) => {
+        setUploadProgress(progress);
+      });
       
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      
-      setTimeout(() => {
-        setSuccess(true);
-        setFormData({
-          title: '',
-          description: '',
-          resourceType: 'PDF',
-          category: 'VAT',
-          audience: 'ALL',
-          file: null,
-        });
-        setUploadProgress(0);
-      }, 500);
+      setSuccess(true);
+      setFormData({
+        title: '',
+        description: '',
+        resourceType: 'PDF',
+        category: 'VAT',
+        audience: 'ALL',
+        file: null,
+      });
+      setUploadProgress(0);
 
     } catch (err: any) {
-      setError(err.message || 'Upload failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }

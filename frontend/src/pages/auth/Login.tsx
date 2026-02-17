@@ -501,11 +501,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {[
                     { label: 'Taxpayer', user: 'taxpayer', pass: 'Taxpayer@123', color: 'primary' },
-                    { label: 'Admin', user: 'systemadmin', pass: 'Admin@123', color: 'secondary' },
-                    { label: 'Manager', user: 'manager', pass: 'Manager@123', color: 'success' },
-                    { label: 'Content', user: 'contentadmin', pass: 'Content@123', color: 'info' },
-                    { label: 'Training', user: 'trainingadmin', pass: 'Training@123', color: 'warning' },
+                    { label: 'MOR Staff', user: 'morstaff', pass: 'Staff@123', color: 'info' },
+                    { label: 'Content Admin', user: 'contentadmin', pass: 'Content@123', color: 'success' },
+                    { label: 'Training Admin', user: 'trainingadmin', pass: 'Training@123', color: 'warning' },
                     { label: 'Comm Officer', user: 'commoffice', pass: 'Notification@123', color: 'error' },
+                    { label: 'Manager', user: 'manager', pass: 'Manager@123', color: 'secondary' },
+                    { label: 'System Admin', user: 'systemadmin', pass: 'Admin@123', color: 'primary' },
+                    { label: 'Auditor', user: 'auditor', pass: 'Auditor@123', color: 'info' },
                   ].map((item, index) => (
                     <Chip
                       key={index}

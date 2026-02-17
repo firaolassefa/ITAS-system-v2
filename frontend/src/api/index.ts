@@ -10,6 +10,7 @@ import { userRolesAPI } from './userRoles';
 import { helpAPI } from './help';
 import { syncAPI } from './sync';
 import { archiveAPI } from './archive';
+import { dashboardAPI } from './dashboard';
 
 // Configure axios defaults
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -58,6 +59,7 @@ export {
   helpAPI,
   syncAPI,
   archiveAPI,
+  dashboardAPI,
 };
 
 // Utility function for file uploads

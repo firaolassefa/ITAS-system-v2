@@ -143,4 +143,50 @@ public class NotificationController {
             return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
         }
     }
+    
+    // Update notification (Communication Officer & System Admin only)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN')")
+    public ResponseEntity<?> updateNotification(@PathVariable Long id, @RequestBody NotificationRequest request) {
+        try {
+            Notification notification = notificationService.getNotificationById(id);
+            if (notification == null) {
+                return ResponseEntity.status(404).body(new ApiResponse<>("Notification not found", null));
+            }
+            
+            notification.setTitle(request.getTitle());
+            notification.setMessage(request.getMessage());
+            notification.setNotificationType(request.getNotificationType());
+            notification.setPriority(request.getPriority());
+            notification.setTargetAudience(request.getTargetAudience());
+            notification.setScheduledFor(request.getScheduledFor());
+            
+            Notification updated = notificationService.updateNotification(notification);
+            return ResponseEntity.ok(new ApiResponse<>("Notification updated successfully", updated));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(404).body(new ApiResponse<>("Notification not found with id: " + id, null));
+            }
+            return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error updating notification: " + e.getMessage(), null));
+        }
+    }
+    
+    // Delete notification (Communication Officer & System Admin only)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN')")
+    public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
+        try {
+            notificationService.deleteNotification(id);
+            return ResponseEntity.ok(new ApiResponse<>("Notification deleted successfully", null));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(404).body(new ApiResponse<>("Notification not found with id: " + id, null));
+            }
+            return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error deleting notification: " + e.getMessage(), null));
+        }
+    }
 }

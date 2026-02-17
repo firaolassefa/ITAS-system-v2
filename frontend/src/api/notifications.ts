@@ -92,6 +92,25 @@ export const notificationAPI = {
     return response.data;
   },
 
+  // Update notification (Communication Officer only)
+  update: async (id: number, notification: Partial<Notification>) => {
+    const response = await axios.put(
+      `${API_BASE_URL}/notifications/${id}`,
+      notification,
+      getAuthHeaders()
+    );
+    return response.data;
+  },
+
+  // Delete notification (Communication Officer only)
+  delete: async (id: number) => {
+    const response = await axios.delete(
+      `${API_BASE_URL}/notifications/${id}`,
+      getAuthHeaders()
+    );
+    return response.data;
+  },
+
   // Get campaign statistics
   getCampaignStats: async () => {
     const response = await axios.get(

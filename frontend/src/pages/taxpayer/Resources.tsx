@@ -60,20 +60,72 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
     }
   };
 
-  const handleDownload = async (resourceId: number) => {
+  const handleDownload = async (resourceId: number, fileName: string) => {
     try {
-      const response = await resourcesAPI.downloadResource(resourceId);
-      alert(`Download started: ${response.message}`);
+      const blob = await resourcesAPI.downloadResource(resourceId);
+      
+      // Create blob URL and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      alert('Download started successfully!');
       await loadResources(); // Refresh to update download count
-    } catch (error) {
+    } catch (error: any) {
       console.error('Download failed:', error);
-      alert('Download failed. Please try again.');
+      if (error.response?.status === 404) {
+        alert('This is a demo resource. Please upload actual files using the "Upload Resource" feature to test downloads.');
+      } else if (error.response?.status === 500) {
+        alert('File not available. This may be a demo resource. Upload actual files to test download functionality.');
+      } else {
+        alert('Download failed. Please try again.');
+      }
     }
   };
 
-  const handlePlayVideo = (videoUrl: string) => {
-    setSelectedVideo(videoUrl);
-    setVideoModalOpen(true);
+  const handlePlayVideo = async (resourceId: number) => {
+    try {
+      const blob = await resourcesAPI.streamResource(resourceId);
+      const url = window.URL.createObjectURL(blob);
+      setSelectedVideo(url);
+      setVideoModalOpen(true);
+    } catch (error: any) {
+      console.error('Failed to load video:', error);
+      if (error.response?.status === 404) {
+        alert('This is a demo video. Please upload actual video files using the "Upload Resource" feature to test video playback.');
+      } else if (error.response?.status === 500) {
+        alert('Video file not available. This may be a demo resource. Upload actual video files to test playback functionality.');
+      } else {
+        alert('Failed to load video. Please try again.');
+      }
+    }
+  };
+
+  const handleViewPDF = async (resourceId: number, fileName: string) => {
+    try {
+      const blob = await resourcesAPI.streamResource(resourceId);
+      const url = window.URL.createObjectURL(blob);
+      
+      // Open PDF in new tab
+      window.open(url, '_blank');
+      
+      // Clean up after a delay
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    } catch (error: any) {
+      console.error('Failed to open PDF:', error);
+      if (error.response?.status === 404) {
+        alert('This is a demo PDF. Please upload actual PDF files using the "Upload Resource" feature to test PDF viewing.');
+      } else if (error.response?.status === 500) {
+        alert('PDF file not available. This may be a demo resource. Upload actual PDF files to test viewing functionality.');
+      } else {
+        alert('Failed to open PDF. Please try again.');
+      }
+    }
   };
 
   const filteredResources = resources.filter(resource => {
@@ -435,7 +487,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               {filteredResources.length} resources found
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Click on videos to play, PDFs/Articles to download
+              Demo resources show sample data. Upload actual files to test downloads/videos.
             </Typography>
           </Box>
 
@@ -462,7 +514,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                           border: '1px solid rgba(102, 126, 234, 0.3)',
                         },
                       }} 
-                      onClick={() => handlePlayVideo(resource.fileUrl)}
+                      onClick={() => handlePlayVideo(resource.id)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <PlayIcon sx={{ fontSize: 40, color: '#667eea', mr: 1 }} />
@@ -486,10 +538,16 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                         }}
                       />
                     </Paper>
+                  ) : resource.resourceType === 'PDF' ? (
+                    <ResourceCard
+                      resource={resource}
+                      onDownload={() => handleDownload(resource.id, resource.fileName)}
+                      onView={() => handleViewPDF(resource.id, resource.fileName)}
+                    />
                   ) : (
                     <ResourceCard
                       resource={resource}
-                      onDownload={() => handleDownload(resource.id)}
+                      onDownload={() => handleDownload(resource.id, resource.fileName)}
                     />
                   )}
                 </Grid>
@@ -546,7 +604,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                       {resource.resourceType === 'VIDEO' ? (
                         <Button
                           startIcon={<PlayIcon />}
-                          onClick={() => handlePlayVideo(resource.fileUrl)}
+                          onClick={() => handlePlayVideo(resource.id)}
                           sx={{
                             borderRadius: '12px',
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -564,10 +622,53 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                         >
                           Play Video
                         </Button>
+                      ) : resource.resourceType === 'PDF' ? (
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                          <Button
+                            onClick={() => handleViewPDF(resource.id, resource.fileName)}
+                            sx={{
+                              borderRadius: '12px',
+                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              color: 'white',
+                              fontWeight: 600,
+                              px: 3,
+                              py: 1,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                              },
+                            }}
+                          >
+                            View PDF
+                          </Button>
+                          <Button
+                            startIcon={<ClearIcon />}
+                            onClick={() => handleDownload(resource.id, resource.fileName)}
+                            variant="outlined"
+                            sx={{
+                              borderRadius: '12px',
+                              borderColor: '#667eea',
+                              color: '#667eea',
+                              fontWeight: 600,
+                              px: 3,
+                              py: 1,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                borderColor: '#667eea',
+                                background: 'rgba(102, 126, 234, 0.1)',
+                                transform: 'translateY(-2px)',
+                              },
+                            }}
+                          >
+                            Download
+                          </Button>
+                        </Box>
                       ) : (
                         <Button
                           startIcon={<ClearIcon />}
-                          onClick={() => handleDownload(resource.id)}
+                          onClick={() => handleDownload(resource.id, resource.fileName)}
                           sx={{
                             borderRadius: '12px',
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

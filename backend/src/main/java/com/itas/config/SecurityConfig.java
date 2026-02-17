@@ -5,6 +5,7 @@ import com.itas.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -73,11 +74,11 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                 
                 // Public access to browse courses and resources (read-only)
-                .requestMatchers("/courses", "/courses/*", "/api/courses", "/api/courses/*").permitAll()
-                .requestMatchers("/resources", "/resources/search", "/resources/*").permitAll()
-                .requestMatchers("/api/resources", "/api/resources/search", "/api/resources/*").permitAll()
-                .requestMatchers("/webinars", "/webinars/upcoming", "/webinars/*").permitAll()
-                .requestMatchers("/api/webinars", "/api/webinars/upcoming", "/api/webinars/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/courses", "/courses/*", "/api/courses", "/api/courses/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/resources", "/resources/search", "/resources/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/resources", "/api/resources/search", "/api/resources/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/webinars", "/webinars/upcoming", "/webinars/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/webinars", "/api/webinars/upcoming", "/api/webinars/*").permitAll()
                 .requestMatchers("/help/**", "/api/help/**").permitAll()
                 
                 // Dashboard endpoints - require authentication

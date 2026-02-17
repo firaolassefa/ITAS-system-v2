@@ -207,9 +207,10 @@ public class RoleConfig {
     private void initializeSampleResources(com.itas.repository.ResourceRepository resourceRepository) {
         com.itas.model.Resource resource1 = new com.itas.model.Resource();
         resource1.setTitle("VAT Compliance Handbook 2024");
-        resource1.setDescription("Complete guide to VAT compliance for small and medium businesses.");
+        resource1.setDescription("Complete guide to VAT compliance for small and medium businesses. (Demo resource - upload actual files to test download functionality)");
         resource1.setResourceType("PDF");
-        resource1.setFilePath("/resources/vat-handbook.pdf");
+        resource1.setFilePath(null); // Demo resource - no actual file
+        resource1.setFileName("vat-handbook.pdf");
         resource1.setCategory("VAT");
         resource1.setAudience("ALL");
         resource1.setStatus("PUBLISHED");
@@ -220,9 +221,10 @@ public class RoleConfig {
         
         com.itas.model.Resource resource2 = new com.itas.model.Resource();
         resource2.setTitle("How to File Tax Returns Online");
-        resource2.setDescription("Step-by-step video tutorial for online tax filing.");
+        resource2.setDescription("Step-by-step video tutorial for online tax filing. (Demo resource - upload actual files to test video playback)");
         resource2.setResourceType("VIDEO");
-        resource2.setFilePath("/resources/tax-filing.mp4");
+        resource2.setFilePath(null); // Demo resource - no actual file
+        resource2.setFileName("tax-filing.mp4");
         resource2.setCategory("INCOME_TAX");
         resource2.setAudience("TAXPAYER");
         resource2.setStatus("PUBLISHED");
@@ -233,9 +235,10 @@ public class RoleConfig {
         
         com.itas.model.Resource resource3 = new com.itas.model.Resource();
         resource3.setTitle("Tax Deductions Guide");
-        resource3.setDescription("Comprehensive list of eligible tax deductions and credits.");
+        resource3.setDescription("Comprehensive list of eligible tax deductions and credits. (Demo resource - upload actual files to test download functionality)");
         resource3.setResourceType("PDF");
-        resource3.setFilePath("/resources/deductions-guide.pdf");
+        resource3.setFilePath(null); // Demo resource - no actual file
+        resource3.setFileName("deductions-guide.pdf");
         resource3.setCategory("INCOME_TAX");
         resource3.setAudience("ALL");
         resource3.setStatus("PUBLISHED");

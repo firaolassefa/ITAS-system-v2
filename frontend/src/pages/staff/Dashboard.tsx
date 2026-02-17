@@ -313,8 +313,8 @@ const MORStaffDashboard: React.FC = () => {
                           </Box>
                         }
                         secondary={
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
+                          <React.Fragment>
+                            <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block', mt: 1 }}>
                               Category: {course.category}
                               {course.deadline && ` • Deadline: ${course.deadline}`}
                             </Typography>
@@ -324,12 +324,13 @@ const MORStaffDashboard: React.FC = () => {
                                 value={course.progress} 
                                 sx={{ flexGrow: 1, mr: 1 }}
                               />
-                              <Typography variant="body2">
+                              <Typography variant="body2" component="span">
                                 {course.progress}%
                               </Typography>
                             </Box>
-                          </Box>
+                          </React.Fragment>
                         }
+                        secondaryTypographyProps={{ component: 'div' }}
                       />
                       <Box>
                         {course.status !== 'completed' && (
@@ -373,15 +374,16 @@ const MORStaffDashboard: React.FC = () => {
                       <ListItemText
                         primary={item.title}
                         secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
+                          <React.Fragment>
+                            <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
                               Due: {item.dueDate}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'block' }}>
                               {item.description}
                             </Typography>
-                          </Box>
+                          </React.Fragment>
                         }
+                        secondaryTypographyProps={{ component: 'div' }}
                       />
                       <Chip 
                         label={item.status} 

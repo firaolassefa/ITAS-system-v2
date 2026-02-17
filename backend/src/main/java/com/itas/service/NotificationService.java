@@ -173,6 +173,21 @@ public class NotificationService {
     }
     
     @Transactional
+    public Notification updateNotification(Notification notification) {
+        Notification existing = getNotificationById(notification.getId());
+        
+        existing.setTitle(notification.getTitle());
+        existing.setMessage(notification.getMessage());
+        existing.setNotificationType(notification.getNotificationType());
+        existing.setPriority(notification.getPriority());
+        existing.setTargetAudience(notification.getTargetAudience());
+        existing.setScheduledFor(notification.getScheduledFor());
+        existing.setUpdatedAt(LocalDateTime.now());
+        
+        return notificationRepository.save(existing);
+    }
+    
+    @Transactional
     public void resendNotification(Long id) {
         Notification notification = getNotificationById(id);
         notification.setStatus("SENT");

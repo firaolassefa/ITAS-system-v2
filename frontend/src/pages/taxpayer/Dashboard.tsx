@@ -51,7 +51,7 @@ const TaxpayerDashboard: React.FC<{ user?: any }> = ({ user }) => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await dashboardAPI.getMyDashboard();
+      const response = await dashboardAPI.getTaxpayerDashboard(user?.id || 1);
       const data = response.data || response;
       setDashboardData({
         enrolledCourses: data.enrolledCourses || 0,

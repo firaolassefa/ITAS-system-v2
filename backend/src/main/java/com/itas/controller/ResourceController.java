@@ -143,23 +143,88 @@ public class ResourceController {
     
     @GetMapping("/{id}/download")
     public ResponseEntity<?> downloadResource(@PathVariable Long id) {
-        Resource resource = resourceService.getResourceById(id);
-        
-        if (resource == null) {
-            return ResponseEntity.status(404).body(new ApiResponse<>("Resource not found", null));
+        try {
+            Resource resource = resourceService.getResourceById(id);
+            
+            if (resource == null) {
+                System.err.println("Resource not found with id: " + id);
+                return ResponseEntity.status(404).body(new ApiResponse<>("Resource not found", null));
+            }
+            
+            System.out.println("Downloading resource: " + resource.getFileName() + " from path: " + resource.getFilePath());
+            
+            // Check if file path is null or empty
+            if (resource.getFilePath() == null || resource.getFilePath().isEmpty()) {
+                System.err.println("File path is null or empty for resource id: " + id);
+                return ResponseEntity.status(500).body(new ApiResponse<>("File path not configured", null));
+            }
+            
+            // Read file and return as byte array
+            java.nio.file.Path filePath = java.nio.file.Paths.get(resource.getFilePath());
+            
+            if (!java.nio.file.Files.exists(filePath)) {
+                System.err.println("File does not exist at path: " + filePath.toString());
+                return ResponseEntity.status(404).body(new ApiResponse<>("File not found on server", null));
+            }
+            
+            byte[] fileContent = java.nio.file.Files.readAllBytes(filePath);
+            
+            // Increment download count
+            resourceService.incrementDownloadCount(id);
+            
+            return ResponseEntity.ok()
+                    .header("Content-Type", resource.getMimeType())
+                    .header("Content-Disposition", "attachment; filename=\"" + resource.getFileName() + "\"")
+                    .body(fileContent);
+        } catch (Exception e) {
+            System.err.println("Error downloading file: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error downloading file: " + e.getMessage(), null));
         }
-        
-        // Increment download count
-        resourceService.incrementDownloadCount(id);
-        
-        // Build response with HashMap
-        Map<String, Object> response = new HashMap<>();
-        response.put("fileName", resource.getFileName());
-        response.put("filePath", resource.getFilePath());
-        response.put("mimeType", resource.getMimeType());
-        response.put("fileSize", resource.getFileSize());
-        
-        return ResponseEntity.ok(new ApiResponse<>("Download ready", response));
+    }
+    
+    @GetMapping("/{id}/stream")
+    public ResponseEntity<?> streamResource(@PathVariable Long id) {
+        try {
+            Resource resource = resourceService.getResourceById(id);
+            
+            if (resource == null) {
+                System.err.println("Resource not found with id: " + id);
+                return ResponseEntity.status(404).body(new ApiResponse<>("Resource not found", null));
+            }
+            
+            System.out.println("Streaming resource: " + resource.getFileName() + " from path: " + resource.getFilePath());
+            
+            // Check if file path is null or empty
+            if (resource.getFilePath() == null || resource.getFilePath().isEmpty()) {
+                System.err.println("File path is null or empty for resource id: " + id);
+                return ResponseEntity.status(500).body(new ApiResponse<>("File path not configured", null));
+            }
+            
+            // Read file and return as byte array for streaming
+            java.nio.file.Path filePath = java.nio.file.Paths.get(resource.getFilePath());
+            
+            if (!java.nio.file.Files.exists(filePath)) {
+                System.err.println("File does not exist at path: " + filePath.toString());
+                return ResponseEntity.status(404).body(new ApiResponse<>("File not found on server", null));
+            }
+            
+            byte[] fileContent = java.nio.file.Files.readAllBytes(filePath);
+            
+            // Increment view count for videos
+            if ("VIDEO".equals(resource.getResourceType())) {
+                resourceService.incrementViewCount(id);
+            }
+            
+            return ResponseEntity.ok()
+                    .header("Content-Type", resource.getMimeType())
+                    .header("Content-Disposition", "inline; filename=\"" + resource.getFileName() + "\"")
+                    .body(fileContent);
+        } catch (Exception e) {
+            System.err.println("Error streaming file: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error streaming file: " + e.getMessage(), null));
+        }
     }
     
     @PutMapping("/{id}/views")

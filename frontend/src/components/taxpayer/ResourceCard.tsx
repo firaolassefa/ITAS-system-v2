@@ -19,9 +19,10 @@ import {
 interface ResourceCardProps {
   resource: any;
   onDownload: () => void;
+  onView?: () => void;
 }
 
-const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onDownload }) => {
+const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onDownload, onView }) => {
   const getIcon = () => {
     switch (resource.resourceType) {
       case 'PDF': return <PdfIcon color="error" />;
@@ -171,40 +172,89 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, onDownload }) => 
       </CardContent>
       
       <CardActions sx={{ p: 3, pt: 0 }}>
-        <Button
-          fullWidth
-          variant="contained"
-          startIcon={<DownloadIcon />}
-          onClick={onDownload}
-          sx={{
-            py: 1.5,
-            borderRadius: '12px',
-            background: resource.resourceType === 'PDF'
-              ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-              : resource.resourceType === 'VIDEO'
-              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-              : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-            fontWeight: 600,
-            fontSize: '0.95rem',
-            textTransform: 'none',
-            transition: 'all 0.3s ease',
-            '&:hover': {
+        {resource.resourceType === 'PDF' && onView ? (
+          <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={onView}
+              sx={{
+                py: 1.5,
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                textTransform: 'none',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                },
+              }}
+            >
+              View PDF
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={onDownload}
+              sx={{
+                py: 1.5,
+                borderRadius: '12px',
+                borderColor: '#667eea',
+                color: '#667eea',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                textTransform: 'none',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  borderColor: '#667eea',
+                  background: 'rgba(102, 126, 234, 0.1)',
+                  transform: 'translateY(-2px)',
+                },
+              }}
+            >
+              Download
+            </Button>
+          </Box>
+        ) : (
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={onDownload}
+            sx={{
+              py: 1.5,
+              borderRadius: '12px',
               background: resource.resourceType === 'PDF'
-                ? 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)'
+                ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
                 : resource.resourceType === 'VIDEO'
-                ? 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)'
-                : 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-              transform: 'translateY(-2px)',
-              boxShadow: resource.resourceType === 'PDF'
-                ? '0 8px 25px rgba(239, 68, 68, 0.4)'
-                : resource.resourceType === 'VIDEO'
-                ? '0 8px 25px rgba(102, 126, 234, 0.4)'
-                : '0 8px 25px rgba(16, 185, 129, 0.4)',
-            },
-          }}
-        >
-          Download Resource
-        </Button>
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              textTransform: 'none',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                background: resource.resourceType === 'PDF'
+                  ? 'linear-gradient(135deg, #DC2626 0%, #EF4444 100%)'
+                  : resource.resourceType === 'VIDEO'
+                  ? 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)'
+                  : 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+                transform: 'translateY(-2px)',
+                boxShadow: resource.resourceType === 'PDF'
+                  ? '0 8px 25px rgba(239, 68, 68, 0.4)'
+                  : resource.resourceType === 'VIDEO'
+                  ? '0 8px 25px rgba(102, 126, 234, 0.4)'
+                  : '0 8px 25px rgba(16, 185, 129, 0.4)',
+              },
+            }}
+          >
+            Download Resource
+          </Button>
+        )}
       </CardActions>
     </Card>
   );

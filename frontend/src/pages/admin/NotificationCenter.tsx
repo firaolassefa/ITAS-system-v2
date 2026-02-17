@@ -3,7 +3,7 @@ import {
   Container, Paper, Typography, Box, TextField, Button,
   Grid, FormControl, InputLabel, Select, MenuItem, Chip,
   RadioGroup, FormControlLabel, Radio, Fade, Zoom, Avatar, SelectChangeEvent,
-  CircularProgress, Alert, Snackbar,
+  CircularProgress, Alert, Snackbar, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -13,8 +13,10 @@ import {
   Notifications as NotifIcon,
   TrendingUp as TrendingIcon,
   CheckCircle as CheckIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
+import { notificationAPI } from '../../api/notifications';
 
 interface Campaign {
   id: number;
@@ -48,6 +50,9 @@ const NotificationCenter: React.FC = () => {
     message: '',
     severity: 'success' as 'success' | 'error',
   });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     loadCampaigns();
@@ -56,23 +61,23 @@ const NotificationCenter: React.FC = () => {
   const loadCampaigns = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8080/api/notifications');
-      const campaignData = response.data.data || response.data || [];
+      const response = await notificationAPI.getAll();
+      const campaignData = response.data || response || [];
       const campaignsArray = Array.isArray(campaignData) ? campaignData : [];
       
       setCampaigns(campaignsArray.slice(0, 5).map((n: any) => ({
         id: n.id,
         title: n.title || n.message?.substring(0, 30),
         audience: n.role || 'ALL',
-        sent: Math.floor(Math.random() * 1000) + 100,
-        opened: Math.floor(Math.random() * 800) + 50,
+        sent: n.sentCount || Math.floor(Math.random() * 1000) + 100,
+        opened: n.openedCount || Math.floor(Math.random() * 800) + 50,
         sentAt: n.createdAt || new Date().toISOString(),
-        channel: 'EMAIL',
+        channel: n.notificationType || 'EMAIL',
       })));
 
       // Calculate stats
-      const totalSent = campaignsArray.reduce((sum: number, c: any) => sum + (c.sent || 100), 0);
-      const totalOpened = campaignsArray.reduce((sum: number, c: any) => sum + (c.opened || 70), 0);
+      const totalSent = campaignsArray.reduce((sum: number, c: any) => sum + (c.sentCount || 100), 0);
+      const totalOpened = campaignsArray.reduce((sum: number, c: any) => sum + (c.openedCount || 70), 0);
       
       setStats({
         totalSent,
@@ -90,18 +95,56 @@ const NotificationCenter: React.FC = () => {
 
   const handleSend = async () => {
     try {
-      await axios.post('http://localhost:8080/notifications', {
-        title: notification.title,
-        message: notification.message,
-        role: notification.audience,
-        link: '/dashboard',
-      });
-      
-      setSnackbar({
-        open: true,
-        message: 'Notification sent successfully!',
-        severity: 'success',
-      });
+      // Map audience to actual role name
+      const roleMapping: Record<string, string> = {
+        'ALL_TAXPAYERS': 'TAXPAYER',
+        'SME': 'TAXPAYER',
+        'INDIVIDUAL': 'TAXPAYER',
+        'NEW_TAXPAYERS': 'TAXPAYER',
+        'MOR_STAFF': 'MOR_STAFF',
+        'ALL': 'ALL',
+      };
+
+      const targetRole = roleMapping[notification.audience] || notification.audience;
+
+      if (editingId) {
+        // Update existing notification
+        await notificationAPI.update(editingId, {
+          title: notification.title,
+          message: notification.message,
+          role: targetRole,
+          link: '/dashboard',
+          notificationType: notification.channel as any,
+          priority: 'MEDIUM',
+          targetAudience: notification.audience,
+          status: 'SENT',
+        });
+        
+        setSnackbar({
+          open: true,
+          message: 'Notification updated successfully!',
+          severity: 'success',
+        });
+        setEditingId(null);
+      } else {
+        // Send new notification
+        await notificationAPI.send({
+          title: notification.title,
+          message: notification.message,
+          role: targetRole,
+          link: '/dashboard',
+          notificationType: notification.channel as any,
+          priority: 'MEDIUM',
+          targetAudience: notification.audience,
+          status: 'SENT',
+        });
+        
+        setSnackbar({
+          open: true,
+          message: 'Notification sent successfully!',
+          severity: 'success',
+        });
+      }
       
       setNotification({
         title: '',
@@ -120,6 +163,45 @@ const NotificationCenter: React.FC = () => {
         severity: 'error',
       });
     }
+  };
+
+  const handleEdit = (campaign: Campaign) => {
+    setEditingId(campaign.id);
+    setNotification({
+      title: campaign.title,
+      message: '',
+      audience: campaign.audience,
+      channel: campaign.channel,
+      scheduleType: 'IMMEDIATE',
+      scheduledTime: ''
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    
+    try {
+      await notificationAPI.delete(deletingId);
+      setSnackbar({
+        open: true,
+        message: 'Notification deleted successfully!',
+        severity: 'success',
+      });
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      loadCampaigns();
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || 'Failed to delete notification',
+        severity: 'error',
+      });
+    }
+  };
+
+  const openDeleteDialog = (id: number) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
   };
 
   const getChannelIcon = (channel: string) => {
@@ -233,8 +315,24 @@ const NotificationCenter: React.FC = () => {
                   sx={{ mt: 3, py: 1.5, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', fontWeight: 600, fontSize: '1rem',
                     '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }
                   }}>
-                  Send Notification
+                  {editingId ? 'Update Notification' : 'Send Notification'}
                 </Button>
+                {editingId && (
+                  <Button variant="outlined" onClick={() => {
+                    setEditingId(null);
+                    setNotification({
+                      title: '',
+                      message: '',
+                      audience: 'ALL_TAXPAYERS',
+                      channel: 'EMAIL',
+                      scheduleType: 'IMMEDIATE',
+                      scheduledTime: ''
+                    });
+                  }} fullWidth
+                    sx={{ mt: 1, py: 1.5, borderColor: '#667eea', color: '#667eea', fontWeight: 600 }}>
+                    Cancel Edit
+                  </Button>
+                )}
               </Paper>
             </Fade>
           </Grid>
@@ -271,6 +369,14 @@ const NotificationCenter: React.FC = () => {
                               <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: '0.9rem' }}>{campaign.title}</Typography>
                               <Typography variant="caption" sx={{ color: 'text.secondary' }}>{new Date(campaign.sentAt).toLocaleDateString()}</Typography>
                             </Box>
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <IconButton size="small" onClick={() => handleEdit(campaign)} sx={{ color: '#667eea' }}>
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton size="small" onClick={() => openDeleteDialog(campaign.id)} sx={{ color: '#EF4444' }}>
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
                           </Box>
                           <Chip label={campaign.audience} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontSize: '0.7rem', mb: 1 }} />
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
@@ -293,6 +399,20 @@ const NotificationCenter: React.FC = () => {
             {snackbar.message}
           </Alert>
         </Snackbar>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <Typography>Are you sure you want to delete this notification? This action cannot be undone.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: '#666' }}>Cancel</Button>
+            <Button onClick={handleDelete} variant="contained" sx={{ background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', color: '#fff' }}>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

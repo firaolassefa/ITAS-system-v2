@@ -45,7 +45,8 @@ const WebinarManagement: React.FC = () => {
     durationMinutes: 60,
     maxAttendees: 100,
     presenters: [''],
-    targetAudience: 'ALL_TAXPAYERS'
+    targetAudience: 'ALL_TAXPAYERS',
+    meetingLink: '',
   });
 
   useEffect(() => {
@@ -57,7 +58,25 @@ const WebinarManagement: React.FC = () => {
     try {
       setLoading(true);
       const response = await webinarApi.getAll();
-      const webinarData = response.data || response.content || [];
+      
+      // Handle different response structures
+      let webinarData = [];
+      if (response.data) {
+        if (response.data.content) {
+          // Page object
+          webinarData = response.data.content;
+        } else if (Array.isArray(response.data)) {
+          // Direct array
+          webinarData = response.data;
+        }
+      } else if (response.content) {
+        // Page object at root
+        webinarData = response.content;
+      } else if (Array.isArray(response)) {
+        // Direct array at root
+        webinarData = response;
+      }
+      
       setWebinars(Array.isArray(webinarData) ? webinarData : []);
       setError('');
     } catch (err: any) {
@@ -80,16 +99,77 @@ const WebinarManagement: React.FC = () => {
 
   const handleSchedule = async () => {
     try {
-      await webinarApi.create(webinarData);
+      // Validation
+      if (!webinarData.title || webinarData.title.length < 5) {
+        setSnackbar({
+          open: true,
+          message: 'Title must be at least 5 characters',
+          severity: 'error',
+        });
+        return;
+      }
+
+      if (!webinarData.description || webinarData.description.length < 20) {
+        setSnackbar({
+          open: true,
+          message: 'Description must be at least 20 characters',
+          severity: 'error',
+        });
+        return;
+      }
+
+      const filteredPresenters = webinarData.presenters.filter(p => p.trim() !== '');
+      if (filteredPresenters.length === 0) {
+        setSnackbar({
+          open: true,
+          message: 'At least one presenter is required',
+          severity: 'error',
+        });
+        return;
+      }
+
+      // Combine date and time into a single datetime
+      const scheduleDateTime = new Date(webinarData.scheduleDate);
+      const timeDate = new Date(webinarData.scheduleTime);
+      scheduleDateTime.setHours(timeDate.getHours());
+      scheduleDateTime.setMinutes(timeDate.getMinutes());
+      scheduleDateTime.setSeconds(0);
+      scheduleDateTime.setMilliseconds(0);
+
+      const webinarPayload = {
+        title: webinarData.title,
+        description: webinarData.description,
+        scheduleTime: scheduleDateTime.toISOString(),
+        durationMinutes: webinarData.durationMinutes,
+        maxAttendees: webinarData.maxAttendees,
+        presenters: filteredPresenters,
+        targetAudience: webinarData.targetAudience,
+        meetingLink: webinarData.meetingLink || undefined,
+      };
+
+      await webinarApi.create(webinarPayload);
       setSnackbar({
         open: true,
         message: 'Webinar scheduled successfully!',
         severity: 'success',
       });
       setOpenDialog(false);
+      // Reset form
+      setWebinarData({
+        title: '',
+        description: '',
+        scheduleDate: new Date(),
+        scheduleTime: new Date(),
+        durationMinutes: 60,
+        maxAttendees: 100,
+        presenters: [''],
+        targetAudience: 'ALL_TAXPAYERS',
+        meetingLink: '',
+      });
       loadWebinars();
       loadStats();
     } catch (err: any) {
+      console.error('Error scheduling webinar:', err);
       setSnackbar({
         open: true,
         message: err.response?.data?.message || 'Failed to schedule webinar',
@@ -207,9 +287,9 @@ const WebinarManagement: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Box>
-                              <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>{webinar.registered || 0}/{webinar.maxAttendees}</Typography>
+                              <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>{webinar.registeredCount || webinar.registered || 0}/{webinar.maxAttendees}</Typography>
                               <Box sx={{ width: '100%', height: 6, background: '#e5e7eb', borderRadius: 3, mt: 0.5, overflow: 'hidden' }}>
-                                <Box sx={{ width: `${((webinar.registered || 0) / webinar.maxAttendees) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)', borderRadius: 3, transition: 'width 0.5s ease' }} />
+                                <Box sx={{ width: `${(((webinar.registeredCount || webinar.registered || 0) / webinar.maxAttendees) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)', borderRadius: 3, transition: 'width 0.5s ease' }} />
                               </Box>
                             </Box>
                           </TableCell>
@@ -272,6 +352,26 @@ const WebinarManagement: React.FC = () => {
                       <MenuItem value="NEW_TAXPAYERS">New Taxpayers</MenuItem>
                     </Select>
                   </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField 
+                    fullWidth 
+                    label="Presenter Name" 
+                    required
+                    value={webinarData.presenters[0] || ''} 
+                    onChange={(e) => setWebinarData({ ...webinarData, presenters: [e.target.value] })}
+                    helperText="Enter the name of the webinar presenter"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField 
+                    fullWidth 
+                    label="Meeting Link (Optional)" 
+                    value={webinarData.meetingLink} 
+                    onChange={(e) => setWebinarData({ ...webinarData, meetingLink: e.target.value })}
+                    placeholder="https://zoom.us/j/..."
+                    helperText="Zoom, Google Meet, or other meeting platform link"
+                  />
                 </Grid>
               </Grid>
             </DialogContent>

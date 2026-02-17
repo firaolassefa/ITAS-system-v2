@@ -28,7 +28,7 @@ public class WebinarController {
     private WebinarService webinarService;
     
     @PostMapping
-    @PreAuthorize("hasRole('TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
     @Operation(summary = "Schedule a new webinar", description = "UC-ADM-001: Schedule Live Webinar")
     public ResponseEntity<ApiResponse<Webinar>> scheduleWebinar(
             @Valid @RequestBody WebinarRequest request,
@@ -85,7 +85,7 @@ public class WebinarController {
     }
     
     @GetMapping("/{webinarId}/registrations")
-    @PreAuthorize("hasRole('TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
     @Operation(summary = "Get webinar registrations")
     public ResponseEntity<ApiResponse<Page<User>>> getRegistrations(
             @PathVariable Long webinarId,
@@ -99,7 +99,7 @@ public class WebinarController {
     }
     
     @PostMapping("/{webinarId}/start")
-    @PreAuthorize("hasRole('TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
     @Operation(summary = "Start a webinar")
     public ResponseEntity<ApiResponse<Void>> startWebinar(
             @PathVariable Long webinarId,
@@ -113,7 +113,7 @@ public class WebinarController {
     }
     
     @PostMapping("/{webinarId}/complete")
-    @PreAuthorize("hasRole('TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
     @Operation(summary = "Mark webinar as completed")
     public ResponseEntity<ApiResponse<Void>> completeWebinar(
             @PathVariable Long webinarId,
@@ -127,7 +127,7 @@ public class WebinarController {
     }
     
     @GetMapping("/{webinarId}/attendance")
-    @PreAuthorize("hasRole('TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
     @Operation(summary = "Get webinar attendance report")
     public ResponseEntity<ApiResponse<Object>> getAttendanceReport(@PathVariable Long webinarId) {
         Object report = webinarService.getAttendanceReport(webinarId);
