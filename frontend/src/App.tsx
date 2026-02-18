@@ -32,9 +32,13 @@ import ResourceVersion from './pages/admin/ResourceVersion';
 import WebinarManagement from './pages/admin/WebinarManagement';
 import NotificationCenter from './pages/admin/NotificationCenter';
 import UserRoleManagement from './pages/admin/UserRoleManagement';
+import CourseManagement from './pages/admin/CourseManagement';
+import ResourceUpload from './pages/admin/ResourceUpload';
+import QuestionManagement from './pages/admin/QuestionManagement';
 
 // Shared Pages
 import Profile from './pages/Profile';
+import TakeAssessment from './pages/TakeAssessment';
 
 // Layout Components
 import TaxpayerLayout from './components/TaxpayerLayout';
@@ -43,6 +47,9 @@ import StaffLayout from './components/StaffLayout';
 
 // Staff Pages
 import MORStaffDashboard from './pages/staff/Dashboard';
+import InternalTraining from './pages/staff/InternalTraining';
+import StaffCertificates from './pages/staff/Certificates';
+import StaffCompliance from './pages/staff/Compliance';
 
 // Shared Components
 import PlaceholderPage from './components/PlaceholderPage';
@@ -61,6 +68,20 @@ const theme = createTheme({
 function App() {
   const [user, setUser] = useState<any>(() => {
     const saved = localStorage.getItem('itas_user');
+    const token = localStorage.getItem('itas_token');
+    
+    // If user exists but no token, clear user data
+    if (saved && !token) {
+      localStorage.removeItem('itas_user');
+      return null;
+    }
+    
+    // If token exists but no user, clear token
+    if (token && !saved) {
+      localStorage.removeItem('itas_token');
+      return null;
+    }
+    
     return saved ? JSON.parse(saved) : null;
   });
 
@@ -175,6 +196,7 @@ function App() {
             <Route path="courses" element={<TaxpayerCourses user={user} />} />
             <Route path="course/:id" element={<CourseDetail />} />
             <Route path="resources" element={<TaxpayerResources user={user} />} />
+            <Route path="assessment/:moduleId" element={<TakeAssessment />} />
           </Route>
 
           {/* MOR Staff Routes */}
@@ -185,12 +207,12 @@ function App() {
           }>
             <Route index element={<Navigate to="dashboard" />} />
             <Route path="dashboard" element={<MORStaffDashboard />} />
-            <Route path="internal-training" element={<PlaceholderPage title="Internal Training" />} />
+            <Route path="internal-training" element={<InternalTraining />} />
             <Route path="courses" element={<TaxpayerCourses user={user} />} />
             <Route path="progress" element={<PlaceholderPage title="My Progress" />} />
             <Route path="assessments" element={<PlaceholderPage title="Assessments" />} />
-            <Route path="certificates" element={<PlaceholderPage title="Certificates" />} />
-            <Route path="compliance" element={<PlaceholderPage title="Compliance" />} />
+            <Route path="certificates" element={<StaffCertificates />} />
+            <Route path="compliance" element={<StaffCompliance />} />
             <Route path="resources" element={<TaxpayerResources user={user} />} />
             <Route path="help" element={<PlaceholderPage title="Help & Support" />} />
           </Route>
@@ -249,6 +271,21 @@ function App() {
             <Route path="resource-version" element={
               <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
                 <ResourceVersion />
+              </ProtectedRoute>
+            } />
+            <Route path="course-management" element={
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
+                <CourseManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="resource-upload" element={
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
+                <ResourceUpload />
+              </ProtectedRoute>
+            } />
+            <Route path="question-management" element={
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN']}>
+                <QuestionManagement />
               </ProtectedRoute>
             } />
             

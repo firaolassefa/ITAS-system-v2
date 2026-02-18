@@ -74,6 +74,13 @@ const MORStaffDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if token exists before fetching data
+    const token = localStorage.getItem('itas_token');
+    if (!token) {
+      console.error('No token found - redirecting to login');
+      window.location.href = '/login';
+      return;
+    }
     fetchStaffData();
   }, []);
 

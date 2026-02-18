@@ -87,6 +87,30 @@ public class ResourceService {
     }
     
     @Transactional
+    public Resource createResource(Resource resource) {
+        resource.setUploadedAt(LocalDateTime.now());
+        resource.setViewCount(0);
+        resource.setDownloadCount(0);
+        return resourceRepository.save(resource);
+    }
+    
+    @Transactional
+    public Resource updateResource(Long id, Resource resourceDetails) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resource not found"));
+        
+        resource.setTitle(resourceDetails.getTitle());
+        resource.setDescription(resourceDetails.getDescription());
+        resource.setResourceType(resourceDetails.getResourceType());
+        resource.setCategory(resourceDetails.getCategory());
+        resource.setAudience(resourceDetails.getAudience());
+        resource.setStatus(resourceDetails.getStatus());
+        resource.setUpdatedAt(LocalDateTime.now());
+        
+        return resourceRepository.save(resource);
+    }
+    
+    @Transactional
     public Resource uploadResource(MultipartFile file, Resource resource, User uploader) throws IOException {
         // Create upload directory if it doesn't exist
         Path uploadPath = Paths.get(uploadDir);

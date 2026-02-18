@@ -30,6 +30,8 @@ import {
   School as CourseIcon,
   ExitToApp as LogoutIcon,
   Person as ProfileIcon,
+  CloudUpload as CloudUploadIcon,
+  Quiz as QuizIcon,
 } from '@mui/icons-material';
 import NotificationBell from './NotificationBell';
 
@@ -81,8 +83,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: getDashboardPath() },
-    { text: 'Upload Resource', icon: <UploadIcon />, path: '/admin/upload-resource', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
-    { text: 'Webinar Management', icon: <CourseIcon />, path: '/admin/webinar-management', roles: ['TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Course Management', icon: <CourseIcon />, path: '/admin/course-management', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Upload Resource', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Question Management', icon: <QuizIcon />, path: '/admin/question-management', roles: ['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Webinar Management', icon: <UploadIcon />, path: '/admin/webinar-management', roles: ['TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Notification Center', icon: <SettingsIcon />, path: '/admin/notification-center', roles: ['COMM_OFFICER', 'SYSTEM_ADMIN'] },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/admin/analytics', roles: ['MANAGER', 'AUDITOR', 'SYSTEM_ADMIN'] },
     { text: 'User Management', icon: <PeopleIcon />, path: '/admin/user-role-management', roles: ['SYSTEM_ADMIN'] },

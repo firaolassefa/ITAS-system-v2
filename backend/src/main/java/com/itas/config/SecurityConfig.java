@@ -74,11 +74,12 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                 
                 // Public access to browse courses and resources (read-only)
-                .requestMatchers(HttpMethod.GET, "/courses", "/courses/*", "/api/courses", "/api/courses/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/resources", "/resources/search", "/resources/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/resources", "/api/resources/search", "/api/resources/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/webinars", "/webinars/upcoming", "/webinars/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/webinars", "/api/webinars/upcoming", "/api/webinars/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/courses", "/courses/*", "/courses/**", "/api/courses", "/api/courses/*", "/api/courses/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/modules", "/modules/*", "/modules/**", "/api/modules", "/api/modules/*", "/api/modules/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/resources", "/resources/search", "/resources/*", "/resources/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/resources", "/api/resources/search", "/api/resources/*", "/api/resources/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/webinars", "/webinars/upcoming", "/webinars/*", "/webinars/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/webinars", "/api/webinars/upcoming", "/api/webinars/*", "/api/webinars/**").permitAll()
                 .requestMatchers("/help/**", "/api/help/**").permitAll()
                 
                 // Dashboard endpoints - require authentication
@@ -90,6 +91,7 @@ public class SecurityConfig {
                 .requestMatchers("/resources/*/download", "/api/resources/*/download").authenticated()
                 .requestMatchers("/assessments/**", "/certificates/**").authenticated()
                 .requestMatchers("/api/assessments/**", "/api/certificates/**").authenticated()
+                .requestMatchers("/questions/**", "/api/questions/**").authenticated()
                 .requestMatchers("/webinars/*/register", "/api/webinars/*/register").authenticated()
                 
                 // Content Management - Content Admin & System Admin

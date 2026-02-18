@@ -250,17 +250,17 @@ const TrainingAdminDashboard: React.FC = () => {
                     </Avatar>
                     <ListItemText
                       primary={
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body1" component="div" sx={{ fontWeight: 600 }}>
                           {webinar.title}
                         </Typography>
                       }
                       secondary={
-                        <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-                          <Typography variant="body2" color="text.secondary">
+                        <Box component="div" sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                          <Typography variant="body2" component="span" color="text.secondary">
                             <Event sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
                             {webinar.date}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" component="span" color="text.secondary">
                             <People sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
                             {webinar.attendees} registered
                           </Typography>
@@ -293,14 +293,14 @@ const TrainingAdminDashboard: React.FC = () => {
                   <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body1" component="div" sx={{ fontWeight: 600 }}>
                           {course.name}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" component="div" color="text.secondary">
                           {course.completed} of {course.enrolled} completed
                         </Typography>
                       </Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: 'success.main' }}>
+                      <Typography variant="h6" component="div" sx={{ fontWeight: 700, color: 'success.main' }}>
                         {course.rate}%
                       </Typography>
                     </Box>
@@ -372,10 +372,10 @@ const TrainingAdminDashboard: React.FC = () => {
                   border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                <Typography variant="body2" component="div" sx={{ fontWeight: 600, mb: 0.5 }}>
                   2:00 PM - Tax Filing Basics
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" component="div" color="text.secondary">
                   45 attendees registered
                 </Typography>
               </Box>
@@ -387,7 +387,7 @@ const TrainingAdminDashboard: React.FC = () => {
                   border: `1px solid ${alpha('#fff', 0.1)}`,
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" component="div" color="text.secondary">
                   No more webinars today
                 </Typography>
               </Box>

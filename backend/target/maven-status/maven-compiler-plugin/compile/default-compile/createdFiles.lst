@@ -5,6 +5,7 @@ com\itas\security\JwtTokenProvider.class
 com\itas\service\ArchiveService.class
 com\itas\controller\CourseController.class
 com\itas\dto\NotificationRequest.class
+com\itas\controller\FileUploadController.class
 com\itas\dto\RoleAssignmentRequest.class
 com\itas\service\AnalyticsService.class
 com\itas\service\AuthService.class
@@ -28,6 +29,7 @@ com\itas\model\Enrollment.class
 com\itas\repository\ResourceRepository.class
 com\itas\controller\SyncController.class
 com\itas\repository\NotificationRepository.class
+com\itas\controller\QuestionController.class
 com\itas\model\Webinar.class
 com\itas\service\SyncService$2.class
 com\itas\repository\UserRoleRepository.class
@@ -70,11 +72,13 @@ com\itas\model\ArchivedResource.class
 com\itas\model\UserType.class
 com\itas\controller\ResourceController.class
 com\itas\dto\WebinarRequest.class
+com\itas\service\FileStorageService.class
 com\itas\repository\HelpContentRepository.class
 com\itas\controller\AuthController.class
 com\itas\model\Resource.class
 com\itas\security\CustomUserDetailsService.class
 com\itas\model\ModuleProgress.class
+com\itas\controller\ModuleContentController.class
 com\itas\model\Question.class
 com\itas\repository\UserRepository.class
 com\itas\controller\WebinarController.class

@@ -1,46 +1,29 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  Paper,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  IconButton,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  Alert,
-  Snackbar,
-  Tooltip,
-  LinearProgress,
+  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Grid, Card, CardContent, Typography, IconButton,
+  Chip, MenuItem, CircularProgress, Alert, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, Paper, Accordion,
+  AccordionSummary, AccordionDetails, List, ListItem, ListItemText,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
-  School as CourseIcon,
-  People as PeopleIcon,
-  Schedule as ScheduleIcon,
-  Publish as PublishIcon,
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { coursesAPI } from '../../api/courses';
+import { Add, Edit, Delete, Visibility, School, ExpandMore, PlaylistAdd, CloudUpload, Link as LinkIcon } from '@mui/icons-material';
+import axios from 'axios';
+import ModuleContentManager from './ModuleContentManager';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('itas_token');
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  };
+};
 
 interface Course {
-  id: number;
+  id?: number;
   title: string;
   description: string;
   category: string;
@@ -48,29 +31,49 @@ interface Course {
   durationHours: number;
   modules: string[];
   published: boolean;
-  enrollments?: number;
-  completionRate?: number;
+}
+
+interface Module {
+  id?: number;
+  courseId?: number;
+  title: string;
+  description: string;
+  orderIndex: number;
+  durationMinutes: number;
+  contentUrl?: string;
+  videoUrl?: string;
 }
 
 const CourseManagement: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openModuleDialog, setOpenModuleDialog] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
-  
-  const [formData, setFormData] = useState({
+  const [selectedCourseForModules, setSelectedCourseForModules] = useState<number | null>(null);
+  const [courseModules, setCourseModules] = useState<{ [key: number]: Module[] }>({});
+  const [moduleFormData, setModuleFormData] = useState<Module>({
+    title: '',
+    description: '',
+    orderIndex: 0,
+    durationMinutes: 60,
+  });
+  const [moduleContentFile, setModuleContentFile] = useState<File | null>(null);
+  const [moduleContentUrl, setModuleContentUrl] = useState('');
+  const [moduleContentType, setModuleContentType] = useState<'document' | 'video'>('document');
+  const [moduleUploadMethod, setModuleUploadMethod] = useState<'file' | 'url'>('file');
+  const [contentManagerOpen, setContentManagerOpen] = useState(false);
+  const [selectedModuleForContent, setSelectedModuleForContent] = useState<{ id: number; name: string } | null>(null);
+  const [formData, setFormData] = useState<Course>({
     title: '',
     description: '',
     category: 'VAT',
     difficulty: 'BEGINNER',
     durationHours: 4,
-    modules: [''],
-    published: false,
+    modules: [],
+    published: true,
   });
-
-  const categories = ['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'PAYROLL_TAX', 'CUSTOMS'];
-  const difficulties = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
+  const [moduleInput, setModuleInput] = useState('');
 
   useEffect(() => {
     loadCourses();
@@ -78,38 +81,127 @@ const CourseManagement: React.FC = () => {
 
   const loadCourses = async () => {
     try {
-      const response = await coursesAPI.getAllCourses();
-      // Add mock enrollment data
-      const coursesWithStats = (response.data || []).map((course: Course) => ({
-        ...course,
-        enrollments: Math.floor(Math.random() * 500) + 50,
-        completionRate: Math.floor(Math.random() * 40) + 60,
-      }));
-      setCourses(coursesWithStats);
+      const response = await axios.get(`${API_BASE_URL}/courses`, getAuthHeaders());
+      const coursesData = response.data.data || response.data || [];
+      setCourses(coursesData);
+      
+      // Load modules for each course
+      for (const course of coursesData) {
+        if (course.id) {
+          loadModulesForCourse(course.id);
+        }
+      }
     } catch (error) {
       console.error('Failed to load courses:', error);
-      showSnackbar('Failed to load courses', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
+  const loadModulesForCourse = async (courseId: number) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/modules/course/${courseId}`, getAuthHeaders());
+      const modules = response.data.data || response.data || [];
+      setCourseModules(prev => ({ ...prev, [courseId]: modules }));
+    } catch (error) {
+      console.error('Failed to load modules:', error);
+    }
+  };
+
+  const handleOpenModuleDialog = (courseId: number) => {
+    setSelectedCourseForModules(courseId);
+    const existingModules = courseModules[courseId] || [];
+    setModuleFormData({
+      title: '',
+      description: '',
+      orderIndex: existingModules.length,
+      durationMinutes: 60,
+    });
+    setModuleContentFile(null);
+    setModuleContentUrl('');
+    setModuleContentType('document');
+    setModuleUploadMethod('file');
+    setOpenModuleDialog(true);
+  };
+
+  const handleCloseModuleDialog = () => {
+    setOpenModuleDialog(false);
+    setSelectedCourseForModules(null);
+  };
+
+  const handleAddModuleToCourse = async () => {
+    if (!selectedCourseForModules) return;
+    
+    try {
+      // First, create the module
+      const moduleResponse = await axios.post(
+        `${API_BASE_URL}/modules`,
+        {
+          courseId: selectedCourseForModules,
+          ...moduleFormData,
+        },
+        getAuthHeaders()
+      );
+      
+      const createdModule = moduleResponse.data.data || moduleResponse.data;
+      const moduleId = createdModule.id;
+      
+      // Then, upload content if provided
+      if (moduleUploadMethod === 'file' && moduleContentFile) {
+        const formData = new FormData();
+        formData.append('file', moduleContentFile);
+        formData.append('contentType', moduleContentType);
+        
+        await axios.post(
+          `${API_BASE_URL}/modules/${moduleId}/upload-content`,
+          formData,
+          {
+            ...getAuthHeaders(),
+            headers: {
+              ...getAuthHeaders().headers,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      } else if (moduleUploadMethod === 'url' && moduleContentUrl.trim()) {
+        await axios.post(
+          `${API_BASE_URL}/modules/${moduleId}/set-url`,
+          null,
+          {
+            ...getAuthHeaders(),
+            params: {
+              url: moduleContentUrl,
+              urlType: moduleContentType,
+            },
+          }
+        );
+      }
+      
+      loadModulesForCourse(selectedCourseForModules);
+      handleCloseModuleDialog();
+      alert('Module created successfully with content!');
+    } catch (error) {
+      console.error('Failed to add module:', error);
+      alert('Failed to add module. Please make sure you are logged in.');
+    }
+  };
+
+  const handleDeleteModule = async (moduleId: number, courseId: number) => {
+    if (window.confirm('Are you sure you want to delete this module?')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/modules/${moduleId}`, getAuthHeaders());
+        loadModulesForCourse(courseId);
+      } catch (error) {
+        console.error('Failed to delete module:', error);
+        alert('Failed to delete module');
+      }
+    }
   };
 
   const handleOpenDialog = (course?: Course) => {
     if (course) {
       setEditingCourse(course);
-      setFormData({
-        title: course.title,
-        description: course.description,
-        category: course.category,
-        difficulty: course.difficulty,
-        durationHours: course.durationHours,
-        modules: course.modules.length > 0 ? course.modules : [''],
-        published: course.published,
-      });
+      setFormData(course);
     } else {
       setEditingCourse(null);
       setFormData({
@@ -118,8 +210,8 @@ const CourseManagement: React.FC = () => {
         category: 'VAT',
         difficulty: 'BEGINNER',
         durationHours: 4,
-        modules: [''],
-        published: false,
+        modules: [],
+        published: true,
       });
     }
     setOpenDialog(true);
@@ -128,75 +220,64 @@ const CourseManagement: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingCourse(null);
+    setModuleInput('');
   };
 
-  const handleSaveCourse = async () => {
-    try {
-      const courseData = {
+  const handleAddModuleChip = () => {
+    if (moduleInput.trim()) {
+      setFormData({
         ...formData,
-        modules: formData.modules.filter(m => m.trim() !== ''),
-      };
-
-      if (editingCourse) {
-        // Update course logic would go here
-        showSnackbar('Course updated successfully', 'success');
-      } else {
-        // Create new course logic would go here
-        showSnackbar('Course created successfully', 'success');
-      }
-      handleCloseDialog();
-      loadCourses();
-    } catch (error) {
-      showSnackbar('Failed to save course', 'error');
+        modules: [...formData.modules, moduleInput.trim()],
+      });
+      setModuleInput('');
     }
   };
 
-  const handleDeleteCourse = async (courseId: number) => {
+  const handleRemoveModule = (index: number) => {
+    setFormData({
+      ...formData,
+      modules: formData.modules.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (editingCourse) {
+        await axios.put(
+          `${API_BASE_URL}/courses/${editingCourse.id}`,
+          formData,
+          getAuthHeaders()
+        );
+      } else {
+        await axios.post(`${API_BASE_URL}/courses`, formData, getAuthHeaders());
+      }
+      loadCourses();
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Failed to save course:', error);
+      alert('Failed to save course');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this course?')) {
       try {
-        setCourses(prev => prev.filter(c => c.id !== courseId));
-        showSnackbar('Course deleted successfully', 'success');
+        await axios.delete(`${API_BASE_URL}/courses/${id}`, getAuthHeaders());
+        loadCourses();
       } catch (error) {
-        showSnackbar('Failed to delete course', 'error');
+        console.error('Failed to delete course:', error);
+        alert('Failed to delete course');
       }
     }
   };
 
-  const handleTogglePublished = async (courseId: number, published: boolean) => {
-    try {
-      setCourses(prev => prev.map(c => c.id === courseId ? { ...c, published } : c));
-      showSnackbar(`Course ${published ? 'published' : 'unpublished'} successfully`, 'success');
-    } catch (error) {
-      showSnackbar('Failed to update course status', 'error');
-    }
-  };
-
-  const addModule = () => {
-    setFormData(prev => ({ ...prev, modules: [...prev.modules, ''] }));
-  };
-
-  const updateModule = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      modules: prev.modules.map((m, i) => i === index ? value : m)
-    }));
-  };
-
-  const removeModule = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      modules: prev.modules.filter((_, i) => i !== index)
-    }));
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'BEGINNER': return 'success';
-      case 'INTERMEDIATE': return 'warning';
-      case 'ADVANCED': return 'error';
-      default: return 'default';
-    }
-  };
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -204,232 +285,457 @@ const CourseManagement: React.FC = () => {
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           Course Management
         </Typography>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => handleOpenDialog()}
         >
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-            }}
-          >
-            Create New Course
-          </Button>
-        </motion.div>
+          Create Course
+        </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {courses.map((course) => (
-          <Grid item xs={12} md={6} lg={4} key={course.id}>
-            <motion.div
-              whileHover={{ y: -5 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 3 }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <CourseIcon sx={{ color: 'primary.main', fontSize: 32 }} />
-                    <Chip
-                      label={course.published ? 'Published' : 'Draft'}
-                      color={course.published ? 'success' : 'default'}
-                      size="small"
-                    />
+      {courses.length === 0 ? (
+        <Alert severity="info">No courses found. Create your first course!</Alert>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {courses.map((course) => (
+            <Accordion key={course.id}>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                  <School color="primary" />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {course.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                      <Chip label={course.category} size="small" color="primary" />
+                      <Chip label={course.difficulty} size="small" />
+                      <Chip
+                        label={course.published ? 'Published' : 'Draft'}
+                        size="small"
+                        color={course.published ? 'success' : 'default'}
+                      />
+                      <Chip 
+                        label={`${courseModules[course.id!]?.length || 0} modules`} 
+                        size="small" 
+                        variant="outlined"
+                      />
+                    </Box>
                   </Box>
-                  
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    {course.title}
-                  </Typography>
-                  
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenDialog(course); }}>
+                      <Edit />
+                    </IconButton>
+                    <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDelete(course.id!); }}>
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     {course.description}
                   </Typography>
                   
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                    <Chip label={course.category} size="small" variant="outlined" />
-                    <Chip 
-                      label={course.difficulty} 
-                      size="small" 
-                      color={getDifficultyColor(course.difficulty)}
-                      variant="outlined"
-                    />
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="caption">{course.durationHours}h</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <PeopleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="caption">{course.enrollments} enrolled</Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Box sx={{ mb: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Completion Rate: {course.completionRate}%
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Course Modules
                     </Typography>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={course.completionRate} 
-                      sx={{ mt: 0.5, borderRadius: 1 }}
-                    />
-                  </Box>
-                </CardContent>
-                
-                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Tooltip title="View Details">
-                      <IconButton size="small" color="info">
-                        <ViewIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit Course">
-                      <IconButton size="small" color="primary" onClick={() => handleOpenDialog(course)}>
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Course">
-                      <IconButton size="small" color="error" onClick={() => handleDeleteCourse(course.id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<PlaylistAdd />}
+                      onClick={() => handleOpenModuleDialog(course.id!)}
+                    >
+                      Add Module
+                    </Button>
                   </Box>
                   
-                  <Tooltip title={course.published ? 'Unpublish' : 'Publish'}>
-                    <IconButton 
-                      size="small" 
-                      color={course.published ? 'warning' : 'success'}
-                      onClick={() => handleTogglePublished(course.id, !course.published)}
-                    >
-                      <PublishIcon />
-                    </IconButton>
-                  </Tooltip>
-                </CardActions>
-              </Card>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
+                  {courseModules[course.id!]?.length > 0 ? (
+                    <List>
+                      {courseModules[course.id!].map((module, index) => (
+                        <ListItem
+                          key={module.id}
+                          sx={{
+                            border: '1px solid',
+                            borderColor: 'grey.300',
+                            borderRadius: 1,
+                            mb: 1,
+                          }}
+                          secondaryAction={
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<CloudUpload />}
+                                onClick={() => {
+                                  setSelectedModuleForContent({ id: module.id!, name: module.title });
+                                  setContentManagerOpen(true);
+                                }}
+                              >
+                                Add Content
+                              </Button>
+                              <IconButton
+                                edge="end"
+                                color="error"
+                                onClick={() => handleDeleteModule(module.id!, course.id!)}
+                              >
+                                <Delete />
+                              </IconButton>
+                            </Box>
+                          }
+                        >
+                          <ListItemText
+                            primary={`${index + 1}. ${module.title}`}
+                            secondary={
+                              <Box component="span">
+                                <Typography variant="body2" component="span">
+                                  {module.durationMinutes} minutes - {module.description}
+                                </Typography>
+                                {(module.contentUrl || module.videoUrl) && (
+                                  <Box sx={{ mt: 0.5 }}>
+                                    {module.contentUrl && (
+                                      <Chip label="Has Document" size="small" color="primary" sx={{ mr: 0.5 }} />
+                                    )}
+                                    {module.videoUrl && (
+                                      <Chip label="Has Video" size="small" color="secondary" />
+                                    )}
+                                  </Box>
+                                )}
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  ) : (
+                    <Alert severity="info">No modules yet. Add your first module!</Alert>
+                  )}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
+      )}
 
-      {/* Add/Edit Course Dialog */}
+      {/* Create/Edit Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           {editingCourse ? 'Edit Course' : 'Create New Course'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'grid', gap: 2, mt: 1 }}>
-            <TextField
-              label="Course Title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              fullWidth
-              required
-            />
-            
-            <TextField
-              label="Description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              fullWidth
-              multiline
-              rows={3}
-              required
-            />
-            
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  label="Category"
-                >
-                  {categories.map(cat => (
-                    <MenuItem key={cat} value={cat}>{cat.replace('_', ' ')}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              
-              <FormControl fullWidth>
-                <InputLabel>Difficulty</InputLabel>
-                <Select
-                  value={formData.difficulty}
-                  onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value }))}
-                  label="Difficulty"
-                >
-                  {difficulties.map(diff => (
-                    <MenuItem key={diff} value={diff}>{diff}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
               <TextField
-                label="Duration (hours)"
-                type="number"
-                value={formData.durationHours}
-                onChange={(e) => setFormData(prev => ({ ...prev, durationHours: parseInt(e.target.value) || 0 }))}
                 fullWidth
+                label="Course Title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
-            </Box>
-            
-            <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Course Modules</Typography>
-              {formData.modules.map((module, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                  <TextField
-                    label={`Module ${index + 1}`}
-                    value={module}
-                    onChange={(e) => updateModule(index, e.target.value)}
-                    fullWidth
-                    size="small"
-                  />
-                  {formData.modules.length > 1 && (
-                    <Button onClick={() => removeModule(index)} color="error" size="small">
-                      Remove
-                    </Button>
-                  )}
-                </Box>
-              ))}
-              <Button onClick={addModule} size="small" sx={{ mt: 1 }}>
-                Add Module
-              </Button>
-            </Box>
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.published}
-                  onChange={(e) => setFormData(prev => ({ ...prev, published: e.target.checked }))}
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                select
+                label="Category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              >
+                <MenuItem value="VAT">VAT</MenuItem>
+                <MenuItem value="INCOME_TAX">Income Tax</MenuItem>
+                <MenuItem value="CORPORATE_TAX">Corporate Tax</MenuItem>
+                <MenuItem value="CUSTOMS">Customs</MenuItem>
+                <MenuItem value="EXCISE">Excise</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                select
+                label="Difficulty"
+                value={formData.difficulty}
+                onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+              >
+                <MenuItem value="BEGINNER">Beginner</MenuItem>
+                <MenuItem value="INTERMEDIATE">Intermediate</MenuItem>
+                <MenuItem value="ADVANCED">Advanced</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Duration (hours)"
+                value={formData.durationHours || 0}
+                onChange={(e) => setFormData({ ...formData, durationHours: parseInt(e.target.value) || 0 })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Course Modules
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Enter module name"
+                  value={moduleInput}
+                  onChange={(e) => setModuleInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddModuleChip()}
                 />
-              }
-              label="Publish Course"
-            />
-          </Box>
+                <Button variant="outlined" onClick={handleAddModuleChip}>
+                  Add
+                </Button>
+              </Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {formData.modules.map((module, index) => (
+                  <Chip
+                    key={index}
+                    label={module}
+                    onDelete={() => handleRemoveModule(index)}
+                  />
+                ))}
+              </Box>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSaveCourse} variant="contained">
-            {editingCourse ? 'Update' : 'Create'} Course
+          <Button variant="contained" onClick={handleSubmit}>
+            {editingCourse ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-      >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* Add Module Dialog */}
+      <Dialog open={openModuleDialog} onClose={handleCloseModuleDialog} maxWidth="md" fullWidth>
+        <DialogTitle>Add Module with Content</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Module Title"
+                value={moduleFormData.title}
+                onChange={(e) => setModuleFormData({ ...moduleFormData, title: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={2}
+                label="Description"
+                value={moduleFormData.description}
+                onChange={(e) => setModuleFormData({ ...moduleFormData, description: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Duration (minutes)"
+                value={moduleFormData.durationMinutes || 60}
+                onChange={(e) => setModuleFormData({ ...moduleFormData, durationMinutes: parseInt(e.target.value) || 60 })}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Order"
+                value={moduleFormData.orderIndex || 0}
+                onChange={(e) => setModuleFormData({ ...moduleFormData, orderIndex: parseInt(e.target.value) || 0 })}
+              />
+            </Grid>
+            
+            {/* Content Upload Section */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, mt: 2 }}>
+                Module Content (Optional)
+              </Typography>
+              
+              {/* Upload Method Toggle */}
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Button
+                  variant={moduleUploadMethod === 'file' ? 'contained' : 'outlined'}
+                  onClick={() => setModuleUploadMethod('file')}
+                  startIcon={<CloudUpload />}
+                >
+                  Upload File
+                </Button>
+                <Button
+                  variant={moduleUploadMethod === 'url' ? 'contained' : 'outlined'}
+                  onClick={() => setModuleUploadMethod('url')}
+                  startIcon={<LinkIcon />}
+                >
+                  Add URL
+                </Button>
+              </Box>
+              
+              {/* Content Type Selection */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1 }}>Content Type:</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    size="small"
+                    variant={moduleContentType === 'document' ? 'contained' : 'outlined'}
+                    onClick={() => setModuleContentType('document')}
+                  >
+                    📄 Document/PDF
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={moduleContentType === 'video' ? 'contained' : 'outlined'}
+                    onClick={() => setModuleContentType('video')}
+                  >
+                    🎥 Video
+                  </Button>
+                </Box>
+              </Box>
+              
+              {/* File Upload */}
+              {moduleUploadMethod === 'file' && (
+                <Box
+                  sx={{
+                    border: '2px dashed',
+                    borderColor: moduleContentFile ? 'primary.main' : 'grey.300',
+                    borderRadius: 2,
+                    p: 3,
+                    textAlign: 'center',
+                    bgcolor: moduleContentFile ? 'primary.50' : 'grey.50',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: 'primary.50',
+                    },
+                  }}
+                  onClick={() => document.getElementById('module-file-input-dialog')?.click()}
+                >
+                  <input
+                    id="module-file-input-dialog"
+                    type="file"
+                    hidden
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setModuleContentFile(e.target.files[0]);
+                      }
+                    }}
+                    accept={moduleContentType === 'video' ? 'video/*' : '.pdf,.doc,.docx,.ppt,.pptx'}
+                  />
+                  
+                  {moduleContentFile ? (
+                    <Box>
+                      <Typography variant="h6" sx={{ mb: 1 }}>
+                        {moduleContentFile.name}
+                      </Typography>
+                      <Chip 
+                        label={`${(moduleContentFile.size / 1024 / 1024).toFixed(2)} MB`} 
+                        color="primary" 
+                        sx={{ mb: 2 }} 
+                      />
+                      <Box>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModuleContentFile(null);
+                          }}
+                        >
+                          Remove File
+                        </Button>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box>
+                      <CloudUpload sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        Click to select file
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {moduleContentType === 'video' ? 'MP4, AVI, MOV (Max 50MB)' : 'PDF, DOC, PPT (Max 50MB)'}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              )}
+              
+              {/* URL Input */}
+              {moduleUploadMethod === 'url' && (
+                <Box>
+                  <TextField
+                    fullWidth
+                    label="Content URL"
+                    placeholder="https://youtube.com/watch?v=... or https://example.com/file.pdf"
+                    value={moduleContentUrl}
+                    onChange={(e) => setModuleContentUrl(e.target.value)}
+                    helperText="Enter YouTube, Vimeo, Google Drive, or direct file URL"
+                  />
+                  <Alert severity="info" sx={{ mt: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                      Supported URLs:
+                    </Typography>
+                    <Typography variant="body2">
+                      • YouTube: https://youtube.com/watch?v=...<br />
+                      • Vimeo: https://vimeo.com/...<br />
+                      • Google Drive: https://drive.google.com/...<br />
+                      • Direct links: https://example.com/file.pdf
+                    </Typography>
+                  </Alert>
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModuleDialog}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleAddModuleToCourse}
+            disabled={!moduleFormData.title.trim()}
+          >
+            Create Module
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Module Content Manager */}
+      {selectedModuleForContent && (
+        <ModuleContentManager
+          open={contentManagerOpen}
+          onClose={() => {
+            setContentManagerOpen(false);
+            setSelectedModuleForContent(null);
+          }}
+          moduleId={selectedModuleForContent.id}
+          moduleName={selectedModuleForContent.name}
+          onSuccess={() => {
+            if (selectedModuleForContent) {
+              const courseId = courseModules[Object.keys(courseModules).find(key => 
+                courseModules[parseInt(key)].some(m => m.id === selectedModuleForContent.id)
+              )!];
+              if (courseId) {
+                loadModulesForCourse(parseInt(Object.keys(courseModules).find(key => 
+                  courseModules[parseInt(key)].some(m => m.id === selectedModuleForContent.id)
+                )!));
+              }
+            }
+          }}
+        />
+      )}
     </Box>
   );
 };

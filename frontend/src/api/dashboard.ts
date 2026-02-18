@@ -4,6 +4,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('itas_token');
+  if (!token) {
+    console.error('No token found in localStorage - redirecting to login');
+    window.location.href = '/login';
+    throw new Error('Authentication token not found. Redirecting to login...');
+  }
   return {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -11,6 +16,19 @@ const getAuthHeaders = () => {
     }
   };
 };
+
+// Add axios interceptor to handle 401 errors globally
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Authentication failed - token may be expired');
+      // Optionally redirect to login
+      // window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const dashboardAPI = {
   // Get taxpayer dashboard
