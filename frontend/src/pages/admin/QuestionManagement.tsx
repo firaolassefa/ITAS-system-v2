@@ -4,22 +4,10 @@ import {
   TextField, Grid, Typography, IconButton, Chip, MenuItem,
   CircularProgress, Alert, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, Card, CardContent,
-  Radio, RadioGroup, FormControlLabel, Checkbox,
+  Radio,
 } from '@mui/material';
-import { Add, Edit, Delete, QuizOutlined } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { Add, Edit, Delete } from '@mui/icons-material';
+import { modulesAPI, questionsAPI } from '../../api/modules';
 
 interface Answer {
   answerText: string;
@@ -44,6 +32,7 @@ const QuestionManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
   
   const [formData, setFormData] = useState<Question>({
     moduleId: 0,
@@ -71,23 +60,97 @@ const QuestionManagement: React.FC = () => {
 
   const loadModules = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/modules`, getAuthHeaders());
-      setModules(response.data.data || response.data || []);
-    } catch (error) {
+      console.log('Loading modules...');
+      console.log('API Base URL:', import.meta.env.VITE_API_URL || 'http://localhost:8080/api');
+      
+      // Check if user is logged in
+      const token = localStorage.getItem('itas_token');
+      const user = localStorage.getItem('itas_user');
+      console.log('Token exists:', !!token);
+      console.log('User:', user);
+      
+      if (!token) {
+        setBackendConnected(true);
+        alert('You are not logged in. Please login first.');
+        window.location.href = '/login';
+        return;
+      }
+      
+      const response = await modulesAPI.getAllModules();
+      console.log('Modules response:', response);
+      
+      // The API now returns the data directly (already unwrapped)
+      const modulesData = Array.isArray(response) ? response : [];
+      console.log('Parsed modules:', modulesData);
+      
+      if (!Array.isArray(modulesData)) {
+        console.error('Modules data is not an array:', modulesData);
+        setModules([]);
+        setBackendConnected(true);
+        return;
+      }
+      
+      setModules(modulesData);
+      setBackendConnected(true);
+      
+      if (modulesData.length === 0) {
+        alert('No modules found. Please create courses and modules first in Course Management and Module Content Manager.');
+      }
+    } catch (error: any) {
       console.error('Failed to load modules:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      
+      let errorMessage = 'Failed to load modules. ';
+      
+      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+        setBackendConnected(false);
+        errorMessage = 'Cannot connect to the backend server at http://localhost:8080/api\n\n';
+        errorMessage += 'Possible causes:\n';
+        errorMessage += '1. Backend server is not running - Run start-backend.bat\n';
+        errorMessage += '2. Backend is running on a different port\n';
+        errorMessage += '3. CORS is blocking the request\n\n';
+        errorMessage += 'Check the browser console for more details.';
+      } else if (error.response?.status === 401) {
+        setBackendConnected(true);
+        errorMessage = 'Authentication failed. Your session may have expired. Please login again.';
+        setTimeout(() => {
+          localStorage.removeItem('itas_token');
+          localStorage.removeItem('itas_user');
+          window.location.href = '/login';
+        }, 2000);
+      } else if (error.response?.status === 403) {
+        setBackendConnected(true);
+        errorMessage = 'Access denied. You do not have permission to manage questions. Please ensure you are logged in as an admin.';
+      } else if (error.response) {
+        setBackendConnected(true);
+        errorMessage += error.response.data?.message || error.response.statusText || 'Unknown error';
+      } else {
+        setBackendConnected(false);
+        errorMessage += error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
   const loadQuestions = async (moduleId: number) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/questions/module/${moduleId}`,
-        getAuthHeaders()
-      );
-      setQuestions(response.data.data || response.data || []);
-    } catch (error) {
+      console.log('Loading questions for module:', moduleId);
+      const response = await questionsAPI.getQuestionsByModule(moduleId);
+      console.log('Questions response:', response);
+      
+      // The API now returns the data directly (already unwrapped)
+      const questionsData = Array.isArray(response) ? response : [];
+      console.log('Parsed questions:', questionsData);
+      
+      setQuestions(questionsData);
+    } catch (error: any) {
       console.error('Failed to load questions:', error);
+      console.error('Error details:', error.response?.data);
+      alert('Failed to load questions: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -137,13 +200,23 @@ const QuestionManagement: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
+      console.log('Submitting question with data:', formData);
+      console.log('Selected module:', selectedModule);
+      
       // Validate
+      if (!selectedModule) {
+        alert('Please select a module first');
+        return;
+      }
+
       if (!formData.questionText.trim()) {
         alert('Please enter a question');
         return;
       }
 
       const validAnswers = formData.answers.filter(a => a.answerText.trim());
+      console.log('Valid answers:', validAnswers);
+      
       if (validAnswers.length < 2) {
         alert('Please provide at least 2 answers');
         return;
@@ -154,36 +227,46 @@ const QuestionManagement: React.FC = () => {
         return;
       }
 
+      // Ensure answers have correct order
+      const orderedAnswers = validAnswers.map((answer, index) => ({
+        ...answer,
+        order: index
+      }));
+
       const payload = {
         ...formData,
         moduleId: selectedModule,
-        answers: validAnswers,
+        answers: orderedAnswers,
       };
 
-      if (editingQuestion) {
-        await axios.put(
-          `${API_BASE_URL}/questions/${editingQuestion.id}`,
-          payload,
-          getAuthHeaders()
-        );
+      console.log('Sending payload:', payload);
+
+      if (editingQuestion && editingQuestion.id) {
+        const response = await questionsAPI.updateQuestion(editingQuestion.id, payload);
+        console.log('Update response:', response);
+        alert('Question updated successfully!');
       } else {
-        await axios.post(`${API_BASE_URL}/questions`, payload, getAuthHeaders());
+        const response = await questionsAPI.createQuestion(payload);
+        console.log('Create response:', response);
+        alert('Question created successfully!');
       }
 
       if (selectedModule) {
-        loadQuestions(selectedModule);
+        await loadQuestions(selectedModule);
       }
       handleCloseDialog();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save question:', error);
-      alert('Failed to save question');
+      console.error('Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save question';
+      alert('Error: ' + errorMessage);
     }
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/questions/${id}`, getAuthHeaders());
+        await questionsAPI.deleteQuestion(id);
         if (selectedModule) {
           loadQuestions(selectedModule);
         }
@@ -196,9 +279,24 @@ const QuestionManagement: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
         Question Management
       </Typography>
+
+      {/* Backend Connection Status */}
+      {backendConnected === false && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Cannot connect to backend server. Please ensure the backend is running on http://localhost:8080
+          <br />
+          Run <code>start-backend.bat</code> in the backend folder to start the server.
+        </Alert>
+      )}
+
+      {backendConnected === true && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Connected to backend server
+        </Alert>
+      )}
 
       {/* Module Selection */}
       <Card sx={{ mb: 3 }}>
@@ -210,12 +308,16 @@ const QuestionManagement: React.FC = () => {
                 select
                 label="Select Module"
                 value={selectedModule || ''}
-                onChange={(e) => setSelectedModule(Number(e.target.value))}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  console.log('Module selected:', value);
+                  setSelectedModule(value);
+                }}
               >
                 <MenuItem value="">Select a module...</MenuItem>
                 {modules.map((module) => (
                   <MenuItem key={module.id} value={module.id}>
-                    {module.title} - {module.course?.title}
+                    {module.title} {module.course?.title ? `(${module.course.title})` : ''}
                   </MenuItem>
                 ))}
               </TextField>

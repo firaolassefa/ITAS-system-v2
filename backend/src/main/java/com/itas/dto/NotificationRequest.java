@@ -24,6 +24,10 @@ public class NotificationRequest {
     @NotNull(message = "Target audience is required")
     private String targetAudience;
     
+    private String role; // Target role for role-based notifications
+    
+    private String link; // Link for notification action
+    
     private LocalDateTime scheduledFor;
 
     // Getters and Setters
@@ -37,6 +41,10 @@ public class NotificationRequest {
     public void setPriority(String priority) { this.priority = priority; }
     public String getTargetAudience() { return targetAudience; }
     public void setTargetAudience(String targetAudience) { this.targetAudience = targetAudience; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public String getLink() { return link; }
+    public void setLink(String link) { this.link = link; }
     public LocalDateTime getScheduledFor() { return scheduledFor; }
     public void setScheduledFor(LocalDateTime scheduledFor) { this.scheduledFor = scheduledFor; }
 }

@@ -84,6 +84,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: getDashboardPath() },
     { text: 'Course Management', icon: <CourseIcon />, path: '/admin/course-management', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Module Content', icon: <CloudUploadIcon />, path: '/admin/module-content', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Upload Resource', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Question Management', icon: <QuizIcon />, path: '/admin/question-management', roles: ['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Webinar Management', icon: <UploadIcon />, path: '/admin/webinar-management', roles: ['TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
@@ -95,7 +96,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
   const drawer = (
     <Box
       sx={{
-        height: '100%',
+        height: '100vh',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: 'linear-gradient(180deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
         backgroundSize: '100% 200%',
         animation: 'gradientShift 8s ease infinite',
@@ -157,7 +161,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
         />
       </Toolbar>
       <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
-      <List sx={{ px: 2, py: 2 }}>
+      <List sx={{ px: 2, py: 2, flex: 1, overflowY: 'auto' }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
             <ListItemButton
@@ -275,7 +279,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <NotificationBell userRole={user?.userType} />
+            <NotificationBell userRole={user?.userType} userId={user?.id} />
             
             <IconButton 
               color="inherit" 
@@ -422,6 +426,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
               width: drawerWidth,
+              height: '100vh',
               borderRight: '1px solid rgba(245, 158, 11, 0.1)',
             },
           }}
@@ -435,6 +440,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
               width: drawerWidth,
+              height: '100vh',
               borderRight: '1px solid rgba(245, 158, 11, 0.1)',
             },
           }}
@@ -451,6 +457,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           mt: 8,
+          minHeight: '100vh',
+          backgroundColor: '#f5f5f5',
         }}
       >
         <Outlet />

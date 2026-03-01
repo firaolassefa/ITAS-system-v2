@@ -29,34 +29,65 @@ public class NotificationController {
         }
     }
     
+    // Get notification by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getNotificationById(@PathVariable Long id) {
+        try {
+            Notification notification = notificationService.getNotificationById(id);
+            return ResponseEntity.ok(new ApiResponse<>("Notification retrieved successfully", notification));
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(404).body(new ApiResponse<>("Notification not found with id: " + id, null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error retrieving notification: " + e.getMessage(), null));
+        }
+    }
+    
     // Get unread notifications
     @GetMapping("/unread")
-    public ResponseEntity<?> getUnreadNotifications(@RequestParam(required = false) String role) {
+    public ResponseEntity<?> getUnreadNotifications(
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long userId) {
         try {
             List<Notification> notifications;
-            if (role != null && !role.isEmpty()) {
+            if (userId != null) {
+                // Get notifications for specific user
+                notifications = notificationService.getUnreadNotifications(userId);
+            } else if (role != null && !role.isEmpty()) {
+                // Get notifications by role
                 notifications = notificationService.getUnreadNotificationsByRole(role);
             } else {
+                // Get all unread notifications
                 notifications = notificationService.getUnreadNotifications();
             }
             return ResponseEntity.ok(new ApiResponse<>("Unread notifications retrieved successfully", notifications));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
         }
     }
     
     // Get unread count
     @GetMapping("/count")
-    public ResponseEntity<?> getUnreadCount(@RequestParam(required = false) String role) {
+    public ResponseEntity<?> getUnreadCount(
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long userId) {
         try {
             Long count;
-            if (role != null && !role.isEmpty()) {
+            if (userId != null) {
+                // Get count for specific user
+                count = notificationService.getUnreadCount(userId);
+            } else if (role != null && !role.isEmpty()) {
+                // Get count by role
                 count = notificationService.getUnreadCountByRole(role);
             } else {
+                // Get all unread count
                 count = notificationService.getUnreadCount();
             }
             return ResponseEntity.ok(new ApiResponse<>("Unread count retrieved successfully", count));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
         }
     }
@@ -80,16 +111,19 @@ public class NotificationController {
             Notification notification = new Notification();
             notification.setTitle(request.getTitle());
             notification.setMessage(request.getMessage());
+            notification.setLink(request.getLink() != null ? request.getLink() : "/taxpayer/dashboard");
             notification.setNotificationType(request.getNotificationType());
             notification.setPriority(request.getPriority());
             notification.setTargetAudience(request.getTargetAudience());
+            notification.setRole(request.getRole());
             notification.setScheduledFor(request.getScheduledFor());
             
             // Use a default sender ID (system admin) - in real app, get from security context
-            notificationService.sendNotification(notification, 1L);
-            return ResponseEntity.ok(new ApiResponse<>("Notification sent successfully", notification));
+            Notification sent = notificationService.sendNotification(notification, 1L);
+            return ResponseEntity.ok(new ApiResponse<>("Notification sent successfully", sent));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ApiResponse<>("Failed to send notification: " + e.getMessage(), null));
         }
     }
     

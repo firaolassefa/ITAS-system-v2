@@ -82,11 +82,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
-  const quickLogin = (user: string, pass: string) => {
-    setUsername(user);
-    setPassword(pass);
-  };
-
   const features = [
     { icon: <Security />, title: 'Secure', desc: 'Bank-level encryption' },
     { icon: <Speed />, title: 'Fast', desc: 'Lightning quick access' },
@@ -485,51 +480,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                   </Button>
                 </form>
-
-                <Divider sx={{ my: 3, borderColor: 'rgba(0, 0, 0, 0.1)' }}>
-                  <Chip 
-                    label="Quick Login" 
-                    size="small" 
-                    sx={{ 
-                      background: '#f5f5f5',
-                      color: '#666',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                </Divider>
-
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {[
-                    { label: 'Taxpayer', user: 'taxpayer', pass: 'Taxpayer@123', color: 'primary' },
-                    { label: 'MOR Staff', user: 'morstaff', pass: 'Staff@123', color: 'info' },
-                    { label: 'Content Admin', user: 'contentadmin', pass: 'Content@123', color: 'success' },
-                    { label: 'Training Admin', user: 'trainingadmin', pass: 'Training@123', color: 'warning' },
-                    { label: 'Comm Officer', user: 'commoffice', pass: 'Notification@123', color: 'error' },
-                    { label: 'Manager', user: 'manager', pass: 'Manager@123', color: 'secondary' },
-                    { label: 'System Admin', user: 'systemadmin', pass: 'Admin@123', color: 'primary' },
-                    { label: 'Auditor', user: 'auditor', pass: 'Auditor@123', color: 'info' },
-                  ].map((item, index) => (
-                    <Chip
-                      key={index}
-                      label={item.label}
-                      onClick={() => quickLogin(item.user, item.pass)}
-                      clickable
-                      color={item.color as any}
-                      variant="outlined"
-                      sx={{ 
-                        borderRadius: 2,
-                        borderWidth: 2,
-                        fontWeight: 600,
-                        background: '#fff',
-                        '&:hover': { 
-                          transform: 'scale(1.05)',
-                          boxShadow: 4,
-                        },
-                        transition: 'all 0.2s',
-                      }}
-                    />
-                  ))}
-                </Box>
               </Paper>
             </Slide>
           </Grid>

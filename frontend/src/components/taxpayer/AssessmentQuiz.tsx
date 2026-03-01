@@ -25,7 +25,7 @@ interface Question {
 interface AssessmentQuizProps {
   questions: Question[];
   timeLimit?: number; // in minutes
-  onComplete: (score: number) => void;
+  onComplete: (score: number, passed: boolean) => void;
 }
 
 const AssessmentQuiz: React.FC<AssessmentQuizProps> = ({
@@ -81,7 +81,8 @@ const AssessmentQuiz: React.FC<AssessmentQuizProps> = ({
     
     setTimeout(() => {
       setShowResults(true);
-      onComplete(percentage);
+      const passed = percentage >= 70;
+      onComplete(percentage, passed);
     }, 1000);
   };
 

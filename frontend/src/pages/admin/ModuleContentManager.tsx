@@ -1,381 +1,276 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Box, Dialog, DialogTitle, DialogContent, DialogActions, Button,
-  TextField, Grid, Tabs, Tab, Typography, Alert, LinearProgress,
-  FormControl, FormLabel, RadioGroup, FormControlLabel, Radio,
-  IconButton, Chip,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  TextField,
+  Button,
+  Alert,
+  CircularProgress,
+  MenuItem,
+  Divider,
+  Chip,
 } from '@mui/material';
-import { CloudUpload, Link as LinkIcon, VideoLibrary, Description, Close } from '@mui/icons-material';
-import axios from 'axios';
+import { Save, VideoLibrary, PictureAsPdf } from '@mui/icons-material';
+import { modulesAPI } from '../../api/modules';
+import { coursesAPI } from '../../api/courses';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const ModuleContentManager: React.FC = () => {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [modules, setModules] = useState<any[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<number | ''>('');
+  const [selectedModule, setSelectedModule] = useState<number | ''>('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [contentUrl, setContentUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCourse) {
+      loadModules(selectedCourse as number);
     }
-  };
-};
+  }, [selectedCourse]);
 
-interface ModuleContentManagerProps {
-  open: boolean;
-  onClose: () => void;
-  moduleId: number;
-  moduleName: string;
-  onSuccess: () => void;
-}
+  useEffect(() => {
+    if (selectedModule) {
+      loadModuleDetails(selectedModule as number);
+    }
+  }, [selectedModule]);
 
-const ModuleContentManager: React.FC<ModuleContentManagerProps> = ({
-  open,
-  onClose,
-  moduleId,
-  moduleName,
-  onSuccess,
-}) => {
-  const [tabValue, setTabValue] = useState(0);
-  const [contentType, setContentType] = useState<'document' | 'video'>('document');
-  const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('file');
-  
-  // File upload state
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  
-  // URL input state
-  const [url, setUrl] = useState('');
-  const [urlType, setUrlType] = useState<'document' | 'video'>('document');
-  
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setFile(event.target.files[0]);
-      setError('');
+  const loadCourses = async () => {
+    try {
+      const response = await coursesAPI.getAllCourses();
+      setCourses(response.data || []);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
     }
   };
 
-  const handleFileUpload = async () => {
-    if (!file) {
-      setError('Please select a file');
+  const loadModules = async (courseId: number) => {
+    try {
+      const response = await modulesAPI.getModulesByCourse(courseId);
+      const modulesData = Array.isArray(response) ? response : [];
+      setModules(modulesData);
+      setSelectedModule('');
+      setVideoUrl('');
+      setContentUrl('');
+    } catch (error) {
+      console.error('Failed to load modules:', error);
+    }
+  };
+
+  const loadModuleDetails = async (moduleId: number) => {
+    try {
+      const response = await modulesAPI.getModuleById(moduleId);
+      const moduleData = response.data || response;
+      setVideoUrl(moduleData.videoUrl || '');
+      setContentUrl(moduleData.contentUrl || '');
+    } catch (error) {
+      console.error('Failed to load module details:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedModule) {
+      setMessage({ type: 'error', text: 'Please select a module' });
       return;
     }
 
-    setUploading(true);
-    setError('');
-    setSuccess(false);
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('contentType', contentType);
+    setLoading(true);
+    setMessage(null);
 
     try {
-      await axios.post(
-        `${API_BASE_URL}/modules/${moduleId}/upload-content`,
-        formData,
-        {
-          ...getAuthHeaders(),
-          headers: {
-            ...getAuthHeaders().headers,
-            'Content-Type': 'multipart/form-data',
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = progressEvent.total
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
-            setUploadProgress(progress);
-          },
-        }
-      );
+      await modulesAPI.updateModule(selectedModule as number, {
+        videoUrl: videoUrl || null,
+        contentUrl: contentUrl || null,
+      });
 
-      setSuccess(true);
-      setFile(null);
-      setUploadProgress(0);
-      onSuccess();
+      setMessage({ type: 'success', text: 'Module content updated successfully!' });
       
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to upload file');
+      // Reload module details
+      await loadModuleDetails(selectedModule as number);
+    } catch (error: any) {
+      console.error('Failed to update module:', error);
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to update module content' 
+      });
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
-  const handleUrlSubmit = async () => {
-    if (!url.trim()) {
-      setError('Please enter a URL');
-      return;
-    }
-
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch {
-      setError('Please enter a valid URL');
-      return;
-    }
-
-    setUploading(true);
-    setError('');
-    setSuccess(false);
-
-    try {
-      await axios.post(
-        `${API_BASE_URL}/modules/${moduleId}/set-url`,
-        null,
-        {
-          ...getAuthHeaders(),
-          params: {
-            url: url,
-            urlType: urlType,
-          },
-        }
-      );
-
-      setSuccess(true);
-      setUrl('');
-      onSuccess();
-      
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to set URL');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleClose = () => {
-    setFile(null);
-    setUrl('');
-    setError('');
-    setSuccess(false);
-    setUploadProgress(0);
-    onClose();
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
+  const selectedModuleData = modules.find(m => m.id === selectedModule);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Add Content to Module</Typography>
-          <IconButton onClick={handleClose}>
-            <Close />
-          </IconButton>
-        </Box>
-        <Typography variant="body2" color="text.secondary">
-          {moduleName}
-        </Typography>
-      </DialogTitle>
-      
-      <DialogContent>
-        <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3 }}>
-          <Tab label="Upload File" icon={<CloudUpload />} iconPosition="start" />
-          <Tab label="Add URL" icon={<LinkIcon />} iconPosition="start" />
-        </Tabs>
+    <Box>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
+        Module Content Manager
+      </Typography>
 
-        {/* File Upload Tab */}
-        {tabValue === 0 && (
-          <Box>
-            <FormControl component="fieldset" sx={{ mb: 3 }}>
-              <FormLabel>Content Type</FormLabel>
-              <RadioGroup
-                row
-                value={contentType}
-                onChange={(e) => setContentType(e.target.value as 'document' | 'video')}
+      <Grid container spacing={3}>
+        {/* Selection Panel */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Select Module
+              </Typography>
+
+              <TextField
+                fullWidth
+                select
+                label="Course"
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(Number(e.target.value) || '')}
+                sx={{ mb: 2 }}
               >
-                <FormControlLabel
-                  value="document"
-                  control={<Radio />}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Description /> Document/PDF
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  value="video"
-                  control={<Radio />}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <VideoLibrary /> Video
-                    </Box>
-                  }
-                />
-              </RadioGroup>
-            </FormControl>
+                <MenuItem value="">Select a course...</MenuItem>
+                {courses.map((course) => (
+                  <MenuItem key={course.id} value={course.id}>
+                    {course.title}
+                  </MenuItem>
+                ))}
+              </TextField>
 
-            <Box
-              sx={{
-                border: '2px dashed',
-                borderColor: file ? 'primary.main' : 'grey.300',
-                borderRadius: 2,
-                p: 4,
-                textAlign: 'center',
-                bgcolor: file ? 'primary.50' : 'grey.50',
-                cursor: 'pointer',
-                mb: 2,
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  bgcolor: 'primary.50',
-                },
-              }}
-              onClick={() => !file && document.getElementById('module-file-input')?.click()}
-            >
-              <input
-                id="module-file-input"
-                type="file"
-                hidden
-                onChange={handleFileChange}
-                accept={contentType === 'video' ? 'video/*' : '.pdf,.doc,.docx,.ppt,.pptx'}
-              />
-              
-              {file ? (
-                <Box>
-                  {contentType === 'video' ? <VideoLibrary sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} /> : <Description sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />}
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    {file.name}
-                  </Typography>
-                  <Chip label={formatFileSize(file.size)} color="primary" sx={{ mb: 2 }} />
-                  <Box>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFile(null);
-                      }}
-                    >
-                      Remove File
-                    </Button>
-                  </Box>
-                </Box>
-              ) : (
-                <Box>
-                  <CloudUpload sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    Click to upload or drag and drop
-                  </Typography>
+              <TextField
+                fullWidth
+                select
+                label="Module"
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(Number(e.target.value) || '')}
+                disabled={!selectedCourse}
+              >
+                <MenuItem value="">Select a module...</MenuItem>
+                {modules.map((module) => (
+                  <MenuItem key={module.id} value={module.id}>
+                    {module.title}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              {selectedModuleData && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    {contentType === 'video' ? 'MP4, AVI, MOV (Max 50MB)' : 'PDF, DOC, PPT (Max 50MB)'}
+                    Selected Module:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {selectedModuleData.title}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Order: {selectedModuleData.order + 1}
                   </Typography>
                 </Box>
               )}
-            </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-            {uploading && (
-              <Box sx={{ width: '100%', mb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2">Uploading...</Typography>
-                  <Typography variant="body2">{uploadProgress}%</Typography>
+        {/* Content Panel */}
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Module Content URLs
+              </Typography>
+
+              {message && (
+                <Alert severity={message.type} sx={{ mb: 3 }} onClose={() => setMessage(null)}>
+                  {message.text}
+                </Alert>
+              )}
+
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <VideoLibrary sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    Video URL
+                  </Typography>
                 </Box>
-                <LinearProgress variant="determinate" value={uploadProgress} />
+                <TextField
+                  fullWidth
+                  placeholder="e.g., /uploads/modules/video.mp4 or https://youtube.com/..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  disabled={!selectedModule}
+                />
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                    Quick fill examples (click to use):
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                    <Chip 
+                      label="/uploads/modules/arduino project.mp4" 
+                      size="small" 
+                      onClick={() => setVideoUrl('/uploads/modules/arduino%20project.mp4')}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  </Box>
+                  {videoUrl && (
+                    <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 1 }}>
+                      Full URL: http://localhost:8080/api{videoUrl}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            )}
-          </Box>
-        )}
 
-        {/* URL Input Tab */}
-        {tabValue === 1 && (
-          <Box>
-            <FormControl component="fieldset" sx={{ mb: 3 }}>
-              <FormLabel>Content Type</FormLabel>
-              <RadioGroup
-                row
-                value={urlType}
-                onChange={(e) => setUrlType(e.target.value as 'document' | 'video')}
+              <Divider sx={{ my: 3 }} />
+
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <PictureAsPdf sx={{ mr: 1, color: 'error.main' }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    PDF/Content URL
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  placeholder="e.g., /uploads/modules/guide.pdf"
+                  value={contentUrl}
+                  onChange={(e) => setContentUrl(e.target.value)}
+                  disabled={!selectedModule}
+                />
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                    Quick fill examples (click to use):
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                    <Chip 
+                      label="/uploads/modules/Lab Manual Performance Testing with K6.pdf" 
+                      size="small" 
+                      onClick={() => setContentUrl('/uploads/modules/Lab%20Manual%20Performance%20Testing%20with%20K6.pdf')}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  </Box>
+                  {contentUrl && (
+                    <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 1 }}>
+                      Full URL: http://localhost:8080/api{contentUrl}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+                onClick={handleSave}
+                disabled={!selectedModule || loading}
+                fullWidth
+                size="large"
               >
-                <FormControlLabel
-                  value="document"
-                  control={<Radio />}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Description /> Document URL
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  value="video"
-                  control={<Radio />}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <VideoLibrary /> Video URL
-                    </Box>
-                  }
-                />
-              </RadioGroup>
-            </FormControl>
-
-            <TextField
-              fullWidth
-              label="Content URL"
-              placeholder="https://example.com/video.mp4 or https://youtube.com/watch?v=..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              helperText="Enter a direct link to a video or document, or a YouTube/Vimeo URL"
-              sx={{ mb: 2 }}
-            />
-
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                Supported URLs:
-              </Typography>
-              <Typography variant="body2" component="div">
-                • YouTube: https://youtube.com/watch?v=...
-              </Typography>
-              <Typography variant="body2" component="div">
-                • Vimeo: https://vimeo.com/...
-              </Typography>
-              <Typography variant="body2" component="div">
-                • Direct links: https://example.com/file.pdf
-              </Typography>
-              <Typography variant="body2" component="div">
-                • Google Drive: https://drive.google.com/...
-              </Typography>
-            </Alert>
-          </Box>
-        )}
-
-        {success && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Content added successfully!
-          </Alert>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ p: 3 }}>
-        <Button onClick={handleClose} disabled={uploading}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={tabValue === 0 ? handleFileUpload : handleUrlSubmit}
-          disabled={uploading || (tabValue === 0 ? !file : !url.trim())}
-          startIcon={tabValue === 0 ? <CloudUpload /> : <LinkIcon />}
-        >
-          {uploading ? 'Processing...' : tabValue === 0 ? 'Upload File' : 'Add URL'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+                {loading ? 'Saving...' : 'Save Module Content'}
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 

@@ -50,7 +50,7 @@ public class QuestionController {
                 ((Number) request.get("order")).intValue() : 0;
             
             Module module = moduleRepository.findById(moduleId)
-                .orElseThrow(() -> new RuntimeException("Module not found"));
+                .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
             
             Question question = new Question();
             question.setModule(module);
@@ -60,28 +60,28 @@ public class QuestionController {
             question.setOrder(order);
             question.setCreatedAt(LocalDateTime.now());
             
-            Question savedQuestion = questionRepository.save(question);
-            
             // Add answers if provided
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> answers = (List<Map<String, Object>>) request.get("answers");
             if (answers != null && !answers.isEmpty()) {
                 for (Map<String, Object> answerData : answers) {
                     Answer answer = new Answer();
-                    answer.setQuestion(savedQuestion);
+                    answer.setQuestion(question);
                     answer.setAnswerText((String) answerData.get("answerText"));
                     answer.setIsCorrect((Boolean) answerData.get("isCorrect"));
                     answer.setOrder(answerData.get("order") != null ? 
                         ((Number) answerData.get("order")).intValue() : 0);
                     
-                    savedQuestion.getAnswers().add(answer);
+                    question.getAnswers().add(answer);
                 }
-                savedQuestion = questionRepository.save(savedQuestion);
             }
+            
+            Question savedQuestion = questionRepository.save(question);
             
             return ResponseEntity.ok(new ApiResponse<>("Question created successfully", savedQuestion));
             
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to create question: " + e.getMessage(), null));
         }
@@ -92,7 +92,7 @@ public class QuestionController {
     public ResponseEntity<?> updateQuestion(@PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found"));
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
             
             if (request.containsKey("questionText")) {
                 question.setQuestionText((String) request.get("questionText"));
@@ -107,10 +107,32 @@ public class QuestionController {
                 question.setOrder(((Number) request.get("order")).intValue());
             }
             
+            // Update answers if provided
+            if (request.containsKey("answers")) {
+                // Clear existing answers
+                question.getAnswers().clear();
+                
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> answers = (List<Map<String, Object>>) request.get("answers");
+                if (answers != null && !answers.isEmpty()) {
+                    for (Map<String, Object> answerData : answers) {
+                        Answer answer = new Answer();
+                        answer.setQuestion(question);
+                        answer.setAnswerText((String) answerData.get("answerText"));
+                        answer.setIsCorrect((Boolean) answerData.get("isCorrect"));
+                        answer.setOrder(answerData.get("order") != null ? 
+                            ((Number) answerData.get("order")).intValue() : 0);
+                        
+                        question.getAnswers().add(answer);
+                    }
+                }
+            }
+            
             Question updated = questionRepository.save(question);
             return ResponseEntity.ok(new ApiResponse<>("Question updated successfully", updated));
             
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to update question: " + e.getMessage(), null));
         }

@@ -82,11 +82,6 @@ const FuturisticLogin: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
-  const quickLogin = (user: string, pass: string) => {
-    setUsername(user);
-    setPassword(pass);
-  };
-
   const features = [
     { icon: <Security />, title: 'Secure', desc: 'Bank-level encryption' },
     { icon: <Speed />, title: 'Fast', desc: 'Lightning quick access' },
@@ -351,46 +346,6 @@ const FuturisticLogin: React.FC<LoginProps> = ({ onLogin }) => {
                     {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                   </Button>
                 </form>
-
-                <Divider sx={{ my: 3, borderColor: alpha('#fff', 0.1) }}>
-                  <Chip 
-                    label="Quick Login" 
-                    size="small" 
-                    sx={{ 
-                      background: alpha('#fff', 0.05),
-                      color: 'text.secondary',
-                      border: `1px solid ${alpha('#fff', 0.1)}`,
-                    }}
-                  />
-                </Divider>
-
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {[
-                    { label: 'Taxpayer', user: 'taxpayer', pass: 'Taxpayer@123', color: 'primary' },
-                    { label: 'Admin', user: 'systemadmin', pass: 'Admin@123', color: 'secondary' },
-                    { label: 'Manager', user: 'manager', pass: 'Manager@123', color: 'success' },
-                    { label: 'Content', user: 'contentadmin', pass: 'Content@123', color: 'info' },
-                  ].map((item, index) => (
-                    <Chip
-                      key={index}
-                      label={item.label}
-                      onClick={() => quickLogin(item.user, item.pass)}
-                      clickable
-                      color={item.color as any}
-                      variant="outlined"
-                      sx={{ 
-                        borderRadius: 2,
-                        borderWidth: 2,
-                        fontWeight: 600,
-                        '&:hover': { 
-                          transform: 'scale(1.05)',
-                          boxShadow: 4,
-                        },
-                        transition: 'all 0.2s',
-                      }}
-                    />
-                  ))}
-                </Box>
               </Paper>
             </Slide>
           </Grid>

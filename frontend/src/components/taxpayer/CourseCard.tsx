@@ -10,6 +10,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 import { Schedule, Book, ArrowForward } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 interface CourseCardProps {
   course: any;
@@ -24,6 +25,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   isEnrolled = false,
   progress = 0,
 }) => {
+  const navigate = useNavigate();
   return (
     <Card 
       elevation={0}
@@ -155,6 +157,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
             fullWidth
             variant="contained"
             endIcon={<ArrowForward />}
+            onClick={() => navigate(`/taxpayer/course/${course.id}`)}
             sx={{
               py: 1.5,
               borderRadius: '12px',

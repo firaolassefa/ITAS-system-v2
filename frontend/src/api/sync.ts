@@ -1,14 +1,4 @@
-import axios from 'axios';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { apiClient } from '../utils/axiosConfig';
 
 export interface SyncRecord {
   id: number;
@@ -24,16 +14,16 @@ export interface SyncRecord {
 
 export const syncAPI = {
   getPendingSyncs: async (): Promise<SyncRecord[]> => {
-    const response = await axios.get('/sync/pending', getAuthHeaders());
+    const response = await apiClient.get('/sync/pending');
     return response.data.data;
   },
 
   syncTrainingRecord: async (recordId: number): Promise<void> => {
-    await axios.post(`/sync/${recordId}/execute`, {}, getAuthHeaders());
+    await apiClient.post(`/sync/${recordId}/execute`, {});
   },
 
   retryFailedSyncs: async (): Promise<void> => {
-    await axios.post('/sync/retry-failed', {}, getAuthHeaders());
+    await apiClient.post('/sync/retry-failed', {});
   },
 
   getSyncStats: async (): Promise<{
@@ -42,11 +32,11 @@ export const syncAPI = {
     synced: number;
     failed: number;
   }> => {
-    const response = await axios.get('/sync/stats', getAuthHeaders());
+    const response = await apiClient.get('/sync/stats');
     return response.data.data;
   },
 
   forceSync: async (userId: number): Promise<void> => {
-    await axios.post(`/sync/force/${userId}`, {}, getAuthHeaders());
+    await apiClient.post(`/sync/force/${userId}`, {});
   },
 };

@@ -1,14 +1,4 @@
-import axios from 'axios';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { apiClient } from '../utils/axiosConfig';
 
 export interface ArchivedResource {
   id: number;
@@ -23,20 +13,20 @@ export interface ArchivedResource {
 
 export const archiveAPI = {
   getArchivedResources: async (): Promise<ArchivedResource[]> => {
-    const response = await axios.get('/archive/resources', getAuthHeaders());
+    const response = await apiClient.get('/archive/resources');
     return response.data.data;
   },
 
   archiveResource: async (resourceId: number, scheduleDeletion: string): Promise<void> => {
-    await axios.post(`/archive/resources/${resourceId}`, { scheduleDeletion }, getAuthHeaders());
+    await apiClient.post(`/archive/resources/${resourceId}`, { scheduleDeletion });
   },
 
   restoreResource: async (archiveId: number): Promise<void> => {
-    await axios.post(`/archive/restore/${archiveId}`, {}, getAuthHeaders());
+    await apiClient.post(`/archive/restore/${archiveId}`, {});
   },
 
   permanentDelete: async (archiveId: number): Promise<void> => {
-    await axios.delete(`/archive/${archiveId}/permanent`, getAuthHeaders());
+    await apiClient.delete(`/archive/${archiveId}/permanent`);
   },
 
   getArchiveStats: async (): Promise<{
@@ -44,7 +34,7 @@ export const archiveAPI = {
     scheduledForDeletion: number;
     storageSaved: string;
   }> => {
-    const response = await axios.get('/archive/stats', getAuthHeaders());
+    const response = await apiClient.get('/archive/stats');
     return response.data.data;
   },
 };

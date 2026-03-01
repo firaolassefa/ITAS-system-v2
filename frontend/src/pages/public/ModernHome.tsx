@@ -1,24 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, Fade, Grow, alpha, useScrollTrigger, Chip, Paper, IconButton, Tooltip, Avatar } from '@mui/material';
+import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, Fade, Grow, alpha, useScrollTrigger, Chip, Paper, IconButton, Tooltip, Avatar, CardActions } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
   School, MenuBook, VideoLibrary, PersonAdd, Login, TrendingUp, People,
   Security, Analytics, Notifications, ArrowForward, PlayArrow, CheckCircle,
   Brightness4, Brightness7, AutoAwesome, Rocket, EmojiEvents,
+  PictureAsPdf, Description, Download as DownloadIcon,
 } from '@mui/icons-material';
+import { resourcesAPI } from '../../api/resources';
 
 const ModernHome: React.FC = () => {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [resources, setResources] = useState<any[]>([]);
   const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 100 });
 
   useEffect(() => {
     setMounted(true);
     const timer = setTimeout(() => setStatsVisible(true), 800);
+    loadResources();
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-refresh resources every 30 seconds for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadResources();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadResources = async () => {
+    try {
+      const response = await resourcesAPI.getAllResources();
+      setResources((response.data || []).slice(0, 6));
+    } catch (error) {
+      console.error('Failed to load resources:', error);
+    }
+  };
+
+  const getResourceIcon = (type: string) => {
+    switch (type) {
+      case 'PDF':
+        return <PictureAsPdf sx={{ fontSize: 40, color: '#EF4444' }} />;
+      case 'VIDEO':
+        return <VideoLibrary sx={{ fontSize: 40, color: '#8B5CF6' }} />;
+      default:
+        return <Description sx={{ fontSize: 40, color: '#10B981' }} />;
+    }
+  };
+
+  const handleDownload = (resource: any) => {
+    if (resource.filePath) {
+      let fileUrl: string;
+      
+      // Check if it's an external URL (starts with http/https)
+      if (resource.filePath.startsWith('http')) {
+        fileUrl = resource.filePath;
+      } else {
+        // For local files, use the download endpoint
+        fileUrl = `http://localhost:8080/api/resources/${resource.id}/download`;
+      }
+      
+      window.open(fileUrl, '_blank');
+    }
+  };
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -217,6 +265,29 @@ const ModernHome: React.FC = () => {
             </Typography>
           </Box>
           
+          {/* Resources Button */}
+          <Button
+            variant="outlined"
+            startIcon={<MenuBook />}
+            onClick={() => navigate('/public/resources')}
+            sx={{ 
+              mr: 2,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              borderWidth: 2,
+              borderColor: darkMode ? alpha('#00E0FF', 0.5) : alpha('#667eea', 0.5),
+              color: textPrimary,
+              '&:hover': {
+                borderWidth: 2,
+                borderColor: darkMode ? '#00E0FF' : '#667eea',
+                background: darkMode ? alpha('#00E0FF', 0.1) : alpha('#667eea', 0.1),
+              },
+            }}
+          >
+            Resources
+          </Button>
+
           {/* Dark Mode Toggle */}
           <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
             <IconButton 
@@ -330,21 +401,7 @@ const ModernHome: React.FC = () => {
                 >
                   Master Tax Education
                 </Typography>
-                <Typography 
-                  variant="h2"
-                  sx={{
-                    fontSize: { xs: '2rem', md: '3rem' },
-                    fontWeight: 900,
-                    mb: 3,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Through Innovation
-                </Typography>
+            
                 <Typography 
                   variant="h6" 
                   sx={{ 
@@ -1034,6 +1091,212 @@ const ModernHome: React.FC = () => {
             </Button>
           </Box>
         </Box>
+      </Container>
+
+      {/* Resources Section */}
+      <Container maxWidth="lg" sx={{ py: 10, position: 'relative', zIndex: 1 }}>
+        <Fade in timeout={1200}>
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography 
+              variant="h3" 
+              gutterBottom 
+              fontWeight="bold"
+              sx={{ mb: 2, color: textPrimary }}
+            >
+              Resources for Use
+            </Typography>
+            <Typography variant="h6" sx={{ maxWidth: '700px', mx: 'auto', mb: 4, color: textSecondary }}>
+              Access our library of tax education materials including videos, guides, and documents - no login required
+            </Typography>
+          </Box>
+        </Fade>
+
+        {resources.length > 0 ? (
+          <>
+            <Grid container spacing={3}>
+              {resources.map((resource, index) => (
+                <Grid item xs={12} md={6} lg={4} key={resource.id}>
+                  <Grow in timeout={800 + index * 100}>
+                    <Card 
+                      sx={{ 
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 4,
+                        transition: 'all 0.3s',
+                        border: `2px solid ${borderColor}`,
+                        bgcolor: cardBg,
+                        backdropFilter: 'blur(20px)',
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: darkMode 
+                            ? `0 12px 40px ${alpha(accentColor, 0.3)}`
+                            : '0 12px 40px rgba(0,0,0,0.15)',
+                          borderColor: darkMode ? accentColor : '#667eea',
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          {getResourceIcon(resource.type)}
+                          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: textPrimary }}>
+                            {resource.title}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" paragraph sx={{ color: textSecondary }}>
+                          {resource.description}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          <Chip 
+                            label={resource.type} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: darkMode ? alpha(accentColor, 0.2) : alpha('#667eea', 0.1),
+                              color: darkMode ? accentColor : '#667eea',
+                              fontWeight: 600,
+                            }}
+                          />
+                          {resource.category && (
+                            <Chip 
+                              label={resource.category} 
+                              size="small" 
+                              variant="outlined"
+                              sx={{ 
+                                borderColor: darkMode ? alpha(accentColor, 0.3) : borderColor,
+                                color: textSecondary,
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </CardContent>
+                      <CardActions sx={{ p: 2, pt: 0 }}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<DownloadIcon />}
+                          onClick={() => handleDownload(resource)}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            background: darkMode 
+                              ? `linear-gradient(135deg, ${accentColor} 0%, #8B5CF6 100%)`
+                              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            '&:hover': {
+                              transform: 'scale(1.02)',
+                              boxShadow: darkMode 
+                                ? `0 8px 24px ${alpha(accentColor, 0.4)}`
+                                : '0 8px 24px rgba(102, 126, 234, 0.4)',
+                            },
+                          }}
+                        >
+                          {resource.type === 'VIDEO' ? 'Watch Video' : 'Download'}
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grow>
+                </Grid>
+              ))}
+            </Grid>
+            
+            <Box sx={{ textAlign: 'center', mt: 6 }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<MenuBook />}
+                onClick={() => navigate('/public/resources')}
+                sx={{ 
+                  px: 5, 
+                  py: 2,
+                  fontSize: '1.1rem',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  background: darkMode 
+                    ? `linear-gradient(135deg, ${accentColor} 0%, #8B5CF6 100%)`
+                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: darkMode 
+                    ? `0 8px 20px ${alpha(accentColor, 0.3)}`
+                    : '0 8px 20px rgba(102, 126, 234, 0.3)',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: darkMode 
+                      ? `0 12px 28px ${alpha(accentColor, 0.4)}`
+                      : '0 12px 28px rgba(102, 126, 234, 0.4)',
+                  },
+                  transition: 'all 0.3s',
+                }}
+              >
+                View All Resources
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Grid container spacing={3}>
+            {[
+              {
+                icon: <VideoLibrary sx={{ fontSize: 48, color: '#EF4444' }} />,
+                title: 'Video Tutorials',
+                description: 'Step-by-step video guides on tax compliance, filing procedures, and best practices',
+                color: '#EF4444',
+              },
+              {
+                icon: <MenuBook sx={{ fontSize: 48, color: '#8B5CF6' }} />,
+                title: 'PDF Guides',
+                description: 'Comprehensive handbooks, manuals, and reference materials for tax agents',
+                color: '#8B5CF6',
+              },
+              {
+                icon: <School sx={{ fontSize: 48, color: '#10B981' }} />,
+                title: 'Learning Materials',
+                description: 'Articles, presentations, and documents covering various tax topics',
+                color: '#10B981',
+              },
+            ].map((item, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <Grow in timeout={1000 + index * 200}>
+                  <Card 
+                    sx={{ 
+                      height: '100%',
+                      textAlign: 'center',
+                      borderRadius: 4,
+                      transition: 'all 0.3s',
+                      border: `2px solid ${borderColor}`,
+                      bgcolor: cardBg,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: `0 12px 40px ${item.color}40`,
+                        borderColor: item.color,
+                      },
+                    }}
+                    onClick={() => navigate('/public/resources')}
+                  >
+                    <CardContent sx={{ py: 5, px: 3 }}>
+                      <Box 
+                        sx={{ 
+                          mb: 3,
+                          display: 'inline-block',
+                          p: 2,
+                          borderRadius: '50%',
+                          bgcolor: `${item.color}15`,
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: textPrimary }}>
+                        {item.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: textSecondary }}>
+                        {item.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grow>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Container>
 
       {/* Footer */}

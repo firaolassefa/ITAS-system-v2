@@ -1,16 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8080/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { apiClient } from '../utils/axiosConfig';
 
 export const analyticsApi = {
   // Get dashboard analytics
@@ -19,7 +7,7 @@ export const analyticsApi = {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const response = await axios.get(`${API_BASE_URL}/analytics/dashboard?${params.toString()}`, getAuthHeaders());
+    const response = await apiClient.get(`/analytics/dashboard?${params.toString()}`);
     return response.data;
   },
 
@@ -27,14 +15,14 @@ export const analyticsApi = {
   getOverviewStats: async () => {
     try {
       // Try to get from analytics endpoint first
-      const response = await axios.get(`${API_BASE_URL}/analytics/dashboard`, getAuthHeaders());
+      const response = await apiClient.get('/analytics/dashboard');
       return response.data;
     } catch (error) {
       // Fallback: calculate from users and courses
       try {
         const [usersRes, coursesRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/users`, getAuthHeaders()),
-          axios.get(`${API_BASE_URL}/courses`, getAuthHeaders()),
+          apiClient.get('/users'),
+          apiClient.get('/courses'),
         ]);
         
         const users = usersRes.data.data || usersRes.data || [];
@@ -61,7 +49,7 @@ export const analyticsApi = {
   // Get top courses
   getTopCourses: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/courses`, getAuthHeaders());
+      const response = await apiClient.get('/courses');
       const courses = response.data.data || response.data || [];
       
       return courses.slice(0, 5).map((course: any) => ({
@@ -81,8 +69,7 @@ export const analyticsApi = {
 
   // Export analytics
   exportReport: async (format: string = 'pdf') => {
-    const response = await axios.get(`${API_BASE_URL}/analytics/export?format=${format}`, {
-      ...getAuthHeaders(),
+    const response = await apiClient.get(`/analytics/export?format=${format}`, {
       responseType: 'blob',
     });
     return response.data;

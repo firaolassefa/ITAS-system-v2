@@ -1,14 +1,4 @@
-import axios from 'axios';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { apiClient } from '../utils/axiosConfig';
 
 export interface HelpContent {
   id: number;
@@ -25,22 +15,22 @@ export interface HelpContent {
 
 export const helpAPI = {
   getHelpByField: async (fieldId: string): Promise<HelpContent> => {
-    const response = await axios.get(`/help/field/${fieldId}`, getAuthHeaders());
+    const response = await apiClient.get(`/help/field/${fieldId}`);
     return response.data.data;
   },
 
   searchHelp: async (query: string): Promise<HelpContent[]> => {
-    const response = await axios.get(`/help/search?q=${query}`, getAuthHeaders());
+    const response = await apiClient.get(`/help/search?q=${query}`);
     return response.data.data;
   },
 
   createHelp: async (data: Omit<HelpContent, 'id' | 'createdAt' | 'updatedAt'>): Promise<HelpContent> => {
-    const response = await axios.post('/help', data, getAuthHeaders());
+    const response = await apiClient.post('/help', data);
     return response.data.data;
   },
 
   updateHelp: async (id: number, data: Partial<HelpContent>): Promise<HelpContent> => {
-    const response = await axios.put(`/help/${id}`, data, getAuthHeaders());
+    const response = await apiClient.put(`/help/${id}`, data);
     return response.data.data;
   },
 };

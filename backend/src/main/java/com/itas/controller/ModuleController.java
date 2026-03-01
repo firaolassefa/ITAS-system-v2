@@ -30,6 +30,7 @@ public class ModuleController {
             List<Module> modules = moduleRepository.findAll();
             return ResponseEntity.ok(new ApiResponse<>("Success", modules));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to load modules: " + e.getMessage(), null));
         }

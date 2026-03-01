@@ -1,81 +1,51 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  if (!token) {
-    console.error('No token found in localStorage - redirecting to login');
-    window.location.href = '/login';
-    throw new Error('Authentication token not found. Redirecting to login...');
-  }
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
-
-// Add axios interceptor to handle 401 errors globally
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error('Authentication failed - token may be expired');
-      // Optionally redirect to login
-      // window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+import { apiClient } from '../utils/axiosConfig';
 
 export const dashboardAPI = {
   // Get taxpayer dashboard
   getTaxpayerDashboard: async (userId: number) => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/taxpayer/${userId}`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/taxpayer/${userId}`);
     return response.data;
   },
 
   // Get staff dashboard
   getStaffDashboard: async (userId: number) => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/staff/${userId}`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/staff/${userId}`);
     return response.data;
   },
 
   // Get content admin dashboard
   getContentAdminDashboard: async () => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/content-admin`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/content-admin`);
     return response.data;
   },
 
   // Get training admin dashboard
   getTrainingAdminDashboard: async () => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/training-admin`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/training-admin`);
     return response.data;
   },
 
   // Get communication officer dashboard
   getCommOfficerDashboard: async () => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/comm-officer`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/comm-officer`);
     return response.data;
   },
 
   // Get manager dashboard
   getManagerDashboard: async () => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/manager`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/manager`);
     return response.data;
   },
 
   // Get system admin dashboard
   getSystemAdminDashboard: async () => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/system-admin`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/system-admin`);
     return response.data;
   },
 
   // Get auditor dashboard
   getAuditorDashboard: async () => {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/auditor`, getAuthHeaders());
+    const response = await apiClient.get(`/dashboard/auditor`);
     return response.data;
   },
 };

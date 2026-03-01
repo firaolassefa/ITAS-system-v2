@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, Fade, Grow, Zoom, useScrollTrigger, alpha, useTheme, Chip, Avatar } from '@mui/material';
+import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, Fade, Grow, Zoom, useScrollTrigger, alpha, useTheme, Chip, Avatar, CardActions } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
   School, 
@@ -19,20 +19,55 @@ import {
   Assessment,
   ArrowForward,
   PlayArrow,
+  PictureAsPdf,
+  Description,
 } from '@mui/icons-material';
+import { resourcesAPI } from '../../api/resources';
 
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [statsVisible, setStatsVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [resources, setResources] = useState<any[]>([]);
   const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 100 });
 
   useEffect(() => {
     setMounted(true);
     const timer = setTimeout(() => setStatsVisible(true), 500);
+    loadResources();
     return () => clearTimeout(timer);
   }, []);
+
+  const loadResources = async () => {
+    try {
+      const response = await resourcesAPI.getAllResources();
+      // Get first 6 resources for preview
+      setResources((response.data || []).slice(0, 6));
+    } catch (error) {
+      console.error('Failed to load resources:', error);
+    }
+  };
+
+  // Auto-refresh resources every 30 seconds for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadResources();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getResourceIcon = (type: string) => {
+    switch (type) {
+      case 'PDF':
+        return <PictureAsPdf sx={{ fontSize: 40, color: '#EF4444' }} />;
+      case 'VIDEO':
+        return <VideoLibrary sx={{ fontSize: 40, color: '#8B5CF6' }} />;
+      default:
+        return <Description sx={{ fontSize: 40, color: '#10B981' }} />;
+    }
+  };
 
   const features = [
     {
@@ -87,52 +122,13 @@ const PublicHome: React.FC = () => {
   ];
 
   const roles = [
-    { name: 'Taxpayer', icon: '👤', desc: 'Access courses, earn certificates' },
+    { name: 'Tax Agent', icon: '👤', desc: 'Access courses, earn certificates' },
     { name: 'Content Admin', icon: '📚', desc: 'Manage educational resources' },
     { name: 'Training Admin', icon: '🎓', desc: 'Schedule webinars & courses' },
     { name: 'Comm Officer', icon: '📢', desc: 'Send targeted notifications' },
     { name: 'Manager', icon: '📊', desc: 'View analytics & reports' },
     { name: 'System Admin', icon: '⚙️', desc: 'Full system control' },
   ];
-
-  return (
-    <Box sx={{ bgcolor: '#0B1220', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Animated Background */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `
-            radial-gradient(circle at 20% 50%, ${alpha('#2563EB', 0.15)} 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, ${alpha('#8B5CF6', 0.15)} 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, ${alpha('#22D3EE', 0.1)} 0%, transparent 50%)
-          `,
-          animation: 'backgroundPulse 15s ease-in-out infinite',
-          zIndex: 0,
-        }}
-      />
-
-      {/* Floating Particles */}
-      {[...Array(30)].map((_, i) => (
-        <Box
-          key={i}
-          sx={{
-            position: 'fixed',
-            width: 2,
-            height: 2,
-            background: alpha('#2563EB', 0.5),
-            borderRadius: '50%',
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${15 + Math.random() * 10}s infinite`,
-            animationDelay: `${Math.random() * 5}s`,
-            zIndex: 0,
-          }}
-        />
-      ))}
 
   return (
     <Box sx={{ bgcolor: '#f5f7fa' }}>
@@ -445,6 +441,178 @@ const PublicHome: React.FC = () => {
         </Container>
       </Box>
 
+      {/* Public Resources Section */}
+      <Container maxWidth="lg" sx={{ py: 10 }}>
+        <Fade in timeout={1200}>
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography 
+              variant="h3" 
+              gutterBottom 
+              fontWeight="bold"
+              sx={{ mb: 2 }}
+            >
+              Resources for Use
+            </Typography>
+            <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto', mb: 4 }}>
+              Access our library of tax education materials including videos, guides, and documents - no login required
+            </Typography>
+          </Box>
+        </Fade>
+
+        {resources.length > 0 ? (
+          <>
+            <Grid container spacing={3}>
+              {resources.map((resource, index) => (
+                <Grid item xs={12} md={6} lg={4} key={resource.id}>
+                  <Grow in timeout={800 + index * 100}>
+                    <Card 
+                      sx={{ 
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 4,
+                        transition: 'all 0.3s',
+                        border: '2px solid transparent',
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+                          borderColor: 'primary.main',
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          {getResourceIcon(resource.type)}
+                          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600 }}>
+                            {resource.title}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          {resource.description}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          <Chip label={resource.type} size="small" color="primary" />
+                          {resource.category && (
+                            <Chip label={resource.category} size="small" variant="outlined" />
+                          )}
+                        </Box>
+                      </CardContent>
+                      <CardActions sx={{ p: 2, pt: 0 }}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<Login />}
+                          onClick={() => navigate('/login')}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            '&:hover': {
+                              transform: 'scale(1.02)',
+                            },
+                          }}
+                        >
+                          Sign in to Access
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grow>
+                </Grid>
+              ))}
+            </Grid>
+            
+            <Box sx={{ textAlign: 'center', mt: 6 }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<MenuBook />}
+                onClick={() => navigate('/public/resources')}
+                sx={{ 
+                  px: 5, 
+                  py: 2,
+                  fontSize: '1.1rem',
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 12px 28px rgba(0,0,0,0.25)',
+                  },
+                  transition: 'all 0.3s',
+                }}
+              >
+                View All Resources
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Grid container spacing={3}>
+            {[
+              {
+                icon: <VideoLibrary sx={{ fontSize: 48, color: '#EF4444' }} />,
+                title: 'Video Tutorials',
+                description: 'Step-by-step video guides on tax compliance, filing procedures, and best practices',
+                color: '#EF4444',
+              },
+              {
+                icon: <MenuBook sx={{ fontSize: 48, color: '#8B5CF6' }} />,
+                title: 'PDF Guides',
+                description: 'Comprehensive handbooks, manuals, and reference materials for tax agents',
+                color: '#8B5CF6',
+              },
+              {
+                icon: <School sx={{ fontSize: 48, color: '#10B981' }} />,
+                title: 'Learning Materials',
+                description: 'Articles, presentations, and documents covering various tax topics',
+                color: '#10B981',
+              },
+            ].map((item, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <Grow in timeout={1000 + index * 200}>
+                  <Card 
+                    sx={{ 
+                      height: '100%',
+                      textAlign: 'center',
+                      borderRadius: 4,
+                      transition: 'all 0.3s',
+                      border: '2px solid transparent',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: `0 12px 40px ${item.color}40`,
+                        borderColor: item.color,
+                      },
+                    }}
+                    onClick={() => navigate('/public/resources')}
+                  >
+                    <CardContent sx={{ py: 5, px: 3 }}>
+                      <Box 
+                        sx={{ 
+                          mb: 3,
+                          display: 'inline-block',
+                          p: 2,
+                          borderRadius: '50%',
+                          bgcolor: `${item.color}15`,
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Typography variant="h5" gutterBottom fontWeight="bold">
+                        {item.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grow>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
+
       {/* CTA Section */}
       <Box 
         sx={{ 
@@ -457,11 +625,11 @@ const PublicHome: React.FC = () => {
           <Fade in timeout={1000}>
             <Box>
               <CheckCircle sx={{ fontSize: 80, mb: 3, opacity: 0.9 }} />
-              <Typography variant="h3" gutterBottom fontWeight="bold">
+              <Typography variant="h6" gutterBottom fontWeight="bold">
                 Ready to Start Learning?
               </Typography>
               <Typography variant="h6" sx={{ mb: 5, opacity: 0.95 }}>
-                Join thousands of taxpayers improving their tax knowledge. Sign up now - it's free!
+                Join thousands of tax agents improving their tax knowledge. Sign up now - it's free!
               </Typography>
               <Button
                 variant="contained"
@@ -505,7 +673,7 @@ const PublicHome: React.FC = () => {
                 </Typography>
               </Box>
               <Typography variant="body2" color="grey.400">
-                Empowering taxpayers with knowledge and skills for better tax compliance.
+                Empowering tax agents with knowledge and skills for better tax compliance.
               </Typography>
             </Grid>
             <Grid item xs={12} md={6} textAlign={{ xs: 'left', md: 'right' }}>

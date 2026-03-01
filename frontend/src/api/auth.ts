@@ -1,17 +1,10 @@
-import { useState, useEffect } from 'react';
+import { apiClient } from '../utils/axiosConfig';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-interface LoginResponse {
-  message: string;
-  data: {
-    user: any;
-    token: string;
-  };
-}
-
 export const authAPI = {
-  login: async (username: string, password: string): Promise<LoginResponse> => {
+  login: async (username: string, password: string) => {
+    // Use fetch for login to avoid circular dependency with token interceptor
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -25,10 +18,19 @@ export const authAPI = {
       throw new Error(error.message || 'Login failed');
     }
 
-    return response.json();
+    const data = await response.json();
+    
+    // Backend returns { message, user, token } directly
+    // Return in the format expected by Login component
+    return {
+      user: data.user,
+      token: data.token,
+      message: data.message
+    };
   },
 
   register: async (userData: any) => {
+    // Use fetch for register to avoid circular dependency
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
@@ -46,31 +48,13 @@ export const authAPI = {
   },
 
   logout: async () => {
-    const token = localStorage.getItem('itas_token');
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    return response.json();
+    const response = await apiClient.post('/auth/logout');
+    return response.data;
   },
 
   getProfile: async () => {
-    const token = localStorage.getItem('itas_token');
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch profile');
-    }
-
-    return response.json();
+    const response = await apiClient.get('/auth/profile');
+    return response.data;
   },
 };
 

@@ -28,6 +28,15 @@ public class CourseService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private CertificateService certificateService;
+    
+    @Autowired
+    private com.itas.repository.ModuleRepository moduleRepository;
+    
+    @Autowired
+    private com.itas.repository.ModuleProgressRepository moduleProgressRepository;
+    
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
     }
@@ -102,11 +111,24 @@ public class CourseService {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new RuntimeException("Enrollment not found"));
         
+        boolean wasNotCompleted = enrollment.getProgress() < 100.0;
+        
         enrollment.setProgress(progress);
         
         if (progress >= 100.0) {
             enrollment.setStatus("COMPLETED");
             enrollment.setCompletedAt(LocalDateTime.now());
+            
+            // Auto-generate certificate if course just completed
+            if (wasNotCompleted) {
+                try {
+                    certificateService.generateCertificate(enrollment.getUserId(), enrollment.getCourseId());
+                    System.out.println("Certificate auto-generated for user " + enrollment.getUserId() + " and course " + enrollment.getCourseId());
+                } catch (Exception e) {
+                    // Certificate might already exist, log but don't fail
+                    System.err.println("Could not generate certificate: " + e.getMessage());
+                }
+            }
         }
         
         enrollmentRepository.save(enrollment);
@@ -132,5 +154,52 @@ public class CourseService {
             
             return item;
         }).collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public Map<String, Object> completeModule(Long userId, Long courseId, Long moduleId) {
+        // Get or create enrollment
+        Enrollment enrollment = enrollmentRepository.findByUserIdAndCourseId(userId, courseId);
+        if (enrollment == null) {
+            throw new RuntimeException("User not enrolled in this course");
+        }
+        
+        // Get or create module progress
+        com.itas.model.ModuleProgress moduleProgress = moduleProgressRepository
+            .findByUserIdAndModuleId(userId, moduleId)
+            .orElseGet(() -> {
+                com.itas.model.ModuleProgress mp = new com.itas.model.ModuleProgress();
+                mp.setUser(userRepository.findById(userId).orElseThrow());
+                mp.setModule(moduleRepository.findById(moduleId).orElseThrow());
+                mp.setEnrollment(enrollment);
+                mp.setStartedAt(LocalDateTime.now());
+                return mp;
+            });
+        
+        // Mark module as completed
+        moduleProgress.setCompleted(true);
+        moduleProgress.setProgress(100.0);
+        moduleProgress.setCompletedAt(LocalDateTime.now());
+        moduleProgressRepository.save(moduleProgress);
+        
+        // Calculate overall course progress
+        List<com.itas.model.Module> allModules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        List<com.itas.model.ModuleProgress> completedModules = moduleProgressRepository
+            .findByEnrollmentIdAndCompleted(enrollment.getId(), true);
+        
+        double courseProgress = allModules.isEmpty() ? 0 : 
+            (completedModules.size() * 100.0) / allModules.size();
+        
+        // Update enrollment progress
+        updateProgress(enrollment.getId(), courseProgress);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("moduleCompleted", true);
+        result.put("courseProgress", courseProgress);
+        result.put("totalModules", allModules.size());
+        result.put("completedModules", completedModules.size());
+        result.put("courseCompleted", courseProgress >= 100.0);
+        
+        return result;
     }
 }

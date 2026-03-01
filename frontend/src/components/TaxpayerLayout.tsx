@@ -26,6 +26,7 @@ import {
   Description as ResourceIcon,
   Person as ProfileIcon,
   ExitToApp as LogoutIcon,
+  Folder as FolderIcon,
 } from '@mui/icons-material';
 import NotificationBell from './NotificationBell';
 
@@ -224,7 +225,21 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <NotificationBell userRole={user?.userType} />
+            <IconButton 
+              color="inherit" 
+              onClick={() => navigate('/taxpayer/resources')}
+              sx={{
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  transform: 'scale(1.1)',
+                },
+              }}
+            >
+              <FolderIcon />
+            </IconButton>
+
+            <NotificationBell userRole={user?.userType} userId={user?.id} />
             
             <IconButton 
               color="inherit" 

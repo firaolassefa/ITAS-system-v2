@@ -1,16 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { apiClient } from '../utils/axiosConfig';
 
 export interface Notification {
   id: number;
@@ -32,91 +20,76 @@ export interface Notification {
 export const notificationAPI = {
   // Get all notifications
   getAll: async () => {
-    const response = await axios.get(`${API_BASE_URL}/notifications`, getAuthHeaders());
+    const response = await apiClient.get('/notifications');
     return response.data;
   },
 
-  // Get unread notifications by role
-  getUnread: async (role?: string) => {
-    const url = role 
-      ? `${API_BASE_URL}/notifications/unread?role=${role}`
-      : `${API_BASE_URL}/notifications/unread`;
-    const response = await axios.get(url, getAuthHeaders());
+  // Get unread notifications by role or userId
+  getUnread: async (role?: string, userId?: number) => {
+    let url = '/notifications/unread';
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (userId) params.append('userId', userId.toString());
+    if (params.toString()) url += `?${params.toString()}`;
+    
+    const response = await apiClient.get(url);
     return response.data;
   },
 
-  // Get unread count by role
-  getUnreadCount: async (role?: string) => {
-    const url = role 
-      ? `${API_BASE_URL}/notifications/count?role=${role}`
-      : `${API_BASE_URL}/notifications/count`;
-    const response = await axios.get(url, getAuthHeaders());
+  // Get unread count by role or userId
+  getUnreadCount: async (role?: string, userId?: number) => {
+    let url = '/notifications/count';
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (userId) params.append('userId', userId.toString());
+    if (params.toString()) url += `?${params.toString()}`;
+    
+    const response = await apiClient.get(url);
     return response.data;
   },
 
   // Get notifications by role
   getByRole: async (role: string) => {
-    const response = await axios.get(
-      `${API_BASE_URL}/notifications/by-role/${role}`, 
-      getAuthHeaders()
-    );
+    const response = await apiClient.get(`/notifications/by-role/${role}`);
     return response.data;
   },
 
   // Mark as read
   markAsRead: async (id: number) => {
-    const response = await axios.post(
-      `${API_BASE_URL}/notifications/mark-as-read/${id}`,
-      {},
-      getAuthHeaders()
-    );
+    const response = await apiClient.post(`/notifications/mark-as-read/${id}`, {});
     return response.data;
   },
 
   // Mark all as read
   markAllAsRead: async (role?: string) => {
     const url = role 
-      ? `${API_BASE_URL}/notifications/mark-all-read?role=${role}`
-      : `${API_BASE_URL}/notifications/mark-all-read`;
-    const response = await axios.post(url, {}, getAuthHeaders());
+      ? `/notifications/mark-all-read?role=${role}`
+      : '/notifications/mark-all-read';
+    const response = await apiClient.post(url, {});
     return response.data;
   },
 
   // Send notification (Communication Officer only)
   send: async (notification: Partial<Notification>) => {
-    const response = await axios.post(
-      `${API_BASE_URL}/notifications/send`,
-      notification,
-      getAuthHeaders()
-    );
+    const response = await apiClient.post('/notifications/send', notification);
     return response.data;
   },
 
   // Update notification (Communication Officer only)
   update: async (id: number, notification: Partial<Notification>) => {
-    const response = await axios.put(
-      `${API_BASE_URL}/notifications/${id}`,
-      notification,
-      getAuthHeaders()
-    );
+    const response = await apiClient.put(`/notifications/${id}`, notification);
     return response.data;
   },
 
   // Delete notification (Communication Officer only)
   delete: async (id: number) => {
-    const response = await axios.delete(
-      `${API_BASE_URL}/notifications/${id}`,
-      getAuthHeaders()
-    );
+    const response = await apiClient.delete(`/notifications/${id}`);
     return response.data;
   },
 
   // Get campaign statistics
   getCampaignStats: async () => {
-    const response = await axios.get(
-      `${API_BASE_URL}/notifications/campaigns/stats`,
-      getAuthHeaders()
-    );
+    const response = await apiClient.get('/notifications/campaigns/stats');
     return response.data;
   }
 };

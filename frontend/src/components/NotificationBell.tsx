@@ -20,11 +20,12 @@ import { useNotifications } from '../hooks/useNotifications';
 
 interface NotificationBellProps {
   userRole?: string;
+  userId?: number;
 }
 
-const NotificationBell: React.FC<NotificationBellProps> = ({ userRole }) => {
+const NotificationBell: React.FC<NotificationBellProps> = ({ userRole, userId }) => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications(userRole);
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications(userRole, userId);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {

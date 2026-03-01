@@ -70,6 +70,7 @@ public class SecurityConfig {
                 // Public endpoints - Note: Spring Security sees paths WITHOUT the servlet context path
                 // So /api/auth/login is seen as /auth/login by Spring Security
                 .requestMatchers("/", "/health", "/test-db", "/api/health", "/api/test-db").permitAll()
+                .requestMatchers("/test/**", "/api/test/**").permitAll()
                 .requestMatchers("/auth/**", "/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                 

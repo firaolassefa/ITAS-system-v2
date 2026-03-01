@@ -1,5 +1,6 @@
 package com.itas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,8 +13,9 @@ public class Module {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "modules", "enrollments"})
     private Course course;
     
     @Column(nullable = false)
@@ -50,6 +52,7 @@ public class Module {
     private LocalDateTime updatedAt;
     
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"module"})
     private List<Question> questions = new ArrayList<>();
     
     // Constructors

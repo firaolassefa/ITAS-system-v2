@@ -47,7 +47,7 @@ import {
   AdminPanelSettings as AdminIcon,
   Block as BlockIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
+import { apiClient } from '../../utils/axiosConfig';
 
 interface User {
   id: number;
@@ -95,7 +95,7 @@ const UserRoleManagement: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get('http://localhost:8080/api/users');
+      const response = await apiClient.get('/users');
       const userData = response.data.data || response.data || [];
       setUsers(Array.isArray(userData) ? userData : []);
     } catch (err: any) {
@@ -109,7 +109,7 @@ const UserRoleManagement: React.FC = () => {
 
   const handleRoleChange = async (userId: number, newRole: string) => {
     try {
-      await axios.put(`http://localhost:8080/users/${userId}`, {
+      await apiClient.put(`/users/${userId}`, {
         userType: newRole,
       });
       
@@ -131,7 +131,7 @@ const UserRoleManagement: React.FC = () => {
 
   const handleStatusToggle = async (userId: number, currentStatus: boolean) => {
     try {
-      await axios.patch(`http://localhost:8080/users/${userId}/status`, {
+      await apiClient.patch(`/users/${userId}/status`, {
         active: !currentStatus,
       });
       
@@ -160,7 +160,7 @@ const UserRoleManagement: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      await axios.put(`http://localhost:8080/users/${selectedUser.id}`, {
+      await apiClient.put(`/users/${selectedUser.id}`, {
         fullName: selectedUser.fullName,
         email: selectedUser.email,
         phoneNumber: selectedUser.phoneNumber,

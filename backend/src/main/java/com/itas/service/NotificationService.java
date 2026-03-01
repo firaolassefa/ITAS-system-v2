@@ -2,6 +2,7 @@ package com.itas.service;
 
 import com.itas.model.Notification;
 import com.itas.model.User;
+import com.itas.model.UserType;
 import com.itas.repository.NotificationRepository;
 import com.itas.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,23 +86,79 @@ public class NotificationService {
     }
     
     public List<Notification> getUnreadNotifications(Long userId) {
-        return notificationRepository.findByUserIdAndRead(userId, false);
+        return notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
+    }
+    
+    public Long getUnreadCount(Long userId) {
+        return notificationRepository.countByUserIdAndReadFalse(userId);
     }
     
     @Transactional
     public Notification sendNotification(Notification notification, Long senderId) {
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
-        
-        notification.setSender(sender);
-        notification.setCreatedAt(LocalDateTime.now());
-        notification.setStatus("SENT");
-        notification.setSentAt(LocalDateTime.now());
-        notification.setRead(false);
-        notification.setSentCount(1);
-        notification.setOpenedCount(0);
-        
-        return notificationRepository.save(notification);
+        try {
+            User sender = userRepository.findById(senderId)
+                    .orElseThrow(() -> new RuntimeException("Sender not found"));
+            
+            notification.setSender(sender);
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setStatus("SENT");
+            notification.setSentAt(LocalDateTime.now());
+            notification.setRead(false);
+            notification.setSentCount(0);
+            notification.setOpenedCount(0);
+            
+            // If role is specified, create notifications for all users with that role
+            if (notification.getRole() != null && !notification.getRole().isEmpty()) {
+                try {
+                    // Convert string role to UserType enum
+                    UserType userType = UserType.valueOf(notification.getRole());
+                    List<User> targetUsers = userRepository.findByUserType(userType);
+                    
+                    if (targetUsers.isEmpty()) {
+                        // If no users found, still save the notification as a broadcast
+                        notification.setSentCount(1);
+                        return notificationRepository.save(notification);
+                    }
+                    
+                    // Create individual notifications for each user
+                    for (User user : targetUsers) {
+                        Notification userNotification = new Notification();
+                        userNotification.setTitle(notification.getTitle());
+                        userNotification.setMessage(notification.getMessage());
+                        userNotification.setLink(notification.getLink());
+                        userNotification.setNotificationType(notification.getNotificationType());
+                        userNotification.setPriority(notification.getPriority());
+                        userNotification.setTargetAudience(notification.getTargetAudience());
+                        userNotification.setRole(notification.getRole());
+                        userNotification.setUserId(user.getId());
+                        userNotification.setSender(sender);
+                        userNotification.setCreatedAt(LocalDateTime.now());
+                        userNotification.setStatus("SENT");
+                        userNotification.setSentAt(LocalDateTime.now());
+                        userNotification.setRead(false);
+                        userNotification.setSentCount(1);
+                        userNotification.setOpenedCount(0);
+                        
+                        notificationRepository.save(userNotification);
+                    }
+                    
+                    notification.setSentCount(targetUsers.size());
+                    return notificationRepository.save(notification);
+                } catch (IllegalArgumentException e) {
+                    // Invalid role, save as general notification
+                    System.err.println("Invalid role: " + notification.getRole());
+                    notification.setSentCount(1);
+                    return notificationRepository.save(notification);
+                }
+            }
+            
+            // If no role specified, save as general notification
+            notification.setSentCount(1);
+            return notificationRepository.save(notification);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to send notification: " + e.getMessage(), e);
+        }
     }
     
     @Transactional

@@ -95,30 +95,60 @@ const NotificationCenter: React.FC = () => {
 
   const handleSend = async () => {
     try {
+      console.log('=== SENDING NOTIFICATION ===');
+      console.log('Current notification state:', notification);
+      
+      // Validate inputs
+      if (!notification.title.trim()) {
+        setSnackbar({
+          open: true,
+          message: 'Please enter a notification title',
+          severity: 'error',
+        });
+        return;
+      }
+
+      if (!notification.message.trim()) {
+        setSnackbar({
+          open: true,
+          message: 'Please enter a notification message',
+          severity: 'error',
+        });
+        return;
+      }
+
       // Map audience to actual role name
       const roleMapping: Record<string, string> = {
         'ALL_TAXPAYERS': 'TAXPAYER',
         'SME': 'TAXPAYER',
         'INDIVIDUAL': 'TAXPAYER',
         'NEW_TAXPAYERS': 'TAXPAYER',
+        'COURSE_COMPLETED': 'TAXPAYER',
+        'WEBINAR_REGISTERED': 'TAXPAYER',
         'MOR_STAFF': 'MOR_STAFF',
         'ALL': 'ALL',
       };
 
-      const targetRole = roleMapping[notification.audience] || notification.audience;
+      const targetRole = roleMapping[notification.audience] || 'TAXPAYER';
+      console.log('Mapped audience:', notification.audience, '-> role:', targetRole);
+
+      const payload = {
+        title: notification.title,
+        message: notification.message,
+        role: targetRole,
+        link: '/taxpayer/dashboard',
+        notificationType: notification.channel as 'EMAIL' | 'SMS' | 'IN_APP' | 'SYSTEM',
+        priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT',
+        targetAudience: notification.audience,
+        status: 'SENT' as 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED',
+      };
+
+      console.log('Sending payload:', payload);
 
       if (editingId) {
         // Update existing notification
-        await notificationAPI.update(editingId, {
-          title: notification.title,
-          message: notification.message,
-          role: targetRole,
-          link: '/dashboard',
-          notificationType: notification.channel as any,
-          priority: 'MEDIUM',
-          targetAudience: notification.audience,
-          status: 'SENT',
-        });
+        const response = await notificationAPI.update(editingId, payload);
+        console.log('Update response:', response);
         
         setSnackbar({
           open: true,
@@ -128,16 +158,8 @@ const NotificationCenter: React.FC = () => {
         setEditingId(null);
       } else {
         // Send new notification
-        await notificationAPI.send({
-          title: notification.title,
-          message: notification.message,
-          role: targetRole,
-          link: '/dashboard',
-          notificationType: notification.channel as any,
-          priority: 'MEDIUM',
-          targetAudience: notification.audience,
-          status: 'SENT',
-        });
+        const response = await notificationAPI.send(payload);
+        console.log('Send response:', response);
         
         setSnackbar({
           open: true,
@@ -155,8 +177,12 @@ const NotificationCenter: React.FC = () => {
         scheduledTime: ''
       });
       
-      loadCampaigns();
+      await loadCampaigns();
+      console.log('=== NOTIFICATION SENT SUCCESSFULLY ===');
     } catch (err: any) {
+      console.error('=== ERROR SENDING NOTIFICATION ===');
+      console.error('Error:', err);
+      console.error('Error response:', err.response?.data);
       setSnackbar({
         open: true,
         message: err.response?.data?.message || 'Failed to send notification',

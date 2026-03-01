@@ -17,14 +17,19 @@ import {
   Card,
   CardContent,
   CardActions,
+  AppBar,
+  Toolbar,
+  alpha,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
-  Login as LoginIcon,
   PictureAsPdf,
   VideoLibrary,
   Description,
+  Download as DownloadIcon,
+  School,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { resourcesAPI } from '../../api/resources';
@@ -35,19 +40,47 @@ const PublicResources: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   useEffect(() => {
     loadResources();
+    
+    // Auto-refresh every 30 seconds for real-time updates
+    const interval = setInterval(() => {
+      loadResources();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadResources = async () => {
     try {
       const response = await resourcesAPI.getAllResources();
       setResources(response.data || []);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to load resources:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = (resource: any) => {
+    if (resource.filePath) {
+      let fileUrl: string;
+      
+      // Check if it's an external URL (starts with http/https)
+      if (resource.filePath.startsWith('http')) {
+        fileUrl = resource.filePath;
+      } else {
+        // For local files, use the download endpoint
+        fileUrl = `http://localhost:8080/api/resources/${resource.id}/download`;
+      }
+      
+      // Open in new tab for download
+      window.open(fileUrl, '_blank');
+    } else {
+      alert('File path not available for this resource');
     }
   };
 
@@ -81,23 +114,87 @@ const PublicResources: React.FC = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ bgcolor: '#f5f7fa', minHeight: '100vh' }}>
+      {/* Navigation Bar */}
+      <AppBar position="sticky" elevation={0} sx={{ bgcolor: 'primary.main' }}>
+        <Toolbar>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <School sx={{ fontSize: 28, mr: 1 }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              ITAS
+            </Typography>
+          </Box>
+          <Button 
+            color="inherit" 
+            onClick={() => navigate('/')}
+            sx={{ 
+              mr: 2, 
+              textTransform: 'none', 
+              fontWeight: 600,
+              '&:hover': {
+                bgcolor: alpha('#fff', 0.1),
+              },
+            }}
+          >
+            Home
+          </Button>
+          <Button 
+            color="inherit" 
+            onClick={() => navigate('/public/courses')}
+            sx={{ 
+              mr: 2, 
+              textTransform: 'none', 
+              fontWeight: 600,
+              '&:hover': {
+                bgcolor: alpha('#fff', 0.1),
+              },
+            }}
+          >
+            Courses
+          </Button>
+        </Toolbar>
+      </AppBar>
+
       {/* Header */}
-      <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 4 }}>
+      <Box sx={{ bgcolor: 'primary.main', color: 'white', py: 6 }}>
         <Container maxWidth="lg">
-          <Typography variant="h3" gutterBottom>
-            Browse Resources
+          <Typography variant="h3" gutterBottom fontWeight="bold">
+            Resources for Use
           </Typography>
-          <Typography variant="h6">
-            Explore our tax education resources. Sign in to download materials.
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Browse and download our tax education resources
           </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Chip 
+              label={`${resources.length} resources available`} 
+              sx={{ bgcolor: 'white', color: 'primary.main', fontWeight: 600 }}
+            />
+            <Chip 
+              icon={<RefreshIcon />}
+              label={`Updated: ${lastUpdated.toLocaleTimeString()}`} 
+              sx={{ bgcolor: alpha('#fff', 0.2), color: 'white' }}
+            />
+          </Box>
         </Container>
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Info Alert */}
-        <Alert severity="info" sx={{ mb: 3 }}>
-          You're browsing as a guest. <Button color="primary" onClick={() => navigate('/login')}>Sign in</Button> to download resources.
+        <Alert 
+          severity="success" 
+          sx={{ mb: 3 }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              startIcon={<RefreshIcon />}
+              onClick={loadResources}
+            >
+              Refresh
+            </Button>
+          }
+        >
+          Resources update automatically every 30 seconds. Click refresh for immediate updates.
         </Alert>
 
         {/* Filters */}
@@ -181,10 +278,14 @@ const PublicResources: React.FC = () => {
                       <Button
                         fullWidth
                         variant="contained"
-                        startIcon={<LoginIcon />}
-                        onClick={() => navigate('/login')}
+                        startIcon={<DownloadIcon />}
+                        onClick={() => handleDownload(resource)}
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 600,
+                        }}
                       >
-                        Sign in to Download
+                        {resource.type === 'VIDEO' ? 'Watch Video' : 'Download'}
                       </Button>
                     </CardActions>
                   </Card>

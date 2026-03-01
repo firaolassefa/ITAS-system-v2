@@ -1,5 +1,6 @@
 package com.itas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,6 +12,7 @@ public class Answer {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "answers", "module"})
     private Question question;
     
     @Column(nullable = false, columnDefinition = "TEXT")

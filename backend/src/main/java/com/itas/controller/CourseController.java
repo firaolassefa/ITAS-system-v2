@@ -87,6 +87,20 @@ public class CourseController {
         }
     }
     
+    @PostMapping("/complete-module")
+    public ResponseEntity<?> completeModule(@RequestBody Map<String, Object> request) {
+        Long userId = ((Number) request.get("userId")).longValue();
+        Long courseId = ((Number) request.get("courseId")).longValue();
+        Long moduleId = ((Number) request.get("moduleId")).longValue();
+        
+        try {
+            Map<String, Object> result = courseService.completeModule(userId, courseId, moduleId);
+            return ResponseEntity.ok(new ApiResponse<>("Module completed", result));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(e.getMessage(), null));
+        }
+    }
+    
     @GetMapping("/enrollments/{userId}")
     public ResponseEntity<?> getUserEnrollments(@PathVariable Long userId) {
         return ResponseEntity.ok(new ApiResponse<>("Success", courseService.getUserEnrollments(userId)));
