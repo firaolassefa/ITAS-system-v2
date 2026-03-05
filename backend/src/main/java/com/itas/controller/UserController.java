@@ -5,6 +5,7 @@ import com.itas.model.User;
 import com.itas.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -20,14 +21,17 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
     
     @GetMapping("")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'MANAGER', 'AUDITOR')")
     public ResponseEntity<?> getAllUsers() {
         List<User> users = userRepository.findAll();
         // Remove passwords from response
         users.forEach(user -> user.setPassword(null));
         return ResponseEntity.ok(new ApiResponse<>("Users retrieved", users));
     }
+
     
     @GetMapping("/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         return userRepository.findById(userId)
             .map(user -> {
@@ -38,6 +42,7 @@ public class UserController {
     }
     
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User userUpdates) {
         return userRepository.findById(userId)
             .map(user -> {
@@ -46,6 +51,7 @@ public class UserController {
                 if (userUpdates.getTaxNumber() != null) user.setTaxNumber(userUpdates.getTaxNumber());
                 if (userUpdates.getCompanyName() != null) user.setCompanyName(userUpdates.getCompanyName());
                 if (userUpdates.getPhoneNumber() != null) user.setPhoneNumber(userUpdates.getPhoneNumber());
+                if (userUpdates.getUserType() != null) user.setUserType(userUpdates.getUserType());
                 
                 User updatedUser = userRepository.save(user);
                 updatedUser.setPassword(null);
@@ -55,6 +61,7 @@ public class UserController {
     }
     
     @PatchMapping("/{userId}/password")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> changePassword(
             @PathVariable Long userId,
             @RequestBody Map<String, String> request) {
@@ -87,6 +94,7 @@ public class UserController {
     }
     
     @PatchMapping("/{userId}/status")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long userId,
             @RequestBody Map<String, Boolean> request) {

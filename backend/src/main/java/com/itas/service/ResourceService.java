@@ -229,4 +229,28 @@ public class ResourceService {
                 .limit(limit)
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * Get all unique categories from existing resources
+     */
+    public List<String> getAllCategories() {
+        return resourceRepository.findAll().stream()
+                .map(Resource::getCategory)
+                .filter(category -> category != null && !category.isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get all unique audiences from existing resources
+     */
+    public List<String> getAllAudiences() {
+        return resourceRepository.findAll().stream()
+                .map(Resource::getAudience)
+                .filter(audience -> audience != null && !audience.isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }

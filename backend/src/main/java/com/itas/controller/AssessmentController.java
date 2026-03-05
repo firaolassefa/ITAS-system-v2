@@ -98,4 +98,42 @@ public class AssessmentController {
                     .body(new ApiResponse<>(e.getMessage(), null));
         }
     }
+    
+    /**
+     * Get final exam questions for a course
+     * GET /api/assessments/course/{courseId}/final-exam
+     */
+    @GetMapping("/course/{courseId}/final-exam")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getFinalExamQuestions(@PathVariable Long courseId) {
+        try {
+            List<Question> questions = assessmentService.getFinalExamQuestions(courseId);
+            return ResponseEntity.ok(new ApiResponse<>("Final exam questions retrieved", questions));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(e.getMessage(), null));
+        }
+    }
+    
+    /**
+     * Submit final exam
+     * POST /api/assessments/final-exam/submit
+     */
+    @PostMapping("/final-exam/submit")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> submitFinalExam(@RequestBody Map<String, Object> request) {
+        try {
+            Long userId = ((Number) request.get("userId")).longValue();
+            Long courseId = ((Number) request.get("courseId")).longValue();
+            
+            @SuppressWarnings("unchecked")
+            Map<Long, Long> answers = (Map<Long, Long>) request.get("answers");
+            
+            Map<String, Object> result = assessmentService.submitFinalExam(userId, courseId, answers);
+            return ResponseEntity.ok(new ApiResponse<>("Final exam submitted", result));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(e.getMessage(), null));
+        }
+    }
 }

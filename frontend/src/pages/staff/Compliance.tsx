@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Grid, Card, CardContent, Typography, LinearProgress,
   Chip, Avatar, List, ListItem, ListItemText, ListItemIcon,
-  Divider, Alert, Button,
+  Divider, Alert, Button, CircularProgress,
 } from '@mui/material';
 import {
   Security, CheckCircle, Warning, Error as ErrorIcon,
@@ -21,55 +21,80 @@ interface ComplianceItem {
 }
 
 const Compliance: React.FC = () => {
-  const [complianceItems] = useState<ComplianceItem[]>([
-    {
-      id: 1,
-      title: 'Annual Ethics Training',
-      category: 'Ethics',
-      status: 'compliant',
-      dueDate: '2026-12-31',
-      completedDate: '2026-01-15',
-      description: 'Completed on time - Valid until end of year',
-      mandatory: true,
-    },
-    {
-      id: 2,
-      title: 'Security Awareness Update',
-      category: 'Security',
-      status: 'warning',
-      dueDate: '2026-03-01',
-      description: 'Due in 2 weeks - Please complete soon',
-      mandatory: true,
-    },
-    {
-      id: 3,
-      title: 'Tax Law Certification Renewal',
-      category: 'Technical',
-      status: 'overdue',
-      dueDate: '2026-01-31',
-      description: 'Overdue by 18 days - Immediate action required',
-      mandatory: true,
-    },
-    {
-      id: 4,
-      title: 'Data Protection Training',
-      category: 'Security',
-      status: 'compliant',
-      dueDate: '2026-06-30',
-      completedDate: '2025-12-10',
-      description: 'Completed - Valid for 6 months',
-      mandatory: true,
-    },
-    {
-      id: 5,
-      title: 'Customer Service Excellence',
-      category: 'Soft Skills',
-      status: 'pending',
-      dueDate: '2026-04-15',
-      description: 'Optional training - Recommended for staff',
-      mandatory: false,
-    },
-  ]);
+  const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadComplianceData();
+  }, []);
+
+  const loadComplianceData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('itas_token');
+      const userId = JSON.parse(localStorage.getItem('itas_user') || '{}').id || 2;
+      
+      // Fetch user enrollments to calculate compliance
+      const enrollmentsResponse = await fetch(`http://localhost:8080/courses/enrollments/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      // Fetch certificates
+      const certificatesResponse = await fetch(`http://localhost:8080/certificates/user/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (enrollmentsResponse.ok) {
+        const enrollmentsData = await enrollmentsResponse.json();
+        const enrollments = enrollmentsData.data || enrollmentsData || [];
+        
+        const certificatesData = certificatesResponse.ok ? await certificatesResponse.json() : { data: [] };
+        const certificates = certificatesData.data || certificatesData || [];
+        
+        // Generate compliance items based on enrollments
+        const items: ComplianceItem[] = enrollments.map((enrollment: any, index: number) => {
+          const progress = enrollment.progress || 0;
+          let status: 'compliant' | 'warning' | 'overdue' | 'pending' = 'pending';
+          let description = 'Not started';
+          
+          if (progress >= 100) {
+            status = 'compliant';
+            description = 'Course completed successfully';
+          } else if (progress >= 50) {
+            status = 'warning';
+            description = `${progress}% complete - Please finish soon`;
+          } else if (progress > 0) {
+            status = 'warning';
+            description = `${progress}% complete - Continue learning`;
+          } else {
+            status = 'overdue';
+            description = 'Not started - Begin immediately';
+          }
+          
+          return {
+            id: enrollment.id,
+            title: enrollment.course?.title || 'Course Training',
+            category: enrollment.course?.category || 'General',
+            status: status,
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            completedDate: progress >= 100 ? enrollment.updatedAt : undefined,
+            description: description,
+            mandatory: index < 3, // First 3 are mandatory
+          };
+        });
+        
+        setComplianceItems(items);
+      }
+    } catch (error) {
+      console.error('Failed to load compliance data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -96,7 +121,15 @@ const Compliance: React.FC = () => {
   const overdueCount = complianceItems.filter(i => i.status === 'overdue').length;
   const mandatoryCount = complianceItems.filter(i => i.mandatory).length;
   const mandatoryCompliant = complianceItems.filter(i => i.mandatory && i.status === 'compliant').length;
-  const complianceScore = Math.round((mandatoryCompliant / mandatoryCount) * 100);
+  const complianceScore = mandatoryCount > 0 ? Math.round((mandatoryCompliant / mandatoryCount) * 100) : 0;
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -230,8 +263,13 @@ const Compliance: React.FC = () => {
             </Button>
           </Box>
 
-          <List>
-            {complianceItems.map((item, index) => (
+          {complianceItems.length === 0 ? (
+            <Alert severity="info">
+              No compliance items found. Enroll in courses to track your compliance status.
+            </Alert>
+          ) : (
+            <List>
+              {complianceItems.map((item, index) => (
               <React.Fragment key={item.id}>
                 <ListItem
                   sx={{
@@ -315,6 +353,7 @@ const Compliance: React.FC = () => {
               </React.Fragment>
             ))}
           </List>
+          )}
         </CardContent>
       </Card>
 

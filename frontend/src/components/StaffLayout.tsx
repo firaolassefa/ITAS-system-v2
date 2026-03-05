@@ -69,7 +69,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
 
   const menuItems = [
     {
-      text: 'Dashboard',
+      text: 'Home',
       icon: <Dashboard />,
       path: '/staff/dashboard',
       description: 'Overview of your training progress',

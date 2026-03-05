@@ -11,4 +11,6 @@ import java.util.List;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByModuleOrderByOrderAsc(Module module);
     List<Question> findByModuleIdOrderByOrderAsc(Long moduleId);
+    List<Question> findByModuleIdAndIsPracticeTrueOrderByOrderAsc(Long moduleId);
+    List<Question> findByModuleIdAndIsPracticeFalseOrderByOrderAsc(Long moduleId);
 }

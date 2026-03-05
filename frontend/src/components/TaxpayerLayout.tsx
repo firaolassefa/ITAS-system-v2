@@ -62,7 +62,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/taxpayer/dashboard' },
+    { text: 'Home', icon: <DashboardIcon />, path: '/taxpayer/dashboard' },
     { text: 'Courses', icon: <CourseIcon />, path: '/taxpayer/courses' },
     { text: 'Resources', icon: <ResourceIcon />, path: '/taxpayer/resources' },
   ];

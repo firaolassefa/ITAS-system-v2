@@ -18,4 +18,6 @@ public interface ModuleProgressRepository extends JpaRepository<ModuleProgress, 
     Integer countByEnrollmentIdAndCompletedTrue(Long enrollmentId);
     
     Optional<ModuleProgress> findByUserIdAndModuleId(Long userId, Long moduleId);
+    
+    void deleteByModuleId(Long moduleId);
 }

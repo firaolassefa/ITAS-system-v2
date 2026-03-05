@@ -32,6 +32,12 @@ public class AssessmentService {
     @Autowired
     private ModuleProgressRepository moduleProgressRepository;
     
+    @Autowired
+    private CourseRepository courseRepository;
+    
+    @Autowired
+    private CertificateService certificateService;
+    
     /**
      * Start a new assessment attempt
      * UC-LMS-002: Complete Learning Module
@@ -187,5 +193,89 @@ public class AssessmentService {
      */
     public List<Question> getModuleQuestions(Long moduleId) {
         return questionRepository.findByModuleIdOrderByOrderAsc(moduleId);
+    }
+    
+    /**
+     * Get final exam questions from all modules in a course
+     */
+    public List<Question> getFinalExamQuestions(Long courseId) {
+        // Get all modules for the course
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        
+        // Get quiz questions (not practice) from all modules
+        List<Question> allQuestions = new java.util.ArrayList<>();
+        for (com.itas.model.Module module : modules) {
+            List<Question> moduleQuestions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(module.getId());
+            allQuestions.addAll(moduleQuestions);
+        }
+        
+        return allQuestions;
+    }
+    
+    /**
+     * Submit final exam and generate certificate if passed
+     */
+    @Transactional
+    public Map<String, Object> submitFinalExam(Long userId, Long courseId, Map<Long, Long> answers) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Get all quiz questions from the course
+        List<Question> questions = getFinalExamQuestions(courseId);
+        
+        if (questions.isEmpty()) {
+            throw new RuntimeException("No exam questions found for this course");
+        }
+        
+        int totalPoints = 0;
+        int earnedPoints = 0;
+        
+        // Calculate score
+        for (Question question : questions) {
+            totalPoints += question.getPoints();
+            
+            Long userAnswerId = answers.get(question.getId());
+            if (userAnswerId != null) {
+                for (Answer answer : question.getAnswers()) {
+                    if (answer.getId().equals(userAnswerId) && answer.getIsCorrect()) {
+                        earnedPoints += question.getPoints();
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Calculate percentage
+        double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0;
+        boolean passed = percentage >= 80; // 80% required for final exam
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalPoints", totalPoints);
+        result.put("earnedPoints", earnedPoints);
+        result.put("percentage", Math.round(percentage * 100.0) / 100.0);
+        result.put("passed", passed);
+        
+        if (passed) {
+            // Generate certificate
+            try {
+                com.itas.model.Certificate certificate = generateCertificate(userId, courseId);
+                result.put("certificateId", certificate.getId());
+                result.put("certificateNumber", certificate.getCertificateNumber());
+                result.put("feedback", "Congratulations! You passed the final exam and earned your certificate!");
+            } catch (Exception e) {
+                result.put("feedback", "Congratulations! You passed the final exam!");
+            }
+        } else {
+            result.put("feedback", "You need at least 80% to pass the final exam. Please review the course materials and try again.");
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Generate certificate for user
+     */
+    private com.itas.model.Certificate generateCertificate(Long userId, Long courseId) {
+        return certificateService.generateCertificate(userId, courseId);
     }
 }

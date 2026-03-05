@@ -34,6 +34,12 @@ public class Question {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
     
+    @Column(name = "is_practice")
+    private Boolean isPractice = false; // false = quiz/exam, true = practice
+    
+    @Column(columnDefinition = "TEXT")
+    private String explanation; // Explanation for practice questions
+    
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"question"})
     private List<Answer> answers = new ArrayList<>();
@@ -62,6 +68,12 @@ public class Question {
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public Boolean getIsPractice() { return isPractice; }
+    public void setIsPractice(Boolean isPractice) { this.isPractice = isPractice; }
+    
+    public String getExplanation() { return explanation; }
+    public void setExplanation(String explanation) { this.explanation = explanation; }
     
     public List<Answer> getAnswers() { return answers; }
     public void setAnswers(List<Answer> answers) { this.answers = answers; }

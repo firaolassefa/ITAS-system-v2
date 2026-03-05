@@ -87,6 +87,7 @@ public class FileUploadController {
     }
     
     @GetMapping("/download/{resourceId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> downloadFile(@PathVariable Long resourceId) {
         try {
             Resource resource = resourceService.getResourceById(resourceId);

@@ -41,6 +41,14 @@ const ModernHome: React.FC = () => {
     }
   };
 
+  const handleLoginClick = () => {
+    window.location.href = '/login';
+  };
+
+  const handleRegisterClick = () => {
+    window.location.href = '/register';
+  };
+
   const getResourceIcon = (type: string) => {
     switch (type) {
       case 'PDF':
@@ -153,6 +161,7 @@ const ModernHome: React.FC = () => {
             animation: 'gridMove 20s linear infinite',
             opacity: 0.3,
             zIndex: 0,
+            pointerEvents: 'none',
           }}
         />
       )}
@@ -172,6 +181,7 @@ const ModernHome: React.FC = () => {
           filter: 'blur(80px)',
           animation: 'pulse 8s ease-in-out infinite',
           zIndex: 0,
+          pointerEvents: 'none',
         }}
       />
       <Box
@@ -188,6 +198,7 @@ const ModernHome: React.FC = () => {
           filter: 'blur(100px)',
           animation: 'pulse 10s ease-in-out infinite 2s',
           zIndex: 0,
+          pointerEvents: 'none',
         }}
       />
 
@@ -208,6 +219,7 @@ const ModernHome: React.FC = () => {
             animation: `particleFloat ${15 + Math.random() * 10}s infinite`,
             animationDelay: `${Math.random() * 5}s`,
             zIndex: 0,
+            pointerEvents: 'none',
             boxShadow: darkMode 
               ? `0 0 20px ${i % 3 === 0 ? '#00E0FF' : i % 3 === 1 ? '#8B5CF6' : '#F59E0B'}`
               : '0 0 10px rgba(102, 126, 234, 0.3)',
@@ -269,7 +281,7 @@ const ModernHome: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<MenuBook />}
-            onClick={() => navigate('/public/resources')}
+            onClick={() => window.location.href = '/public/resources'}
             sx={{ 
               mr: 2,
               borderRadius: 2,
@@ -307,10 +319,45 @@ const ModernHome: React.FC = () => {
             </IconButton>
           </Tooltip>
 
+          {/* Check if user is logged in */}
+          {(() => {
+            const user = localStorage.getItem('itas_user');
+            if (user) {
+              const userData = JSON.parse(user);
+              return (
+                <Button 
+                  variant="outlined"
+                  onClick={() => {
+                    localStorage.removeItem('itas_user');
+                    localStorage.removeItem('itas_token');
+                    window.location.reload();
+                  }}
+                  sx={{ 
+                    mr: 2,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    borderWidth: 2,
+                    borderColor: darkMode ? alpha('#F59E0B', 0.5) : alpha('#EF4444', 0.5),
+                    color: darkMode ? '#F59E0B' : '#EF4444',
+                    '&:hover': {
+                      borderWidth: 2,
+                      borderColor: darkMode ? '#F59E0B' : '#EF4444',
+                      background: darkMode ? alpha('#F59E0B', 0.1) : alpha('#EF4444', 0.1),
+                    },
+                  }}
+                >
+                  Logout ({userData.username})
+                </Button>
+              );
+            }
+            return null;
+          })()}
+
           <Button 
             variant="outlined"
             startIcon={<Login />}
-            onClick={() => navigate('/login')}
+            onClick={handleLoginClick}
             sx={{ 
               mr: 2,
               borderRadius: 3,
@@ -332,7 +379,7 @@ const ModernHome: React.FC = () => {
           <Button 
             variant="contained"
             startIcon={<PersonAdd />}
-            onClick={() => navigate('/register')}
+            onClick={handleRegisterClick}
             sx={{ 
               borderRadius: 3,
               textTransform: 'none',
@@ -449,7 +496,7 @@ const ModernHome: React.FC = () => {
                     variant="contained"
                     size="large"
                     endIcon={<ArrowForward />}
-                    onClick={() => navigate('/register')}
+                    onClick={() => window.location.href = '/register'}
                     sx={{ 
                       px: 4, 
                       py: 1.8,
@@ -1047,7 +1094,7 @@ const ModernHome: React.FC = () => {
               variant="contained"
               size="large"
               endIcon={<ArrowForward />}
-              onClick={() => navigate('/register')}
+              onClick={() => window.location.href = '/register'}
               sx={{ 
                 px: 5, 
                 py: 1.8,
@@ -1069,7 +1116,7 @@ const ModernHome: React.FC = () => {
             <Button
               variant="outlined"
               size="large"
-              onClick={() => navigate('/login')}
+              onClick={handleLoginClick}
               sx={{ 
                 px: 5,
                 py: 1.8,
@@ -1204,7 +1251,7 @@ const ModernHome: React.FC = () => {
                 variant="contained"
                 size="large"
                 startIcon={<MenuBook />}
-                onClick={() => navigate('/public/resources')}
+                onClick={() => window.location.href = '/public/resources'}
                 sx={{ 
                   px: 5, 
                   py: 2,
@@ -1270,7 +1317,7 @@ const ModernHome: React.FC = () => {
                         borderColor: item.color,
                       },
                     }}
-                    onClick={() => navigate('/public/resources')}
+                    onClick={() => window.location.href = '/public/resources'}
                   >
                     <CardContent sx={{ py: 5, px: 3 }}>
                       <Box 

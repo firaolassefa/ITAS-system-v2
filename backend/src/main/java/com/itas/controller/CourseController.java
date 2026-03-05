@@ -51,7 +51,7 @@ public class CourseController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> deleteCourse(@PathVariable Long id) {
         try {
             courseService.deleteCourse(id);
@@ -62,6 +62,7 @@ public class CourseController {
     }
     
     @PostMapping("/enroll")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> enroll(@RequestBody Map<String, Long> request) {
         Long userId = request.get("userId");
         Long courseId = request.get("courseId");
@@ -75,6 +76,7 @@ public class CourseController {
     }
     
     @PutMapping("/progress")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateProgress(@RequestBody Map<String, Object> request) {
         Long enrollmentId = ((Number) request.get("enrollmentId")).longValue();
         double progress = ((Number) request.get("progress")).doubleValue();

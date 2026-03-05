@@ -7,6 +7,7 @@ import com.itas.model.User;
 import com.itas.service.CertificateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -19,6 +20,7 @@ public class CertificateController {
     private CertificateService certificateService;
     
     @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getUserCertificates(@PathVariable Long userId) {
         try {
             List<Certificate> certificates = certificateService.getUserCertificates(userId);
@@ -30,6 +32,7 @@ public class CertificateController {
     }
     
     @PostMapping("/generate")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<?> generateCertificate(@RequestBody Map<String, Long> request) {
         try {
             Long userId = request.get("userId");

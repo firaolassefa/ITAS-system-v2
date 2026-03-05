@@ -6,38 +6,30 @@ import {
   Box,
   Card,
   CardContent,
-  Button,
   Chip,
   List,
   ListItem,
   ListItemText,
   Divider,
-  LinearProgress,
   Avatar,
-  IconButton,
   alpha,
   useTheme,
   CircularProgress,
   Container,
 } from '@mui/material';
 import {
-  Settings,
   People,
-  Security,
-  Storage,
   Speed,
   AdminPanelSettings,
   Upload,
-  Notifications,
   VideoCall,
   Assessment,
-  TrendingUp,
-  TrendingDown,
-  MoreVert,
   CheckCircle,
   Warning,
   Error as ErrorIcon,
   Info,
+  School,
+  EmojiEvents,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { dashboardAPI } from '../../api/dashboard';
@@ -77,8 +69,6 @@ const SystemAdminDashboard: React.FC = () => {
     { 
       title: 'Total Users', 
       value: (dashboardData.totalUsers || 0).toString(), 
-      change: '+12.5%', 
-      trend: 'up', 
       icon: <People />, 
       color: '#667eea',
       gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -86,62 +76,34 @@ const SystemAdminDashboard: React.FC = () => {
     { 
       title: 'Active Users', 
       value: (dashboardData.activeUsers || 0).toString(), 
-      change: '+8.2%', 
-      trend: 'up', 
       icon: <Speed />, 
       color: '#10B981',
       gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
     },
     { 
-      title: 'System Health', 
-      value: '99.8%', 
-      change: '+0.3%', 
-      trend: 'up', 
-      icon: <Security />, 
+      title: 'Total Courses', 
+      value: (dashboardData.totalCourses || 0).toString(), 
+      icon: <Assessment />, 
       color: '#3B82F6',
       gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
     },
     { 
-      title: 'Storage Used', 
-      value: '65%', 
-      change: '+5.1%', 
-      trend: 'up', 
-      icon: <Storage />, 
+      title: 'Total Resources', 
+      value: (dashboardData.totalResources || 0).toString(), 
+      icon: <Upload />, 
       color: '#F59E0B',
       gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
     },
   ];
 
   const quickStats = [
-    { label: 'Total Courses', value: 42, icon: <Assessment />, color: '#667eea' },
-    { label: 'Resources', value: 156, icon: <Upload />, color: '#8B5CF6' },
-    { label: 'Active Webinars', value: 5, icon: <VideoCall />, color: '#10B981' },
-    { label: 'Notifications', value: 3, icon: <Notifications />, color: '#3B82F6' },
+    { label: 'Enrollments', value: dashboardData.totalEnrollments || 0, icon: <School />, color: '#667eea' },
+    { label: 'Completed', value: dashboardData.completedCourses || 0, icon: <CheckCircle />, color: '#10B981' },
+    { label: 'Active Webinars', value: dashboardData.activeWebinars || 0, icon: <VideoCall />, color: '#8B5CF6' },
+    { label: 'Certificates', value: dashboardData.totalCertificates || 0, icon: <EmojiEvents />, color: '#3B82F6' },
   ];
 
-  const recentActivities = [
-    { action: 'New user registered', user: 'john.doe@example.com', time: '5 minutes ago', type: 'success', icon: <CheckCircle />, color: '#10B981' },
-    { action: 'Course published', user: 'contentadmin', time: '1 hour ago', type: 'info', icon: <Info />, color: '#3B82F6' },
-    { action: 'System warning', user: 'System', time: '2 hours ago', type: 'warning', icon: <Warning />, color: '#F59E0B' },
-    { action: 'Webinar scheduled', user: 'trainingadmin', time: '3 hours ago', type: 'success', icon: <CheckCircle />, color: '#10B981' },
-    { action: 'Failed login attempt', user: 'unknown', time: '4 hours ago', type: 'error', icon: <ErrorIcon />, color: '#EF4444' },
-  ];
-
-  const systemMetrics = [
-    { label: 'CPU Usage', value: 45, color: '#667eea' },
-    { label: 'Memory', value: 68, color: '#8B5CF6' },
-    { label: 'Disk I/O', value: 32, color: '#10B981' },
-    { label: 'Network', value: 78, color: '#3B82F6' },
-  ];
-
-  const quickActions = [
-    { label: 'Manage Users', icon: <People />, path: '/admin/user-role-management', color: '#667eea' },
-    { label: 'Analytics', icon: <Assessment />, path: '/admin/analytics', color: '#8B5CF6' },
-    { label: 'Upload Resource', icon: <Upload />, path: '/admin/upload-resource', color: '#10B981' },
-    { label: 'Webinars', icon: <VideoCall />, path: '/admin/webinar-management', color: '#3B82F6' },
-    { label: 'Notifications', icon: <Notifications />, path: '/admin/notification-center', color: '#F59E0B' },
-    { label: 'Settings', icon: <Settings />, path: '/admin/system-settings', color: '#EF4444' },
-  ];
+  const recentActivities = dashboardData.recentActivities || [];
 
   return (
     <Box sx={{ animation: 'fadeIn 0.6s ease-out' }}>
@@ -233,27 +195,6 @@ const SystemAdminDashboard: React.FC = () => {
                   >
                     {React.cloneElement(stat.icon, { sx: { fontSize: 24 } })}
                   </Box>
-                  <Chip
-                    label={stat.change}
-                    size="small"
-                    icon={stat.trend === 'up' ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingDown sx={{ fontSize: 14 }} />}
-                    sx={{
-                      background: stat.trend === 'up' 
-                        ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                        : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      border: 'none',
-                      height: 24,
-                      boxShadow: stat.trend === 'up'
-                        ? '0 3px 10px rgba(16, 185, 129, 0.3)'
-                        : '0 3px 10px rgba(239, 68, 68, 0.3)',
-                      '& .MuiChip-icon': {
-                        color: 'white',
-                      },
-                    }}
-                  />
                 </Box>
                 <Typography 
                   className="stat-value"
@@ -329,136 +270,60 @@ const SystemAdminDashboard: React.FC = () => {
       </Grid>
 
       <Grid container spacing={3}>
-        {/* System Metrics */}
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 4, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                System Performance
-              </Typography>
-              <IconButton size="small">
-                <MoreVert />
-              </IconButton>
-            </Box>
-            
-            <Grid container spacing={3}>
-              {systemMetrics.map((metric, index) => (
-                <Grid item xs={12} sm={6} key={index}>
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        {metric.label}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {metric.value}%
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={metric.value}
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        background: `${metric.color}20`,
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: 4,
-                          background: `linear-gradient(90deg, ${metric.color} 0%, ${metric.color}CC 100%)`,
-                        },
-                      }}
-                    />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
-
-          {/* Recent Activity */}
+        {/* Recent Activity */}
+        <Grid item xs={12}>
           <Paper sx={{ p: 4 }}>
             <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
               Recent Activity
             </Typography>
-            <List sx={{ p: 0 }}>
-              {recentActivities.map((activity, index) => (
-                <React.Fragment key={index}>
-                  <ListItem
-                    sx={{
-                      px: 0,
-                      py: 2,
-                      '&:hover': {
-                        background: alpha('#fff', 0.02),
-                        borderRadius: 2,
-                      },
-                    }}
-                  >
-                    <Avatar
+            {recentActivities.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 6 }}>
+                <Info sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary">
+                  No recent activity to display
+                </Typography>
+              </Box>
+            ) : (
+              <List sx={{ p: 0 }}>
+                {recentActivities.map((activity: any, index: number) => (
+                  <React.Fragment key={index}>
+                    <ListItem
                       sx={{
-                        mr: 2,
-                        background: `${activity.color}20`,
-                        color: activity.color,
+                        px: 0,
+                        py: 2,
+                        '&:hover': {
+                          background: alpha('#fff', 0.02),
+                          borderRadius: 2,
+                        },
                       }}
                     >
-                      {activity.icon}
-                    </Avatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                          {activity.action}
-                        </Typography>
-                      }
-                      secondary={
-                        <Typography variant="body2" color="text.secondary">
-                          {activity.user} • {activity.time}
-                        </Typography>
-                      }
-                    />
-                  </ListItem>
-                  {index < recentActivities.length - 1 && <Divider sx={{ borderColor: alpha('#fff', 0.05) }} />}
-                </React.Fragment>
-              ))}
-            </List>
-          </Paper>
-        </Grid>
-
-        {/* Quick Actions */}
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-              Quick Actions
-            </Typography>
-            <Grid container spacing={2}>
-              {quickActions.map((action, index) => (
-                <Grid item xs={6} key={index}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={() => navigate(action.path)}
-                    sx={{
-                      py: 3,
-                      flexDirection: 'column',
-                      gap: 1,
-                      borderWidth: 2,
-                      borderColor: `${action.color}50`,
-                      borderRadius: '12px',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderWidth: 2,
-                        borderColor: action.color,
-                        background: `${action.color}10`,
-                        transform: 'translateY(-4px)',
-                        boxShadow: `0 8px 25px ${action.color}40`,
-                      },
-                    }}
-                  >
-                    <Box sx={{ color: action.color }}>
-                      {action.icon}
-                    </Box>
-                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                      {action.label}
-                    </Typography>
-                  </Button>
-                </Grid>
-              ))}
-            </Grid>
+                      <Avatar
+                        sx={{
+                          mr: 2,
+                          background: `${activity.color || '#667eea'}20`,
+                          color: activity.color || '#667eea',
+                        }}
+                      >
+                        {activity.icon || <Info />}
+                      </Avatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            {activity.action || 'Activity'}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="body2" color="text.secondary">
+                            {activity.user || 'System'} • {activity.time || 'Recently'}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                    {index < recentActivities.length - 1 && <Divider sx={{ borderColor: alpha('#fff', 0.05) }} />}
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
           </Paper>
         </Grid>
       </Grid>

@@ -40,12 +40,79 @@ const UploadResource: React.FC = () => {
     category: 'VAT',
     audience: 'ALL',
     file: null as File | null,
+    customCategory: '',
+    customAudience: '',
   });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [showCustomAudience, setShowCustomAudience] = useState(false);
+  
+  // Dynamic categories and audiences - fetched from backend
+  const [categories, setCategories] = useState<string[]>([]);
+  const [audiences, setAudiences] = useState<string[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+
+  useEffect(() => {
+    loadDynamicOptions();
+  }, []);
+
+  const loadDynamicOptions = async () => {
+    try {
+      setLoadingOptions(true);
+      const token = localStorage.getItem('itas_token');
+      
+      // Fetch categories from backend
+      const categoriesResponse = await fetch('http://localhost:8080/resources/categories', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      // Fetch audiences from backend
+      const audiencesResponse = await fetch('http://localhost:8080/resources/audiences', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        const fetchedCategories = categoriesData.data || categoriesData || [];
+        
+        // Add default categories if none exist, plus OTHER option
+        const defaultCategories = ['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC', 'CUSTOMS', 'EXCISE', 'TAX_COMPLIANCE'];
+        const allCategories = [...new Set([...defaultCategories, ...fetchedCategories, 'OTHER'])];
+        setCategories(allCategories);
+      } else {
+        // Fallback to default categories
+        setCategories(['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC', 'CUSTOMS', 'EXCISE', 'TAX_COMPLIANCE', 'OTHER']);
+      }
+      
+      if (audiencesResponse.ok) {
+        const audiencesData = await audiencesResponse.json();
+        const fetchedAudiences = audiencesData.data || audiencesData || [];
+        
+        // Add default audiences if none exist, plus OTHER option
+        const defaultAudiences = ['ALL', 'TAXPAYER', 'STAFF', 'SME', 'INDIVIDUAL', 'CORPORATE', 'GOVERNMENT'];
+        const allAudiences = [...new Set([...defaultAudiences, ...fetchedAudiences, 'OTHER'])];
+        setAudiences(allAudiences);
+      } else {
+        // Fallback to default audiences
+        setAudiences(['ALL', 'TAXPAYER', 'STAFF', 'SME', 'INDIVIDUAL', 'CORPORATE', 'GOVERNMENT', 'OTHER']);
+      }
+    } catch (error) {
+      console.error('Failed to load dynamic options:', error);
+      // Fallback to default values
+      setCategories(['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC', 'CUSTOMS', 'EXCISE', 'TAX_COMPLIANCE', 'OTHER']);
+      setAudiences(['ALL', 'TAXPAYER', 'STAFF', 'SME', 'INDIVIDUAL', 'CORPORATE', 'GOVERNMENT', 'OTHER']);
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,6 +121,20 @@ const UploadResource: React.FC = () => {
 
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
+    
+    // Show custom input if "OTHER" is selected
+    if (name === 'category' && value === 'OTHER') {
+      setShowCustomCategory(true);
+    } else if (name === 'category') {
+      setShowCustomCategory(false);
+    }
+    
+    if (name === 'audience' && value === 'OTHER') {
+      setShowCustomAudience(true);
+    } else if (name === 'audience') {
+      setShowCustomAudience(false);
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -98,12 +179,21 @@ const UploadResource: React.FC = () => {
         throw new Error('Please select a file to upload');
       }
 
+      // Use custom category/audience if "OTHER" was selected
+      const finalCategory = formData.category === 'OTHER' && formData.customCategory 
+        ? formData.customCategory.toUpperCase().replace(/\s+/g, '_')
+        : formData.category;
+        
+      const finalAudience = formData.audience === 'OTHER' && formData.customAudience
+        ? formData.customAudience.toUpperCase().replace(/\s+/g, '_')
+        : formData.audience;
+
       const resourceData = {
         title: formData.title,
         description: formData.description,
         resourceType: formData.resourceType,
-        category: formData.category,
-        audience: formData.audience,
+        category: finalCategory,
+        audience: finalAudience,
       };
 
       await resourcesAPI.uploadResource(formData.file, resourceData, (progress) => {
@@ -118,8 +208,15 @@ const UploadResource: React.FC = () => {
         category: 'VAT',
         audience: 'ALL',
         file: null,
+        customCategory: '',
+        customAudience: '',
       });
       setUploadProgress(0);
+      setShowCustomCategory(false);
+      setShowCustomAudience(false);
+      
+      // Reload dynamic options to include newly added categories/audiences
+      await loadDynamicOptions();
 
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
@@ -335,12 +432,36 @@ const UploadResource: React.FC = () => {
                         },
                       }}
                     >
-                      {COURSE_CATEGORIES.map(cat => (
-                        <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                      {categories.map(cat => (
+                        <MenuItem key={cat} value={cat}>
+                          {cat.replace(/_/g, ' ')}
+                        </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </Grid>
+
+                {/* Custom Category Input */}
+                {showCustomCategory && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Enter Custom Category"
+                      name="customCategory"
+                      value={formData.customCategory}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Property Tax, Sales Tax"
+                      disabled={uploading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          background: 'rgba(102, 126, 234, 0.05)',
+                        },
+                      }}
+                      helperText="This will be added to the category list"
+                    />
+                  </Grid>
+                )}
 
                 <Grid item xs={12}>
                   <FormControl fullWidth>
@@ -359,14 +480,36 @@ const UploadResource: React.FC = () => {
                         },
                       }}
                     >
-                      <MenuItem value="ALL">All Users</MenuItem>
-                      <MenuItem value="TAXPAYER">Taxpayers</MenuItem>
-                      <MenuItem value="STAFF">Staff</MenuItem>
-                      <MenuItem value="SME">Small Businesses</MenuItem>
-                      <MenuItem value="INDIVIDUAL">Individuals</MenuItem>
+                      {audiences.map(aud => (
+                        <MenuItem key={aud} value={aud}>
+                          {aud.replace(/_/g, ' ')}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
+
+                {/* Custom Audience Input */}
+                {showCustomAudience && (
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Enter Custom Audience"
+                      name="customAudience"
+                      value={formData.customAudience}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Tax Consultants, Accountants"
+                      disabled={uploading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          background: 'rgba(102, 126, 234, 0.05)',
+                        },
+                      }}
+                      helperText="This will be added to the audience list"
+                    />
+                  </Grid>
+                )}
 
                 {/* Drag and Drop File Upload */}
                 <Grid item xs={12}>

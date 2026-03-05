@@ -38,6 +38,9 @@ const Analytics: React.FC = () => {
   });
   
   const [topCourses, setTopCourses] = useState<any[]>([]);
+  const [userEngagement, setUserEngagement] = useState<any[]>([]);
+  const [resourceStats, setResourceStats] = useState<any[]>([]);
+  const [keyInsights, setKeyInsights] = useState<any[]>([]);
 
   useEffect(() => {
     loadAnalytics();
@@ -61,6 +64,18 @@ const Analytics: React.FC = () => {
       const courses = await analyticsApi.getTopCourses();
       setTopCourses(courses);
       
+      // Load user engagement (from backend)
+      const engagement = await analyticsApi.getUserEngagement();
+      setUserEngagement(engagement || []);
+      
+      // Load resource stats (from backend)
+      const resources = await analyticsApi.getResourceStats();
+      setResourceStats(resources || []);
+      
+      // Load key insights (from backend)
+      const insights = await analyticsApi.getKeyInsights();
+      setKeyInsights(insights || []);
+      
     } catch (err: any) {
       console.error('Error loading analytics:', err);
       setError('Failed to load analytics data');
@@ -69,18 +84,13 @@ const Analytics: React.FC = () => {
     }
   };
 
-  const userEngagement = [
-    { category: 'VAT', activeUsers: 456, avgTime: '45 min', completionRate: 72 },
-    { category: 'Income Tax', activeUsers: 389, avgTime: '38 min', completionRate: 65 },
-    { category: 'Corporate Tax', activeUsers: 234, avgTime: '52 min', completionRate: 82 },
-    { category: 'TCC', activeUsers: 187, avgTime: '41 min', completionRate: 76 },
-  ];
-
-  const resourceStats = [
-    { type: 'PDF', count: 28, downloads: 2345, avgRating: 4.5, color: '#EF4444' },
-    { type: 'Video', count: 12, downloads: 1567, avgRating: 4.7, color: '#8B5CF6' },
-    { type: 'Article', count: 8, downloads: 876, avgRating: 4.3, color: '#10B981' },
-  ];
+  const handleExportReport = async () => {
+    try {
+      await analyticsApi.exportReport('pdf');
+    } catch (err: any) {
+      alert('Failed to export report: ' + (err.message || 'Unknown error'));
+    }
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -99,6 +109,7 @@ const Analytics: React.FC = () => {
                   </Typography>
                 </Box>
                 <Button variant="contained" startIcon={<DownloadIcon />}
+                  onClick={handleExportReport}
                   sx={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', px: 3, py: 1.5, fontWeight: 600,
                     '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }
                   }}>
@@ -419,37 +430,44 @@ const Analytics: React.FC = () => {
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <UsersIcon /> User Engagement by Tax Category
                       </Typography>
-                      <TableContainer>
-                        <Table>
-                          <TableHead>
-                            <TableRow sx={{ background: '#f9fafb' }}>
-                              <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Category</TableCell>
-                              <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Active Users</TableCell>
-                              <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Avg. Time</TableCell>
-                              <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Completion</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {userEngagement.map((item, index) => (
-                              <TableRow key={index} sx={{ '&:hover': { background: '#f9fafb' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
-                                <TableCell>
-                                  <Chip label={item.category} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontWeight: 600 }} />
-                                </TableCell>
-                                <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 600 }}>{item.activeUsers}</TableCell>
-                                <TableCell align="right" sx={{ color: 'text.secondary' }}>{item.avgTime}</TableCell>
-                                <TableCell align="right">
-                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-                                    <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>{item.completionRate}%</Typography>
-                                    <Box sx={{ width: 60, height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
-                                      <Box sx={{ width: `${item.completionRate}%`, height: '100%', background: 'linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%)', borderRadius: 3 }} />
-                                    </Box>
-                                  </Box>
-                                </TableCell>
+                      {userEngagement.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                          <UsersIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                          <Typography variant="body2" color="text.secondary">No engagement data available</Typography>
+                        </Box>
+                      ) : (
+                        <TableContainer>
+                          <Table>
+                            <TableHead>
+                              <TableRow sx={{ background: '#f9fafb' }}>
+                                <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Category</TableCell>
+                                <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Active Users</TableCell>
+                                <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Avg. Time</TableCell>
+                                <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Completion</TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                              {userEngagement.map((item, index) => (
+                                <TableRow key={index} sx={{ '&:hover': { background: '#f9fafb' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
+                                  <TableCell>
+                                    <Chip label={item.category} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontWeight: 600 }} />
+                                  </TableCell>
+                                  <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 600 }}>{item.activeUsers}</TableCell>
+                                  <TableCell align="right" sx={{ color: 'text.secondary' }}>{item.avgTime}</TableCell>
+                                  <TableCell align="right">
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+                                      <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>{item.completionRate}%</Typography>
+                                      <Box sx={{ width: 60, height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+                                        <Box sx={{ width: `${item.completionRate}%`, height: '100%', background: 'linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%)', borderRadius: 3 }} />
+                                      </Box>
+                                    </Box>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
                     </Paper>
                   </Fade>
                 </Grid>
@@ -462,25 +480,32 @@ const Analytics: React.FC = () => {
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <DownloadIcon /> Resource Statistics
                       </Typography>
-                      {resourceStats.map((resource, index) => (
-                        <Zoom in timeout={800 + index * 100} key={index}>
-                          <Paper sx={{ p: 2, mb: 2, background: '#f9fafb', border: '1px solid #e5e7eb', borderLeft: `3px solid ${resource.color}`, borderRadius: 2,
-                            transition: 'all 0.3s ease', '&:hover': { transform: 'translateX(8px)', background: 'white' }
-                          }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                              <Chip label={resource.type} size="small" sx={{ background: `${resource.color}20`, color: resource.color, border: `1px solid ${resource.color}40`, fontWeight: 600 }} />
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <StarIcon sx={{ color: '#F59E0B', fontSize: '1rem' }} />
-                                <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: '0.9rem' }}>{resource.avgRating}</Typography>
+                      {resourceStats.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                          <DownloadIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                          <Typography variant="body2" color="text.secondary">No resource data available</Typography>
+                        </Box>
+                      ) : (
+                        resourceStats.map((resource, index) => (
+                          <Zoom in timeout={800 + index * 100} key={index}>
+                            <Paper sx={{ p: 2, mb: 2, background: '#f9fafb', border: '1px solid #e5e7eb', borderLeft: `3px solid ${resource.color}`, borderRadius: 2,
+                              transition: 'all 0.3s ease', '&:hover': { transform: 'translateX(8px)', background: 'white' }
+                            }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Chip label={resource.type} size="small" sx={{ background: `${resource.color}20`, color: resource.color, border: `1px solid ${resource.color}40`, fontWeight: 600 }} />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <StarIcon sx={{ color: '#F59E0B', fontSize: '1rem' }} />
+                                  <Typography sx={{ color: 'text.primary', fontWeight: 600, fontSize: '0.9rem' }}>{resource.avgRating}</Typography>
+                                </Box>
                               </Box>
-                            </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Count: {resource.count}</Typography>
-                              <Typography variant="body2" sx={{ color: '#10B981', fontWeight: 600 }}>{resource.downloads.toLocaleString()} downloads</Typography>
-                            </Box>
-                          </Paper>
-                        </Zoom>
-                      ))}
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>Count: {resource.count}</Typography>
+                                <Typography variant="body2" sx={{ color: '#10B981', fontWeight: 600 }}>{resource.downloads.toLocaleString()} downloads</Typography>
+                              </Box>
+                            </Paper>
+                          </Zoom>
+                        ))
+                      )}
                     </Paper>
                   </Fade>
 
@@ -514,24 +539,26 @@ const Analytics: React.FC = () => {
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <TrendIcon /> Key Insights
                       </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {[
-                          { text: 'VAT courses show 78% completion rate', icon: <CheckIcon />, color: '#10B981', label: 'High Performance' },
-                          { text: '12% user growth this month', icon: <TrendIcon />, color: '#667eea', label: 'Growth Trend' },
-                          { text: 'Income Tax courses have lowest completion', icon: <WarningIcon />, color: '#F59E0B', label: 'Attention Needed' },
-                          { text: 'Add more video resources for complex topics', icon: <CourseIcon />, color: '#8B5CF6', label: 'Recommendation' },
-                        ].map((insight, index) => (
-                          <Paper key={index} sx={{ p: 2, background: `${insight.color}10`, border: `1px solid ${insight.color}30`, borderLeft: `3px solid ${insight.color}`, borderRadius: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                              <Box sx={{ color: insight.color, mt: 0.2 }}>{insight.icon}</Box>
-                              <Box>
-                                <Typography sx={{ color: insight.color, fontWeight: 700, fontSize: '0.9rem', mb: 0.5 }}>{insight.label}</Typography>
-                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>{insight.text}</Typography>
+                      {keyInsights.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                          <InsightsIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                          <Typography variant="body2" color="text.secondary">No insights available</Typography>
+                        </Box>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {keyInsights.map((insight, index) => (
+                            <Paper key={index} sx={{ p: 2, background: `${insight.color}10`, border: `1px solid ${insight.color}30`, borderLeft: `3px solid ${insight.color}`, borderRadius: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                                <Box sx={{ color: insight.color, mt: 0.2 }}>{insight.icon}</Box>
+                                <Box>
+                                  <Typography sx={{ color: insight.color, fontWeight: 700, fontSize: '0.9rem', mb: 0.5 }}>{insight.label}</Typography>
+                                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>{insight.text}</Typography>
+                                </Box>
                               </Box>
-                            </Box>
-                          </Paper>
-                        ))}
-                      </Box>
+                            </Paper>
+                          ))}
+                        </Box>
+                      )}
                     </Paper>
                   </Fade>
                 </Grid>

@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete, Visibility, School, ExpandMore, PlaylistAdd, CloudUpload, Link as LinkIcon } from '@mui/icons-material';
 import axios from 'axios';
-import ModuleContentManager from './ModuleContentManager';
+import ModuleContentDialog from '../../components/ModuleContentDialog';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -58,10 +58,6 @@ const CourseManagement: React.FC = () => {
     orderIndex: 0,
     durationMinutes: 60,
   });
-  const [moduleContentFile, setModuleContentFile] = useState<File | null>(null);
-  const [moduleContentUrl, setModuleContentUrl] = useState('');
-  const [moduleContentType, setModuleContentType] = useState<'document' | 'video'>('document');
-  const [moduleUploadMethod, setModuleUploadMethod] = useState<'file' | 'url'>('file');
   const [contentManagerOpen, setContentManagerOpen] = useState(false);
   const [selectedModuleForContent, setSelectedModuleForContent] = useState<{ id: number; name: string } | null>(null);
   const [formData, setFormData] = useState<Course>({
@@ -117,10 +113,6 @@ const CourseManagement: React.FC = () => {
       orderIndex: existingModules.length,
       durationMinutes: 60,
     });
-    setModuleContentFile(null);
-    setModuleContentUrl('');
-    setModuleContentType('document');
-    setModuleUploadMethod('file');
     setOpenModuleDialog(true);
   };
 
@@ -133,8 +125,8 @@ const CourseManagement: React.FC = () => {
     if (!selectedCourseForModules) return;
     
     try {
-      // First, create the module
-      const moduleResponse = await axios.post(
+      // Create the module
+      await axios.post(
         `${API_BASE_URL}/modules`,
         {
           courseId: selectedCourseForModules,
@@ -143,43 +135,9 @@ const CourseManagement: React.FC = () => {
         getAuthHeaders()
       );
       
-      const createdModule = moduleResponse.data.data || moduleResponse.data;
-      const moduleId = createdModule.id;
-      
-      // Then, upload content if provided
-      if (moduleUploadMethod === 'file' && moduleContentFile) {
-        const formData = new FormData();
-        formData.append('file', moduleContentFile);
-        formData.append('contentType', moduleContentType);
-        
-        await axios.post(
-          `${API_BASE_URL}/modules/${moduleId}/upload-content`,
-          formData,
-          {
-            ...getAuthHeaders(),
-            headers: {
-              ...getAuthHeaders().headers,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-      } else if (moduleUploadMethod === 'url' && moduleContentUrl.trim()) {
-        await axios.post(
-          `${API_BASE_URL}/modules/${moduleId}/set-url`,
-          null,
-          {
-            ...getAuthHeaders(),
-            params: {
-              url: moduleContentUrl,
-              urlType: moduleContentType,
-            },
-          }
-        );
-      }
-      
       loadModulesForCourse(selectedCourseForModules);
       handleCloseModuleDialog();
-      alert('Module created successfully with content!');
+      alert('Module created successfully! You can now add content to it.');
     } catch (error) {
       console.error('Failed to add module:', error);
       alert('Failed to add module. Please make sure you are logged in.');
@@ -389,22 +347,23 @@ const CourseManagement: React.FC = () => {
                           <ListItemText
                             primary={`${index + 1}. ${module.title}`}
                             secondary={
-                              <Box component="span">
-                                <Typography variant="body2" component="span">
+                              <React.Fragment>
+                                <Typography variant="body2" component="span" display="block">
                                   {module.durationMinutes} minutes - {module.description}
                                 </Typography>
                                 {(module.contentUrl || module.videoUrl) && (
-                                  <Box sx={{ mt: 0.5 }}>
+                                  <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, mt: 0.5 }}>
                                     {module.contentUrl && (
-                                      <Chip label="Has Document" size="small" color="primary" sx={{ mr: 0.5 }} />
+                                      <Chip label="Has Document" size="small" color="primary" />
                                     )}
                                     {module.videoUrl && (
                                       <Chip label="Has Video" size="small" color="secondary" />
                                     )}
                                   </Box>
                                 )}
-                              </Box>
+                              </React.Fragment>
                             }
+                            secondaryTypographyProps={{ component: 'div' }}
                           />
                         </ListItem>
                       ))}
@@ -519,8 +478,8 @@ const CourseManagement: React.FC = () => {
       </Dialog>
 
       {/* Add Module Dialog */}
-      <Dialog open={openModuleDialog} onClose={handleCloseModuleDialog} maxWidth="md" fullWidth>
-        <DialogTitle>Add Module with Content</DialogTitle>
+      <Dialog open={openModuleDialog} onClose={handleCloseModuleDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Module</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -559,144 +518,10 @@ const CourseManagement: React.FC = () => {
                 onChange={(e) => setModuleFormData({ ...moduleFormData, orderIndex: parseInt(e.target.value) || 0 })}
               />
             </Grid>
-            
-            {/* Content Upload Section */}
             <Grid item xs={12}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, mt: 2 }}>
-                Module Content (Optional)
-              </Typography>
-              
-              {/* Upload Method Toggle */}
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Button
-                  variant={moduleUploadMethod === 'file' ? 'contained' : 'outlined'}
-                  onClick={() => setModuleUploadMethod('file')}
-                  startIcon={<CloudUpload />}
-                >
-                  Upload File
-                </Button>
-                <Button
-                  variant={moduleUploadMethod === 'url' ? 'contained' : 'outlined'}
-                  onClick={() => setModuleUploadMethod('url')}
-                  startIcon={<LinkIcon />}
-                >
-                  Add URL
-                </Button>
-              </Box>
-              
-              {/* Content Type Selection */}
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1 }}>Content Type:</Typography>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Button
-                    size="small"
-                    variant={moduleContentType === 'document' ? 'contained' : 'outlined'}
-                    onClick={() => setModuleContentType('document')}
-                  >
-                    📄 Document/PDF
-                  </Button>
-                  <Button
-                    size="small"
-                    variant={moduleContentType === 'video' ? 'contained' : 'outlined'}
-                    onClick={() => setModuleContentType('video')}
-                  >
-                    🎥 Video
-                  </Button>
-                </Box>
-              </Box>
-              
-              {/* File Upload */}
-              {moduleUploadMethod === 'file' && (
-                <Box
-                  sx={{
-                    border: '2px dashed',
-                    borderColor: moduleContentFile ? 'primary.main' : 'grey.300',
-                    borderRadius: 2,
-                    p: 3,
-                    textAlign: 'center',
-                    bgcolor: moduleContentFile ? 'primary.50' : 'grey.50',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      bgcolor: 'primary.50',
-                    },
-                  }}
-                  onClick={() => document.getElementById('module-file-input-dialog')?.click()}
-                >
-                  <input
-                    id="module-file-input-dialog"
-                    type="file"
-                    hidden
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setModuleContentFile(e.target.files[0]);
-                      }
-                    }}
-                    accept={moduleContentType === 'video' ? 'video/*' : '.pdf,.doc,.docx,.ppt,.pptx'}
-                  />
-                  
-                  {moduleContentFile ? (
-                    <Box>
-                      <Typography variant="h6" sx={{ mb: 1 }}>
-                        {moduleContentFile.name}
-                      </Typography>
-                      <Chip 
-                        label={`${(moduleContentFile.size / 1024 / 1024).toFixed(2)} MB`} 
-                        color="primary" 
-                        sx={{ mb: 2 }} 
-                      />
-                      <Box>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setModuleContentFile(null);
-                          }}
-                        >
-                          Remove File
-                        </Button>
-                      </Box>
-                    </Box>
-                  ) : (
-                    <Box>
-                      <CloudUpload sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
-                      <Typography variant="body1" sx={{ mb: 1 }}>
-                        Click to select file
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {moduleContentType === 'video' ? 'MP4, AVI, MOV (Max 50MB)' : 'PDF, DOC, PPT (Max 50MB)'}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              )}
-              
-              {/* URL Input */}
-              {moduleUploadMethod === 'url' && (
-                <Box>
-                  <TextField
-                    fullWidth
-                    label="Content URL"
-                    placeholder="https://youtube.com/watch?v=... or https://example.com/file.pdf"
-                    value={moduleContentUrl}
-                    onChange={(e) => setModuleContentUrl(e.target.value)}
-                    helperText="Enter YouTube, Vimeo, Google Drive, or direct file URL"
-                  />
-                  <Alert severity="info" sx={{ mt: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                      Supported URLs:
-                    </Typography>
-                    <Typography variant="body2">
-                      • YouTube: https://youtube.com/watch?v=...<br />
-                      • Vimeo: https://vimeo.com/...<br />
-                      • Google Drive: https://drive.google.com/...<br />
-                      • Direct links: https://example.com/file.pdf
-                    </Typography>
-                  </Alert>
-                </Box>
-              )}
+              <Alert severity="info">
+                After creating the module, you can add video and document content using the "Add Content" button.
+              </Alert>
             </Grid>
           </Grid>
         </DialogContent>
@@ -712,9 +537,9 @@ const CourseManagement: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Module Content Manager */}
+      {/* Module Content Dialog */}
       {selectedModuleForContent && (
-        <ModuleContentManager
+        <ModuleContentDialog
           open={contentManagerOpen}
           onClose={() => {
             setContentManagerOpen(false);
@@ -723,15 +548,12 @@ const CourseManagement: React.FC = () => {
           moduleId={selectedModuleForContent.id}
           moduleName={selectedModuleForContent.name}
           onSuccess={() => {
-            if (selectedModuleForContent) {
-              const courseId = courseModules[Object.keys(courseModules).find(key => 
-                courseModules[parseInt(key)].some(m => m.id === selectedModuleForContent.id)
-              )!];
-              if (courseId) {
-                loadModulesForCourse(parseInt(Object.keys(courseModules).find(key => 
-                  courseModules[parseInt(key)].some(m => m.id === selectedModuleForContent.id)
-                )!));
-              }
+            // Reload modules for the course
+            const courseId = Object.keys(courseModules).find(key =>
+              courseModules[parseInt(key)].some(m => m.id === selectedModuleForContent.id)
+            );
+            if (courseId) {
+              loadModulesForCourse(parseInt(courseId));
             }
           }}
         />

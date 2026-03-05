@@ -18,6 +18,11 @@ import TaxpayerCourses from './pages/taxpayer/Courses';
 import CourseDetail from './pages/taxpayer/CourseDetail';
 import TaxpayerResources from './pages/taxpayer/Resources';
 import TaxpayerCertificates from './pages/taxpayer/Certificates';
+import PracticeQuestions from './pages/taxpayer/PracticeQuestions';
+import ModuleQuiz from './pages/taxpayer/ModuleQuiz';
+import FinalExam from './pages/taxpayer/FinalExam';
+import TakeAssessment from './pages/taxpayer/TakeAssessment';
+import PracticeQuiz from './pages/taxpayer/PracticeQuiz';
 
 // Admin Pages - Different dashboards for each role
 import SystemAdminDashboard from './pages/admin/SystemAdminDashboard';
@@ -36,11 +41,11 @@ import UserRoleManagement from './pages/admin/UserRoleManagement';
 import CourseManagement from './pages/admin/CourseManagement';
 import ResourceUpload from './pages/admin/ResourceUpload';
 import QuestionManagement from './pages/admin/QuestionManagement';
+import AssessmentManagement from './pages/admin/AssessmentManagement';
 import ModuleContentManager from './pages/admin/ModuleContentManager';
 
 // Shared Pages
 import Profile from './pages/Profile';
-import TakeAssessment from './pages/TakeAssessment';
 
 // Layout Components
 import TaxpayerLayout from './components/TaxpayerLayout';
@@ -102,7 +107,8 @@ function App() {
   // Get dashboard based on user role - 8 Role System
   const getDashboardRoute = (userType: string) => {
     switch(userType) {
-      case 'TAX_AGENT': return '/taxpayer/dashboard';
+      case 'TAX_AGENT':
+      case 'TAXPAYER': return '/taxpayer/dashboard';
       case 'MOR_STAFF': return '/staff/dashboard';
       case 'CONTENT_ADMIN': return '/admin/content-dashboard';
       case 'TRAINING_ADMIN': return '/admin/training-dashboard';
@@ -189,7 +195,7 @@ function App() {
 
           {/* Taxpayer Routes */}
           <Route path="/taxpayer" element={
-            <ProtectedRoute requiredRole="TAX_AGENT">
+            <ProtectedRoute allowedRoles={['TAX_AGENT', 'TAXPAYER']}>
               <TaxpayerLayout user={user} onLogout={handleLogout} />
             </ProtectedRoute>
           }>
@@ -197,9 +203,13 @@ function App() {
             <Route path="dashboard" element={<TaxpayerDashboard user={user} />} />
             <Route path="courses" element={<TaxpayerCourses user={user} />} />
             <Route path="course/:id" element={<CourseDetail />} />
+            <Route path="module/:moduleId/practice" element={<PracticeQuestions />} />
+            <Route path="module/:moduleId/practice-quiz" element={<PracticeQuiz />} />
+            <Route path="module/:moduleId/quiz" element={<ModuleQuiz />} />
+            <Route path="course/:courseId/final-exam" element={<FinalExam />} />
+            <Route path="assessment/:assessmentId" element={<TakeAssessment />} />
             <Route path="resources" element={<TaxpayerResources user={user} />} />
             <Route path="certificates" element={<TaxpayerCertificates />} />
-            <Route path="assessment/:moduleId" element={<TakeAssessment />} />
           </Route>
 
           {/* MOR Staff Routes */}
@@ -289,6 +299,11 @@ function App() {
             <Route path="question-management" element={
               <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN']}>
                 <QuestionManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="assessment-management" element={
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN']}>
+                <AssessmentManagement />
               </ProtectedRoute>
             } />
             <Route path="module-content" element={

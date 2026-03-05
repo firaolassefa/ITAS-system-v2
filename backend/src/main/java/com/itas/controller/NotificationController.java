@@ -20,6 +20,7 @@ public class NotificationController {
     
     // Get all notifications
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getAllNotifications() {
         try {
             List<Notification> notifications = notificationService.getAllNotifications();
@@ -129,6 +130,7 @@ public class NotificationController {
     
     // Mark notification as read
     @PostMapping("/mark-as-read/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> markAsRead(@PathVariable Long id) {
         try {
             notificationService.markAsRead(id);

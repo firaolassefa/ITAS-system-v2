@@ -34,8 +34,8 @@ const AuditorDashboard: React.FC = () => {
 
   const stats = {
     totalAudits: dashboardData.totalAudits || 0,
-    pendingReviews: 12,
-    completedThisMonth: 28,
+    pendingReviews: dashboardData.pendingReviews || 0,
+    completedThisMonth: dashboardData.completedThisMonth || 0,
     complianceRate: dashboardData.complianceScore || 0,
     totalUsers: dashboardData.totalUsers || 0,
     totalCourses: dashboardData.totalCourses || 0,
@@ -43,12 +43,7 @@ const AuditorDashboard: React.FC = () => {
     systemHealth: dashboardData.systemHealth || 0,
   };
 
-  const recentAudits = [
-    { item: 'User Registration Audit', status: 'Completed', date: '2 hours ago' },
-    { item: 'Course Content Review', status: 'In Progress', date: '5 hours ago' },
-    { item: 'Resource Access Audit', status: 'Completed', date: '1 day ago' },
-    { item: 'System Security Check', status: 'Pending', date: '2 days ago' },
-  ];
+  const recentAudits = dashboardData.recentAudits || [];
 
   return (
     <Box>
@@ -156,7 +151,7 @@ const AuditorDashboard: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Permissions & Info */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               Auditor Permissions
@@ -189,97 +184,40 @@ const AuditorDashboard: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Recent Audit Activities
             </Typography>
-            <List>
-              {recentAudits.map((audit, index) => (
-                <React.Fragment key={index}>
-                  <ListItem>
-                    <ListItemText
-                      primary={audit.item}
-                      secondary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Chip 
-                            label={audit.status} 
-                            size="small" 
-                            color={
-                              audit.status === 'Completed' ? 'success' : 
-                              audit.status === 'In Progress' ? 'warning' : 
-                              'default'
-                            }
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            {audit.date}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                  {index < recentAudits.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
-          </Paper>
-        </Grid>
-
-        {/* Quick Actions */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Quick Actions
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<Assessment />}
-                  onClick={() => navigate('/admin/analytics')}
-                  sx={{ py: 1.5 }}
-                >
-                  View Analytics
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<Description />}
-                  onClick={() => navigate('/admin/analytics')}
-                  sx={{ py: 1.5 }}
-                >
-                  Generate Audit Report
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<Visibility />}
-                  sx={{ py: 1.5 }}
-                >
-                  View Activity Logs
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<VerifiedUser />}
-                  sx={{ py: 1.5 }}
-                >
-                  Compliance Dashboard
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<BarChart />}
-                  sx={{ py: 1.5 }}
-                >
-                  Export Reports
-                </Button>
-              </Grid>
-            </Grid>
+            {recentAudits.length > 0 ? (
+              <List>
+                {recentAudits.map((audit: any, index: number) => (
+                  <React.Fragment key={index}>
+                    <ListItem>
+                      <ListItemText
+                        primary={audit.item || audit.title || 'Audit Activity'}
+                        secondary={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                              label={audit.status || 'Pending'} 
+                              size="small" 
+                              color={
+                                audit.status === 'Completed' ? 'success' : 
+                                audit.status === 'In Progress' ? 'warning' : 
+                                'default'
+                              }
+                            />
+                            <Typography variant="caption" color="text.secondary">
+                              {audit.date || new Date(audit.createdAt || Date.now()).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                    {index < recentAudits.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                No recent audit activities found
+              </Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>

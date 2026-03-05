@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
   TrendingUp, People, School, Assessment, CheckCircle,
-  ArrowUpward, ArrowDownward, Timeline, Speed, EmojiEvents,
+  Timeline, Speed, EmojiEvents,
 } from '@mui/icons-material';
 import { dashboardAPI } from '../../api/dashboard';
 
@@ -42,27 +42,22 @@ const ManagerDashboard: React.FC = () => {
   }
 
   const stats = [
-    { label: 'Total Users', value: (dashboardData.totalUsers || 0).toString(), icon: <People />, color: '#667eea', change: '+18%', trend: 'up' },
-    { label: 'Active Courses', value: (dashboardData.totalCourses || 0).toString(), icon: <School />, color: '#10B981', change: '+12%', trend: 'up' },
-    { label: 'Completion Rate', value: `${dashboardData.completionRate || 0}%`, icon: <CheckCircle />, color: '#F59E0B', change: '+5%', trend: 'up' },
-    { label: 'Active Users', value: (dashboardData.activeUsers || 0).toString(), icon: <Assessment />, color: '#8B5CF6', change: '+8%', trend: 'up' },
+    { label: 'Total Users', value: (dashboardData.totalUsers || 0).toString(), icon: <People />, color: '#667eea' },
+    { label: 'Active Courses', value: (dashboardData.totalCourses || 0).toString(), icon: <School />, color: '#10B981' },
+    { label: 'Completion Rate', value: `${dashboardData.completionRate || 0}%`, icon: <CheckCircle />, color: '#F59E0B' },
+    { label: 'Active Users', value: (dashboardData.activeUsers || 0).toString(), icon: <Assessment />, color: '#8B5CF6' },
   ];
 
   const coursePerformance = (dashboardData.coursePerformance || []).map((course: any, index: number) => ({
     name: course.title || 'Untitled Course',
-    enrolled: 100,
-    completed: 80,
-    avgScore: 85,
-    completionRate: 80,
+    enrolled: course.enrolled || 0,
+    completed: course.completed || 0,
+    avgScore: course.avgScore || 0,
+    completionRate: course.completionRate || 0,
     color: ['#667eea', '#10B981', '#F59E0B', '#8B5CF6'][index % 4],
   }));
 
-  const recentActivity = [
-    { user: 'John Doe', action: 'Completed', course: 'Tax Filing Basics', time: '2 hours ago', color: '#10B981' },
-    { user: 'Jane Smith', action: 'Enrolled', course: 'VAT Fundamentals', time: '3 hours ago', color: '#667eea' },
-    { user: 'Mike Johnson', action: 'Passed Assessment', course: 'Income Tax Advanced', time: '5 hours ago', color: '#F59E0B' },
-    { user: 'Sarah Williams', action: 'Started', course: 'Corporate Tax', time: '6 hours ago', color: '#8B5CF6' },
-  ];
+  const recentActivity = dashboardData.recentActivity || [];
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -157,25 +152,6 @@ const ManagerDashboard: React.FC = () => {
                     >
                       {React.cloneElement(stat.icon, { sx: { fontSize: 22 } })}
                     </Box>
-                    <Chip
-                      icon={stat.trend === 'up' ? <ArrowUpward sx={{ fontSize: 14 }} /> : <ArrowDownward sx={{ fontSize: 14 }} />}
-                      label={stat.change}
-                      size="small"
-                      sx={{
-                        height: 24,
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        background: stat.trend === 'up' 
-                          ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                          : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                        color: 'white',
-                        border: 'none',
-                        boxShadow: stat.trend === 'up'
-                          ? '0 2px 8px rgba(16, 185, 129, 0.3)'
-                          : '0 2px 8px rgba(239, 68, 68, 0.3)',
-                        '& .MuiChip-icon': { color: 'white' },
-                      }}
-                    />
                   </Box>
                   <Typography 
                     className="stat-value"
@@ -249,7 +225,17 @@ const ManagerDashboard: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {coursePerformance.map((course, index) => (
+                    {coursePerformance.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                          <Assessment sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                          <Typography variant="body2" color="text.secondary">
+                            No course performance data available
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                    coursePerformance.map((course, index) => (
                       <TableRow
                         key={index}
                         sx={{
@@ -329,7 +315,8 @@ const ManagerDashboard: React.FC = () => {
                           </Box>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -373,7 +360,15 @@ const ManagerDashboard: React.FC = () => {
               </Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {recentActivity.map((activity, index) => (
+                {recentActivity.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Speed sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      No recent activity to display
+                    </Typography>
+                  </Box>
+                ) : (
+                recentActivity.map((activity, index) => (
                   <Zoom in={mounted} timeout={800 + index * 150} key={index}>
                     <Paper
                       sx={{
@@ -431,7 +426,8 @@ const ManagerDashboard: React.FC = () => {
                       </Box>
                     </Paper>
                   </Zoom>
-                ))}
+                ))
+                )}
               </Box>
             </Paper>
           </Fade>

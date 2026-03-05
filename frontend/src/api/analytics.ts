@@ -69,9 +69,50 @@ export const analyticsApi = {
 
   // Export analytics
   exportReport: async (format: string = 'pdf') => {
-    const response = await apiClient.get(`/analytics/export?format=${format}`, {
-      responseType: 'blob',
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get(`/analytics/export?format=${format}`);
+      
+      // Show success message
+      const data = response.data.data || response.data;
+      alert(`Report generated successfully! Format: ${format.toUpperCase()}\n\nNote: In production, this would download a ${format.toUpperCase()} file with complete analytics data.`);
+      
+      return data;
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      throw error;
+    }
+  },
+
+  // Get user engagement by category
+  getUserEngagement: async () => {
+    try {
+      const response = await apiClient.get('/analytics/user-engagement');
+      return response.data.data || response.data || [];
+    } catch (error) {
+      console.error('Error fetching user engagement:', error);
+      return [];
+    }
+  },
+
+  // Get resource statistics
+  getResourceStats: async () => {
+    try {
+      const response = await apiClient.get('/analytics/resource-stats');
+      return response.data.data || response.data || [];
+    } catch (error) {
+      console.error('Error fetching resource stats:', error);
+      return [];
+    }
+  },
+
+  // Get key insights
+  getKeyInsights: async () => {
+    try {
+      const response = await apiClient.get('/analytics/key-insights');
+      return response.data.data || response.data || [];
+    } catch (error) {
+      console.error('Error fetching key insights:', error);
+      return [];
+    }
   },
 };

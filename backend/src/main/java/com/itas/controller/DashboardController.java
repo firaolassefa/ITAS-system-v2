@@ -5,6 +5,7 @@ import com.itas.model.UserType;
 import com.itas.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +45,7 @@ public class DashboardController {
      * Get dashboard stats for TAXPAYER
      */
     @GetMapping("/taxpayer/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getTaxpayerDashboard(@PathVariable Long userId) {
         Map<String, Object> data = new HashMap<>();
         
@@ -73,6 +75,7 @@ public class DashboardController {
      * Get dashboard stats for MOR_STAFF
      */
     @GetMapping("/staff/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getStaffDashboard(@PathVariable Long userId) {
         Map<String, Object> data = new HashMap<>();
         
@@ -94,6 +97,7 @@ public class DashboardController {
      * Get dashboard stats for CONTENT_ADMIN
      */
     @GetMapping("/content-admin")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> getContentAdminDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -123,6 +127,7 @@ public class DashboardController {
      * Get dashboard stats for TRAINING_ADMIN
      */
     @GetMapping("/training-admin")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'TRAINING_ADMIN')")
     public ResponseEntity<?> getTrainingAdminDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -147,6 +152,7 @@ public class DashboardController {
      * Get dashboard stats for COMM_OFFICER
      */
     @GetMapping("/comm-officer")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'COMM_OFFICER')")
     public ResponseEntity<?> getCommOfficerDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -168,6 +174,7 @@ public class DashboardController {
      * Get dashboard stats for MANAGER
      */
     @GetMapping("/manager")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'MANAGER')")
     public ResponseEntity<?> getManagerDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -195,6 +202,7 @@ public class DashboardController {
      * Get dashboard stats for SYSTEM_ADMIN
      */
     @GetMapping("/system-admin")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<?> getSystemAdminDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -224,6 +232,7 @@ public class DashboardController {
      * Get dashboard stats for AUDITOR
      */
     @GetMapping("/auditor")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'AUDITOR')")
     public ResponseEntity<?> getAuditorDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -246,6 +255,7 @@ public class DashboardController {
      * Get dashboard stats based on current user role
      */
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getMyDashboard() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();

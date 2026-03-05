@@ -1,29 +1,73 @@
 import React, { useState } from 'react';
 import {
   Container, Box, TextField, Button, Typography, Paper,
-  InputAdornment, IconButton, Chip, alpha, Grid,
+  InputAdornment, IconButton, Chip, alpha, Grid, Alert,
 } from '@mui/material';
 import {
   Person, Email, Lock, Visibility, VisibilityOff,
   School, CheckCircle, ArrowForward, EmojiEvents, Rocket, TrendingUp,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../../api/auth';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    username: '',
     password: '',
     confirmPassword: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic
-    console.log('Register:', formData);
+    setError('');
+    setSuccess('');
+
+    // Validation
+    if (!formData.fullName || !formData.email || !formData.username || !formData.password) {
+      setError('All fields are required');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const userData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        userType: 'TAXPAYER', // Default user type
+      };
+
+      const response = await authAPI.register(userData);
+      setSuccess('Registration successful! Redirecting to login...');
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const benefits = [
@@ -111,13 +155,53 @@ const Register: React.FC = () => {
                 </Box>
 
               <form onSubmit={handleSubmit}>
+                {error && (
+                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                    {error}
+                  </Alert>
+                )}
+                {success && (
+                  <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                    {success}
+                  </Alert>
+                )}
+                
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <TextField
                     fullWidth
                     label="Full Name"
                     variant="outlined"
+                    required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: '#667eea' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        '&:hover fieldset': {
+                          borderColor: '#667eea',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#667eea',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Username"
+                    variant="outlined"
+                    required
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -144,6 +228,7 @@ const Register: React.FC = () => {
                     label="Email Address"
                     type="email"
                     variant="outlined"
+                    required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     InputProps={{
@@ -172,6 +257,7 @@ const Register: React.FC = () => {
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
                     variant="outlined"
+                    required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     InputProps={{
@@ -210,6 +296,7 @@ const Register: React.FC = () => {
                     label="Confirm Password"
                     type={showConfirmPassword ? 'text' : 'password'}
                     variant="outlined"
+                    required
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     InputProps={{
@@ -248,6 +335,7 @@ const Register: React.FC = () => {
                       type="submit"
                       variant="contained"
                       size="large"
+                      disabled={loading}
                       endIcon={<ArrowForward />}
                       sx={{
                         flex: 1,
@@ -263,14 +351,18 @@ const Register: React.FC = () => {
                           transform: 'translateY(-2px)',
                           boxShadow: '0 12px 35px rgba(102, 126, 234, 0.6)',
                         },
+                        '&:disabled': {
+                          background: '#ccc',
+                        },
                       }}
                     >
-                      Create Account
+                      {loading ? 'Creating Account...' : 'Create Account'}
                     </Button>
                     <Button
                       variant="outlined"
                       size="large"
                       onClick={() => navigate('/login')}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         py: 1.8,

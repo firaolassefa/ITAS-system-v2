@@ -16,6 +16,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     long countByUserId(Long userId);
     long countByUserIdAndProgressGreaterThanEqual(Long userId, int progress);
     long countByProgressGreaterThanEqual(int progress);
+    long countByProgressGreaterThanEqual(double progress);
     
     @Query("SELECT AVG(e.progress) FROM Enrollment e WHERE e.userId = :userId")
     Double findAverageProgressByUserId(@Param("userId") Long userId);

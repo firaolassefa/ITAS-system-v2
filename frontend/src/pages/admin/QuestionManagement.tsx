@@ -1,13 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Grid, Typography, IconButton, Chip, MenuItem,
-  CircularProgress, Alert, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, Card, CardContent,
-  Radio,
+  TextField, Grid, Typography, IconButton, Card, CardContent,
+  MenuItem, Alert, CircularProgress, Chip, Radio, RadioGroup,
+  FormControlLabel, FormControl, FormLabel, Divider, Paper,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
-import { modulesAPI, questionsAPI } from '../../api/modules';
+import {
+  Add, Edit, Delete, Quiz, CheckCircle, Cancel, Upload,
+} from '@mui/icons-material';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('itas_token');
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  };
+};
+
+interface Question {
+  id?: number;
+  moduleId: number;
+  questionText: string;
+  questionType: string;
+  isPractice: boolean;
+  explanation?: string;
+  points: number;
+  order: number;
+  answers: Answer[];
+}
 
 interface Answer {
   answerText: string;
@@ -15,142 +40,76 @@ interface Answer {
   order: number;
 }
 
-interface Question {
-  id?: number;
-  moduleId: number;
-  questionText: string;
-  questionType: string;
-  points: number;
-  order: number;
-  answers: Answer[];
-}
-
 const QuestionManagement: React.FC = () => {
+  const [courses, setCourses] = useState<any[]>([]);
   const [modules, setModules] = useState<any[]>([]);
-  const [selectedModule, setSelectedModule] = useState<number | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<number | ''>('');
+  const [selectedModule, setSelectedModule] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
-  
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const [formData, setFormData] = useState<Question>({
     moduleId: 0,
     questionText: '',
     questionType: 'MULTIPLE_CHOICE',
+    isPractice: false,
+    explanation: '',
     points: 1,
     order: 0,
     answers: [
       { answerText: '', isCorrect: false, order: 0 },
       { answerText: '', isCorrect: false, order: 1 },
-      { answerText: '', isCorrect: false, order: 2 },
-      { answerText: '', isCorrect: false, order: 3 },
     ],
   });
 
   useEffect(() => {
-    loadModules();
+    loadCourses();
   }, []);
 
   useEffect(() => {
+    if (selectedCourse) {
+      loadModules(selectedCourse as number);
+    }
+  }, [selectedCourse]);
+
+  useEffect(() => {
     if (selectedModule) {
-      loadQuestions(selectedModule);
+      loadQuestions(selectedModule as number);
     }
   }, [selectedModule]);
 
-  const loadModules = async () => {
+  const loadCourses = async () => {
     try {
-      console.log('Loading modules...');
-      console.log('API Base URL:', import.meta.env.VITE_API_URL || 'http://localhost:8080/api');
-      
-      // Check if user is logged in
-      const token = localStorage.getItem('itas_token');
-      const user = localStorage.getItem('itas_user');
-      console.log('Token exists:', !!token);
-      console.log('User:', user);
-      
-      if (!token) {
-        setBackendConnected(true);
-        alert('You are not logged in. Please login first.');
-        window.location.href = '/login';
-        return;
-      }
-      
-      const response = await modulesAPI.getAllModules();
-      console.log('Modules response:', response);
-      
-      // The API now returns the data directly (already unwrapped)
-      const modulesData = Array.isArray(response) ? response : [];
-      console.log('Parsed modules:', modulesData);
-      
-      if (!Array.isArray(modulesData)) {
-        console.error('Modules data is not an array:', modulesData);
-        setModules([]);
-        setBackendConnected(true);
-        return;
-      }
-      
-      setModules(modulesData);
-      setBackendConnected(true);
-      
-      if (modulesData.length === 0) {
-        alert('No modules found. Please create courses and modules first in Course Management and Module Content Manager.');
-      }
-    } catch (error: any) {
+      const response = await axios.get(`${API_BASE_URL}/courses`, getAuthHeaders());
+      setCourses(response.data.data || response.data || []);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+    }
+  };
+
+  const loadModules = async (courseId: number) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/modules/course/${courseId}`, getAuthHeaders());
+      setModules(response.data.data || response.data || []);
+      setSelectedModule('');
+      setQuestions([]);
+    } catch (error) {
       console.error('Failed to load modules:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
-      console.error('Error code:', error.code);
-      
-      let errorMessage = 'Failed to load modules. ';
-      
-      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
-        setBackendConnected(false);
-        errorMessage = 'Cannot connect to the backend server at http://localhost:8080/api\n\n';
-        errorMessage += 'Possible causes:\n';
-        errorMessage += '1. Backend server is not running - Run start-backend.bat\n';
-        errorMessage += '2. Backend is running on a different port\n';
-        errorMessage += '3. CORS is blocking the request\n\n';
-        errorMessage += 'Check the browser console for more details.';
-      } else if (error.response?.status === 401) {
-        setBackendConnected(true);
-        errorMessage = 'Authentication failed. Your session may have expired. Please login again.';
-        setTimeout(() => {
-          localStorage.removeItem('itas_token');
-          localStorage.removeItem('itas_user');
-          window.location.href = '/login';
-        }, 2000);
-      } else if (error.response?.status === 403) {
-        setBackendConnected(true);
-        errorMessage = 'Access denied. You do not have permission to manage questions. Please ensure you are logged in as an admin.';
-      } else if (error.response) {
-        setBackendConnected(true);
-        errorMessage += error.response.data?.message || error.response.statusText || 'Unknown error';
-      } else {
-        setBackendConnected(false);
-        errorMessage += error.message;
-      }
-      
-      alert(errorMessage);
     }
   };
 
   const loadQuestions = async (moduleId: number) => {
     try {
       setLoading(true);
-      console.log('Loading questions for module:', moduleId);
-      const response = await questionsAPI.getQuestionsByModule(moduleId);
-      console.log('Questions response:', response);
-      
-      // The API now returns the data directly (already unwrapped)
-      const questionsData = Array.isArray(response) ? response : [];
-      console.log('Parsed questions:', questionsData);
-      
-      setQuestions(questionsData);
-    } catch (error: any) {
+      const response = await axios.get(`${API_BASE_URL}/questions/module/${moduleId}`, getAuthHeaders());
+      setQuestions(response.data.data || response.data || []);
+    } catch (error) {
       console.error('Failed to load questions:', error);
-      console.error('Error details:', error.response?.data);
-      alert('Failed to load questions: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -162,17 +121,18 @@ const QuestionManagement: React.FC = () => {
       setFormData(question);
     } else {
       setEditingQuestion(null);
+      const nextOrder = questions.length;
       setFormData({
-        moduleId: selectedModule || 0,
+        moduleId: selectedModule as number,
         questionText: '',
         questionType: 'MULTIPLE_CHOICE',
+        isPractice: false,
+        explanation: '',
         points: 1,
-        order: questions.length,
+        order: nextOrder,
         answers: [
           { answerText: '', isCorrect: false, order: 0 },
           { answerText: '', isCorrect: false, order: 1 },
-          { answerText: '', isCorrect: false, order: 2 },
-          { answerText: '', isCorrect: false, order: 3 },
         ],
       });
     }
@@ -182,6 +142,26 @@ const QuestionManagement: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingQuestion(null);
+    setMessage(null);
+  };
+
+  const handleAddAnswer = () => {
+    setFormData({
+      ...formData,
+      answers: [
+        ...formData.answers,
+        { answerText: '', isCorrect: false, order: formData.answers.length },
+      ],
+    });
+  };
+
+  const handleRemoveAnswer = (index: number) => {
+    if (formData.answers.length > 2) {
+      setFormData({
+        ...formData,
+        answers: formData.answers.filter((_, i) => i !== index),
+      });
+    }
   };
 
   const handleAnswerChange = (index: number, field: string, value: any) => {
@@ -190,214 +170,307 @@ const QuestionManagement: React.FC = () => {
     setFormData({ ...formData, answers: newAnswers });
   };
 
-  const handleCorrectAnswerChange = (index: number) => {
-    const newAnswers = formData.answers.map((answer, i) => ({
-      ...answer,
-      isCorrect: i === index,
-    }));
-    setFormData({ ...formData, answers: newAnswers });
-  };
-
   const handleSubmit = async () => {
+    // Validation
+    if (!formData.questionText.trim()) {
+      setMessage({ type: 'error', text: 'Question text is required' });
+      return;
+    }
+
+    if (formData.answers.length < 2) {
+      setMessage({ type: 'error', text: 'At least 2 answers are required' });
+      return;
+    }
+
+    const hasCorrectAnswer = formData.answers.some(a => a.isCorrect);
+    if (!hasCorrectAnswer) {
+      setMessage({ type: 'error', text: 'At least one answer must be marked as correct' });
+      return;
+    }
+
+    if (formData.isPractice && !formData.explanation?.trim()) {
+      setMessage({ type: 'error', text: 'Explanation is required for practice questions' });
+      return;
+    }
+
     try {
-      console.log('Submitting question with data:', formData);
-      console.log('Selected module:', selectedModule);
-      
-      // Validate
-      if (!selectedModule) {
-        alert('Please select a module first');
-        return;
-      }
-
-      if (!formData.questionText.trim()) {
-        alert('Please enter a question');
-        return;
-      }
-
-      const validAnswers = formData.answers.filter(a => a.answerText.trim());
-      console.log('Valid answers:', validAnswers);
-      
-      if (validAnswers.length < 2) {
-        alert('Please provide at least 2 answers');
-        return;
-      }
-
-      if (!validAnswers.some(a => a.isCorrect)) {
-        alert('Please mark at least one answer as correct');
-        return;
-      }
-
-      // Ensure answers have correct order
-      const orderedAnswers = validAnswers.map((answer, index) => ({
-        ...answer,
-        order: index
-      }));
-
-      const payload = {
-        ...formData,
-        moduleId: selectedModule,
-        answers: orderedAnswers,
-      };
-
-      console.log('Sending payload:', payload);
-
-      if (editingQuestion && editingQuestion.id) {
-        const response = await questionsAPI.updateQuestion(editingQuestion.id, payload);
-        console.log('Update response:', response);
-        alert('Question updated successfully!');
+      setLoading(true);
+      if (editingQuestion) {
+        await axios.put(
+          `${API_BASE_URL}/questions/${editingQuestion.id}`,
+          formData,
+          getAuthHeaders()
+        );
+        setMessage({ type: 'success', text: 'Question updated successfully!' });
       } else {
-        const response = await questionsAPI.createQuestion(payload);
-        console.log('Create response:', response);
-        alert('Question created successfully!');
+        await axios.post(`${API_BASE_URL}/questions`, formData, getAuthHeaders());
+        setMessage({ type: 'success', text: 'Question created successfully!' });
       }
 
-      if (selectedModule) {
-        await loadQuestions(selectedModule);
-      }
-      handleCloseDialog();
+      await loadQuestions(selectedModule as number);
+      setTimeout(() => {
+        handleCloseDialog();
+      }, 1500);
     } catch (error: any) {
-      console.error('Failed to save question:', error);
-      console.error('Error response:', error.response?.data);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to save question';
-      alert('Error: ' + errorMessage);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to save question',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
       try {
-        await questionsAPI.deleteQuestion(id);
-        if (selectedModule) {
-          loadQuestions(selectedModule);
-        }
+        await axios.delete(`${API_BASE_URL}/questions/${id}`, getAuthHeaders());
+        await loadQuestions(selectedModule as number);
       } catch (error) {
-        console.error('Failed to delete question:', error);
         alert('Failed to delete question');
       }
     }
   };
 
+  const handleFileUpload = async () => {
+    if (!uploadFile || !selectedModule) {
+      setMessage({ type: 'error', text: 'Please select a file and module' });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('moduleId', selectedModule.toString());
+
+      const token = localStorage.getItem('itas_token');
+      
+      // Check if token exists
+      if (!token) {
+        setMessage({ type: 'error', text: 'Session expired. Please login again.' });
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/assessment-definitions/import`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      const data = response.data.data || response.data;
+      setMessage({ 
+        type: 'success', 
+        text: `Successfully imported ${Array.isArray(data) ? data.length : 0} questions!` 
+      });
+      setUploadDialogOpen(false);
+      setUploadFile(null);
+      await loadQuestions(selectedModule as number);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setMessage({ type: 'error', text: 'Session expired. Please login again.' });
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: error.response?.data?.message || 'Failed to upload file' 
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const practiceQuestions = questions.filter(q => q.isPractice);
+  const quizQuestions = questions.filter(q => !q.isPractice);
+
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
         Question Management
       </Typography>
 
-      {/* Backend Connection Status */}
-      {backendConnected === false && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Cannot connect to backend server. Please ensure the backend is running on http://localhost:8080
-          <br />
-          Run <code>start-backend.bat</code> in the backend folder to start the server.
-        </Alert>
-      )}
-
-      {backendConnected === true && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Connected to backend server
-        </Alert>
-      )}
-
-      {/* Module Selection */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <TextField
-                fullWidth
-                select
-                label="Select Module"
-                value={selectedModule || ''}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  console.log('Module selected:', value);
-                  setSelectedModule(value);
-                }}
-              >
-                <MenuItem value="">Select a module...</MenuItem>
-                {modules.map((module) => (
-                  <MenuItem key={module.id} value={module.id}>
-                    {module.title} {module.course?.title ? `(${module.course.title})` : ''}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<Add />}
-                disabled={!selectedModule}
-                onClick={() => handleOpenDialog()}
-              >
-                Add Question
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Questions List */}
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : !selectedModule ? (
-        <Alert severity="info">Please select a module to manage questions</Alert>
-      ) : questions.length === 0 ? (
-        <Alert severity="info">No questions found. Add your first question!</Alert>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Order</TableCell>
-                <TableCell>Question</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Points</TableCell>
-                <TableCell>Answers</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {questions.map((question) => (
-                <TableRow key={question.id}>
-                  <TableCell>{question.order + 1}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ maxWidth: 400 }}>
-                      {question.questionText}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={question.questionType} size="small" />
-                  </TableCell>
-                  <TableCell>{question.points}</TableCell>
-                  <TableCell>{question.answers?.length || 0}</TableCell>
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => handleOpenDialog(question)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(question.id!)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
+      {/* Selection Panel */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              select
+              label="Select Course"
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(Number(e.target.value) || '')}
+            >
+              <MenuItem value="">Choose a course...</MenuItem>
+              {courses.map((course) => (
+                <MenuItem key={course.id} value={course.id}>
+                  {course.title}
+                </MenuItem>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </TextField>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              select
+              label="Select Module"
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(Number(e.target.value) || '')}
+              disabled={!selectedCourse}
+            >
+              <MenuItem value="">Choose a module...</MenuItem>
+              {modules.map((module) => (
+                <MenuItem key={module.id} value={module.id}>
+                  {module.title}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} md={1.5}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Add />}
+              onClick={() => setUploadDialogOpen(true)}
+              disabled={!selectedModule}
+              sx={{ height: '56px' }}
+            >
+              Upload File
+            </Button>
+          </Grid>
+          <Grid item xs={12} md={0.5}></Grid>
+          <Grid item xs={12} md={1.5}>
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => handleOpenDialog()}
+              disabled={!selectedModule}
+              sx={{ height: '56px' }}
+            >
+              Add Question
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Questions Display */}
+      {selectedModule && (
+        <Grid container spacing={3}>
+          {/* Practice Questions */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Quiz color="primary" />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Practice Questions ({practiceQuestions.length})
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  For learning - unlimited attempts, instant feedback
+                </Typography>
+
+                {loading ? (
+                  <CircularProgress />
+                ) : practiceQuestions.length === 0 ? (
+                  <Alert severity="info">No practice questions yet</Alert>
+                ) : (
+                  practiceQuestions.map((q, index) => (
+                    <Paper key={q.id} sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
+                            {index + 1}. {q.questionText}
+                          </Typography>
+                          <Chip label={`${q.points} point${q.points > 1 ? 's' : ''}`} size="small" sx={{ mr: 1 }} />
+                          <Chip label={q.questionType} size="small" color="primary" />
+                        </Box>
+                        <Box>
+                          <IconButton size="small" onClick={() => handleOpenDialog(q)}>
+                            <Edit />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => handleDelete(q.id!)}>
+                            <Delete />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Quiz Questions */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <CheckCircle color="success" />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Quiz Questions ({quizQuestions.length})
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  For assessment - must pass to unlock next module
+                </Typography>
+
+                {loading ? (
+                  <CircularProgress />
+                ) : quizQuestions.length === 0 ? (
+                  <Alert severity="info">No quiz questions yet</Alert>
+                ) : (
+                  quizQuestions.map((q, index) => (
+                    <Paper key={q.id} sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
+                            {index + 1}. {q.questionText}
+                          </Typography>
+                          <Chip label={`${q.points} point${q.points > 1 ? 's' : ''}`} size="small" sx={{ mr: 1 }} />
+                          <Chip label={q.questionType} size="small" color="success" />
+                        </Box>
+                        <Box>
+                          <IconButton size="small" onClick={() => handleOpenDialog(q)}>
+                            <Edit />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => handleDelete(q.id!)}>
+                            <Delete />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       )}
 
-      {/* Create/Edit Dialog */}
+      {/* Add/Edit Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingQuestion ? 'Edit Question' : 'Create New Question'}
+          {editingQuestion ? 'Edit Question' : 'Add New Question'}
         </DialogTitle>
         <DialogContent>
+          {message && (
+            <Alert severity={message.type} sx={{ mb: 2 }} onClose={() => setMessage(null)}>
+              {message.text}
+            </Alert>
+          )}
+
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
@@ -410,7 +483,7 @@ const QuestionManagement: React.FC = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 select
@@ -420,46 +493,195 @@ const QuestionManagement: React.FC = () => {
               >
                 <MenuItem value="MULTIPLE_CHOICE">Multiple Choice</MenuItem>
                 <MenuItem value="TRUE_FALSE">True/False</MenuItem>
-                <MenuItem value="SHORT_ANSWER">Short Answer</MenuItem>
               </TextField>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                select
+                label="Question Category"
+                value={formData.isPractice ? 'practice' : 'quiz'}
+                onChange={(e) => setFormData({ ...formData, isPractice: e.target.value === 'practice' })}
+              >
+                <MenuItem value="practice">Practice (Learning)</MenuItem>
+                <MenuItem value="quiz">Quiz (Assessment)</MenuItem>
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 type="number"
                 label="Points"
                 value={formData.points}
-                onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 1 })}
               />
             </Grid>
 
+            {formData.isPractice && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  label="Explanation (for practice questions)"
+                  value={formData.explanation || ''}
+                  onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
+                  helperText="This will be shown after the user answers"
+                />
+              </Grid>
+            )}
+
             <Grid item xs={12}>
-              <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                Answer Options (Select the correct answer)
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Answers
               </Typography>
+
               {formData.answers.map((answer, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
-                  <Radio
-                    checked={answer.isCorrect}
-                    onChange={() => handleCorrectAnswerChange(index)}
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label={`Answer ${index + 1}`}
-                    value={answer.answerText}
-                    onChange={(e) => handleAnswerChange(index, 'answerText', e.target.value)}
-                  />
-                </Box>
+                <Paper key={index} sx={{ p: 2, mb: 2, bgcolor: '#f5f5f5' }}>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={8}>
+                      <TextField
+                        fullWidth
+                        label={`Answer ${index + 1}`}
+                        value={answer.answerText}
+                        onChange={(e) => handleAnswerChange(index, 'answerText', e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={6} md={2}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={answer.isCorrect}
+                            onChange={(e) => {
+                              // Only one answer can be correct
+                              const newAnswers = formData.answers.map((a, i) => ({
+                                ...a,
+                                isCorrect: i === index,
+                              }));
+                              setFormData({ ...formData, answers: newAnswers });
+                            }}
+                          />
+                        }
+                        label="Correct"
+                      />
+                    </Grid>
+                    <Grid item xs={6} md={2}>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleRemoveAnswer(index)}
+                        disabled={formData.answers.length <= 2}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Grid>
+                  </Grid>
+                </Paper>
               ))}
+
+              <Button
+                variant="outlined"
+                startIcon={<Add />}
+                onClick={handleAddAnswer}
+                disabled={formData.answers.length >= 6}
+              >
+                Add Answer
+              </Button>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {editingQuestion ? 'Update' : 'Create'}
+          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+            {loading ? <CircularProgress size={20} /> : editingQuestion ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* File Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onClose={() => setUploadDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>Import Questions from File (Like W3Schools!)</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Alert severity="info" sx={{ fontSize: '0.9rem' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                Upload Word (.docx) or PDF with questions in this format:
+              </Typography>
+              <Box component="pre" sx={{ 
+                bgcolor: '#f5f5f5', 
+                p: 2, 
+                borderRadius: 1, 
+                fontSize: '0.85rem',
+                overflow: 'auto',
+                fontFamily: 'monospace'
+              }}>
+{`Question 1: What is VAT?
+Type: Practice
+A) Value Added Tax
+B) Variable Annual Tax
+C) Verified Asset Tax
+D) None of the above
+Correct Answer: A
+Explanation: VAT stands for Value Added Tax
+Points: 10
+
+Question 2: What is the VAT rate?
+Type: Exam
+A) 5%
+B) 10%
+C) 15%
+D) 20%
+Correct Answer: C
+Explanation: Standard VAT rate is 15%
+Points: 10`}
+              </Box>
+              <Typography variant="body2" sx={{ mt: 2, fontWeight: 600 }}>
+                📝 Type: Practice = Unlimited tries, see answers (like W3Schools)<br />
+                📝 Type: Exam = For certificate, limited tries<br />
+                📝 If no Type specified, defaults to Exam
+              </Typography>
+            </Alert>
+
+            {message && (
+              <Alert severity={message.type} onClose={() => setMessage(null)}>
+                {message.text}
+              </Alert>
+            )}
+
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<Upload />}
+              fullWidth
+              sx={{ py: 2 }}
+            >
+              {uploadFile ? uploadFile.name : 'Choose File (.docx or .pdf)'}
+              <input
+                type="file"
+                hidden
+                accept=".docx,.pdf,.doc"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+              />
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => {
+            setUploadDialogOpen(false);
+            setUploadFile(null);
+            setMessage(null);
+          }}>
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleFileUpload} 
+            disabled={!uploadFile || loading}
+            startIcon={loading ? <CircularProgress size={20} /> : <Upload />}
+          >
+            {loading ? 'Uploading...' : 'Upload & Import'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -68,10 +68,10 @@ const CommOfficerDashboard: React.FC = () => {
   }
 
   const stats = [
-    { label: 'Total Campaigns', value: (dashboardData.totalCampaigns || 0).toString(), icon: <Campaign />, color: '#667eea', change: '+12%' },
-    { label: 'Messages Sent', value: (dashboardData.sentToday || 0).toString(), icon: <Send />, color: '#10B981', change: '+28%' },
-    { label: 'Avg Open Rate', value: `${dashboardData.openRate || 0}%`, icon: <TrendingUp />, color: '#F59E0B', change: '+5%' },
-    { label: 'Active Recipients', value: (dashboardData.activeRecipients || 0).toString(), icon: <People />, color: '#8B5CF6', change: '+18%' },
+    { label: 'Total Campaigns', value: (dashboardData.totalCampaigns || 0).toString(), icon: <Campaign />, color: '#667eea' },
+    { label: 'Messages Sent', value: (dashboardData.sentToday || 0).toString(), icon: <Send />, color: '#10B981' },
+    { label: 'Avg Open Rate', value: `${dashboardData.openRate || 0}%`, icon: <TrendingUp />, color: '#F59E0B' },
+    { label: 'Active Recipients', value: (dashboardData.activeRecipients || 0).toString(), icon: <People />, color: '#8B5CF6' },
   ];
 
   const getStatusColor = (status: string) => {
@@ -165,16 +165,6 @@ const CommOfficerDashboard: React.FC = () => {
                     >
                       {stat.icon}
                     </Box>
-                    <Chip
-                      label={stat.change}
-                      size="small"
-                      sx={{
-                        background: alpha('#10B981', 0.1),
-                        color: '#10B981',
-                        fontWeight: 700,
-                        border: 'none',
-                      }}
-                    />
                   </Box>
                   <Typography variant="h3" sx={{ fontWeight: 800, mb: 0.5, color: stat.color }}>
                     {stat.value}

@@ -3,6 +3,7 @@ package com.itas.controller;
 import com.itas.dto.ApiResponse;
 import com.itas.model.ArchivedResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,6 +29,7 @@ public class ArchiveController {
     }
     
     @GetMapping("/resources")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> getArchivedResources() {
         return ResponseEntity.ok(new ApiResponse<>("Archived resources retrieved", mockArchivedResources));
     }
@@ -58,6 +60,7 @@ public class ArchiveController {
     }
     
     @PostMapping("/restore/{archiveId}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> restoreResource(@PathVariable Long archiveId) {
         Optional<ArchivedResource> resource = mockArchivedResources.stream()
             .filter(r -> r.getId().equals(archiveId))
@@ -72,6 +75,7 @@ public class ArchiveController {
     }
     
     @DeleteMapping("/{archiveId}/permanent")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     public ResponseEntity<?> permanentDelete(@PathVariable Long archiveId) {
         Optional<ArchivedResource> resource = mockArchivedResources.stream()
             .filter(r -> r.getId().equals(archiveId))

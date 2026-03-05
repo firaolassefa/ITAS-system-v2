@@ -71,8 +71,6 @@ const ContentAdminDashboard: React.FC = () => {
     { 
       title: 'Total Resources', 
       value: (dashboardData.totalResources || 0).toString(), 
-      change: '+18', 
-      trend: 'up', 
       icon: <Folder />, 
       color: '#667eea',
       gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -80,44 +78,32 @@ const ContentAdminDashboard: React.FC = () => {
     { 
       title: 'Pending Approval', 
       value: (dashboardData.pendingApproval || 0).toString(), 
-      change: '+5', 
-      trend: 'up', 
       icon: <Schedule />, 
       color: '#F59E0B',
       gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
     },
     { 
-      title: 'Published Today', 
-      value: '8', 
-      change: '+3', 
-      trend: 'up', 
+      title: 'Published', 
+      value: (dashboardData.publishedResources || 0).toString(), 
       icon: <CheckCircle />, 
       color: '#10B981',
       gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
     },
     { 
-      title: 'Storage Used', 
-      value: '4.2 GB', 
-      change: '+0.5 GB', 
-      trend: 'up', 
-      icon: <CloudUpload />, 
+      title: 'Total Views', 
+      value: (dashboardData.totalViews || 0).toString(), 
+      icon: <Visibility />, 
       color: '#8B5CF6',
       gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
     },
   ];
 
-  const resourceTypes = [
-    { type: 'Videos', count: 45, icon: <VideoLibrary />, color: '#EF4444', percentage: 65, gradient: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' },
-    { type: 'PDFs', count: 78, icon: <PictureAsPdf />, color: '#667eea', percentage: 85, gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    { type: 'Images', count: 33, icon: <Image />, color: '#10B981', percentage: 45, gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
-  ];
-
-  const recentUploads = [
-    { title: 'Tax Filing Guide 2026', type: 'PDF', size: '2.4 MB', status: 'published', time: '2 hours ago', views: 1245, downloads: 342 },
-    { title: 'VAT Calculation Tutorial', type: 'Video', size: '45 MB', status: 'pending', time: '5 hours ago', views: 0, downloads: 0 },
-    { title: 'Income Tax Infographic', type: 'Image', size: '1.2 MB', status: 'published', time: '1 day ago', views: 856, downloads: 234 },
-    { title: 'Business Tax Workshop', type: 'Video', size: '120 MB', status: 'draft', time: '2 days ago', views: 0, downloads: 0 },
-  ];
+  const resourceTypes = Array.isArray(dashboardData.resourceTypes) 
+    ? dashboardData.resourceTypes 
+    : [];
+  const recentUploads = Array.isArray(dashboardData.recentUploads)
+    ? dashboardData.recentUploads
+    : [];
 
   const quickActions = [
     { label: 'Upload Resource', icon: <CloudUpload />, path: '/admin/upload-resource', color: '#667eea', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
@@ -249,26 +235,6 @@ const ContentAdminDashboard: React.FC = () => {
                     >
                       {React.cloneElement(stat.icon, { sx: { fontSize: 22 } })}
                     </Box>
-                    <Chip
-                      icon={<ArrowUpward sx={{ fontSize: 14 }} />}
-                      label={stat.change}
-                      size="small"
-                      sx={{
-                        height: 24,
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                        color: 'white',
-                        border: 'none',
-                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                        '& .MuiChip-icon': { color: 'white' },
-                        animation: 'pulse 2s ease-in-out infinite',
-                        '@keyframes pulse': {
-                          '0%, 100%': { transform: 'scale(1)' },
-                          '50%': { transform: 'scale(1.05)' },
-                        },
-                      }}
-                    />
                   </Box>
                   <Typography 
                     className="stat-value"
@@ -346,6 +312,14 @@ const ContentAdminDashboard: React.FC = () => {
                   Resource Distribution
                 </Typography>
               </Box>
+              {resourceTypes.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <InsertDriveFile sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    No resource data available
+                  </Typography>
+                </Box>
+              ) : (
               <Grid container spacing={3}>
                 {resourceTypes.map((resource, index) => (
                   <Grid item xs={12} key={index}>
@@ -437,6 +411,7 @@ const ContentAdminDashboard: React.FC = () => {
                   </Grid>
                 ))}
               </Grid>
+              )}
             </Paper>
           </Fade>
 
@@ -572,81 +547,8 @@ const ContentAdminDashboard: React.FC = () => {
           </Fade>
         </Grid>
 
-        {/* Quick Actions */}
+        {/* Upload Zone */}
         <Grid item xs={12} lg={4}>
-          <Fade in={mounted} timeout={1000}>
-            <Paper 
-              sx={{ 
-                p: 3, 
-                mb: 3, 
-                background: 'white', 
-                border: '1px solid #e5e7eb', 
-                borderRadius: 3, 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                    color: 'white',
-                    display: 'flex',
-                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
-                  }}
-                >
-                  <Edit />
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                  Quick Actions
-                </Typography>
-              </Box>
-              <Grid container spacing={2}>
-                {quickActions.map((action, index) => (
-                  <Grid item xs={12} key={index}>
-                    <Zoom in={mounted} timeout={800 + index * 100}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={action.icon}
-                        onClick={() => navigate(action.path)}
-                        sx={{
-                          py: 2,
-                          px: 2.5,
-                          justifyContent: 'flex-start',
-                          borderWidth: 2,
-                          borderColor: '#e5e7eb',
-                          color: 'text.primary',
-                          fontWeight: 600,
-                          borderRadius: 2,
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            borderWidth: 2,
-                            borderColor: action.color,
-                            background: `${action.color}10`,
-                            transform: 'translateX(8px)',
-                            boxShadow: `0 8px 20px ${action.color}30`,
-                            '& .MuiButton-startIcon': {
-                              transform: 'scale(1.2) rotate(5deg)',
-                            },
-                          },
-                          '& .MuiButton-startIcon': {
-                            transition: 'all 0.3s ease',
-                            color: action.color,
-                          },
-                        }}
-                      >
-                        {action.label}
-                      </Button>
-                    </Zoom>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Fade>
-
-          {/* Upload Zone */}
           <Fade in={mounted} timeout={1400}>
             <Paper
               sx={{

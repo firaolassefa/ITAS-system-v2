@@ -6,6 +6,7 @@ import com.itas.model.User;
 import com.itas.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +24,7 @@ public class ResourceController {
     private ResourceService resourceService;
 
     @PostMapping("/upload")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> uploadResource(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
@@ -61,6 +63,7 @@ public class ResourceController {
     }
 
     @GetMapping("")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getAllResources(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String resourceType,
@@ -72,6 +75,7 @@ public class ResourceController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getResourceById(@PathVariable Long id) {
         Resource resource = resourceService.getResourceById(id);
 
@@ -98,6 +102,7 @@ public class ResourceController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> updateResource(
             @PathVariable Long id,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -136,12 +141,14 @@ public class ResourceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> deleteResource(@PathVariable Long id) {
         resourceService.deleteResource(id);
         return ResponseEntity.ok(new ApiResponse<>("Resource deleted successfully", null));
     }
 
     @GetMapping("/{id}/download")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> downloadResource(@PathVariable Long id) {
         try {
             Resource resource = resourceService.getResourceById(id);
@@ -184,6 +191,7 @@ public class ResourceController {
     }
 
     @GetMapping("/{id}/stream")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> streamResource(@PathVariable Long id) {
         try {
             Resource resource = resourceService.getResourceById(id);
@@ -228,12 +236,14 @@ public class ResourceController {
     }
 
     @PutMapping("/{id}/views")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> incrementViews(@PathVariable Long id) {
         resourceService.incrementViewCount(id);
         return ResponseEntity.ok(new ApiResponse<>("View count incremented", null));
     }
 
     @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> searchResources(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
@@ -242,5 +252,25 @@ public class ResourceController {
 
         List<Resource> resources = resourceService.searchResources(query, category, resourceType, audience);
         return ResponseEntity.ok(new ApiResponse<>("Search results", resources));
+    }
+
+    /**
+     * Get all unique categories from existing resources
+     */
+    @GetMapping("/categories")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getCategories() {
+        List<String> categories = resourceService.getAllCategories();
+        return ResponseEntity.ok(new ApiResponse<>("Categories retrieved successfully", categories));
+    }
+
+    /**
+     * Get all unique audiences from existing resources
+     */
+    @GetMapping("/audiences")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getAudiences() {
+        List<String> audiences = resourceService.getAllAudiences();
+        return ResponseEntity.ok(new ApiResponse<>("Audiences retrieved successfully", audiences));
     }
 }

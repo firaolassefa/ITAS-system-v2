@@ -71,7 +71,18 @@ const UserRoleManagement: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newUser, setNewUser] = useState({
+    username: '',
+    fullName: '',
+    email: '',
+    password: '',
+    phoneNumber: '',
+    userType: 'TAXPAYER',
+    taxNumber: '',
+    companyName: '',
+  });
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -179,6 +190,65 @@ const UserRoleManagement: React.FC = () => {
       setSnackbar({
         open: true,
         message: err.response?.data?.message || 'Failed to update user',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleAddUser = async () => {
+    // Validation
+    if (!newUser.username || !newUser.fullName || !newUser.email || !newUser.password) {
+      setSnackbar({
+        open: true,
+        message: 'Please fill in all required fields',
+        severity: 'error',
+      });
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      setSnackbar({
+        open: true,
+        message: 'Password must be at least 6 characters',
+        severity: 'error',
+      });
+      return;
+    }
+
+    try {
+      await apiClient.post('/auth/register', {
+        username: newUser.username,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        password: newUser.password,
+        phoneNumber: newUser.phoneNumber,
+        userType: newUser.userType,
+        taxNumber: newUser.taxNumber,
+        companyName: newUser.companyName,
+      });
+      
+      setSnackbar({
+        open: true,
+        message: 'User added successfully!',
+        severity: 'success',
+      });
+      
+      setAddDialogOpen(false);
+      setNewUser({
+        username: '',
+        fullName: '',
+        email: '',
+        password: '',
+        phoneNumber: '',
+        userType: 'TAXPAYER',
+        taxNumber: '',
+        companyName: '',
+      });
+      await loadUsers();
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || 'Failed to add user',
         severity: 'error',
       });
     }
@@ -353,6 +423,7 @@ const UserRoleManagement: React.FC = () => {
                   fullWidth
                   variant="contained"
                   startIcon={<AddIcon />}
+                  onClick={() => setAddDialogOpen(true)}
                   sx={{
                     background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                     color: '#fff',
@@ -521,6 +592,267 @@ const UserRoleManagement: React.FC = () => {
             )}
           </Paper>
         </Fade>
+
+        {/* Add User Dialog */}
+        <Dialog
+          open={addDialogOpen}
+          onClose={() => setAddDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: 3,
+            },
+          }}
+        >
+          <DialogTitle sx={{ color: '#fff', fontWeight: 700, fontSize: '1.5rem' }}>
+            Add New User
+            <IconButton
+              onClick={() => setAddDialogOpen(false)}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: '#fff',
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Username *"
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Full Name *"
+                    value={newUser.fullName}
+                    onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Email *"
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Password *"
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Phone Number"
+                    value={newUser.phoneNumber}
+                    onChange={(e) => setNewUser({ ...newUser, phoneNumber: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth>
+                    <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Role *</InputLabel>
+                    <Select
+                      value={newUser.userType}
+                      onChange={(e: SelectChangeEvent) => setNewUser({ ...newUser, userType: e.target.value })}
+                      label="Role *"
+                      sx={{
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                        '& .MuiSvgIcon-root': {
+                          color: '#fff',
+                        },
+                      }}
+                    >
+                      {roles.map((role) => (
+                        <MenuItem key={role} value={role}>
+                          {role.replace('_', ' ')}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Tax Number"
+                    value={newUser.taxNumber}
+                    onChange={(e) => setNewUser({ ...newUser, taxNumber: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Company Name"
+                    value={newUser.companyName}
+                    onChange={(e) => setNewUser({ ...newUser, companyName: e.target.value })}
+                    InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 0 }}>
+            <Button
+              onClick={() => setAddDialogOpen(false)}
+              sx={{
+                color: '#fff',
+                '&:hover': {
+                  background: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddUser}
+              variant="contained"
+              sx={{
+                background: '#fff',
+                color: '#10B981',
+                fontWeight: 600,
+                px: 3,
+                '&:hover': {
+                  background: '#f0f0f0',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 16px rgba(255, 255, 255, 0.3)',
+                },
+              }}
+            >
+              Add User
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Edit User Dialog */}
         <Dialog

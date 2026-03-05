@@ -28,6 +28,9 @@ import {
   Book as BookIcon,
   Schedule as ScheduleIcon,
   School as SchoolIcon,
+  Quiz as QuizIcon,
+  EmojiEvents as TrophyIcon,
+  Psychology as PracticeIcon,
 } from '@mui/icons-material';
 import { coursesAPI } from '../../api/courses';
 import { modulesAPI } from '../../api/modules';
@@ -467,6 +470,60 @@ const CourseDetail: React.FC = () => {
                 </CardContent>
               </Card>
 
+              {/* Practice Questions - New Feature */}
+              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <PracticeIcon sx={{ mr: 1, color: '#3b82f6' }} /> Practice Questions
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Test your understanding with unlimited practice questions. Get instant feedback and explanations.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    disabled={!currentModuleData?.id}
+                    onClick={() => navigate(`/taxpayer/module/${currentModuleData?.id}/practice`)}
+                    sx={{
+                      borderColor: '#3b82f6',
+                      color: '#3b82f6',
+                      '&:hover': {
+                        borderColor: '#3b82f6',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                      },
+                    }}
+                  >
+                    Practice Now
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Module Quiz - New Feature */}
+              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%)' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <QuizIcon sx={{ mr: 1, color: '#f59e0b' }} /> Module Quiz
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Take the official module quiz. Score 70% or higher to unlock the next module. (15 minutes)
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    disabled={!currentModuleData?.id}
+                    onClick={() => navigate(`/taxpayer/module/${currentModuleData?.id}/quiz`)}
+                    sx={{
+                      borderColor: '#f59e0b',
+                      color: '#f59e0b',
+                      '&:hover': {
+                        borderColor: '#f59e0b',
+                        background: 'rgba(245, 158, 11, 0.1)',
+                      },
+                    }}
+                  >
+                    Take Module Quiz
+                  </Button>
+                </CardContent>
+              </Card>
+
               {/* Take Assessment Button - Primary Action */}
               <Card sx={{ mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                 <CardContent>
@@ -523,6 +580,41 @@ const CourseDetail: React.FC = () => {
                   Skip to Next Module
                 </Button>
               </Box>
+
+              {/* Final Exam - Show when all modules are completed */}
+              {completedModules >= totalModules && totalModules > 0 && (
+                <Card sx={{ mt: 4, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: 'white' }}>
+                  <CardContent>
+                    <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', fontWeight: 700 }}>
+                      <TrophyIcon sx={{ mr: 1, fontSize: 32 }} /> Ready for Final Exam!
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 3, opacity: 0.95 }}>
+                      🎉 Congratulations! You've completed all modules. Take the final exam to earn your certificate.
+                      You need to score 80% or higher to pass. (60 minutes)
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={() => navigate(`/taxpayer/course/${id}/final-exam`)}
+                      sx={{
+                        background: 'white',
+                        color: '#059669',
+                        fontWeight: 700,
+                        fontSize: '1.1rem',
+                        py: 1.5,
+                        px: 4,
+                        '&:hover': {
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          transform: 'scale(1.05)',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      Take Final Exam & Get Certificate
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </Paper>
           )}
         </Grid>

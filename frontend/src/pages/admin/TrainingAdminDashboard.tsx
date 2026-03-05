@@ -25,8 +25,6 @@ import {
   VideoCall,
   Assessment,
   People,
-  TrendingUp,
-  TrendingDown,
   MoreVert,
   Event,
   PlayCircle,
@@ -71,32 +69,24 @@ const TrainingAdminDashboard: React.FC = () => {
     { 
       title: 'Total Courses', 
       value: (dashboardData.totalCourses || 0).toString(), 
-      change: '+6', 
-      trend: 'up', 
       icon: <School />, 
       color: theme.palette.primary.main,
     },
     { 
       title: 'Active Webinars', 
       value: (dashboardData.upcomingWebinars || 0).toString(), 
-      change: '+2', 
-      trend: 'up', 
       icon: <VideoCall />, 
       color: theme.palette.success.main,
     },
     { 
       title: 'Total Enrollments', 
       value: (dashboardData.totalEnrollments || 0).toString(), 
-      change: '+156', 
-      trend: 'up', 
       icon: <People />, 
       color: theme.palette.info.main,
     },
     { 
       title: 'Attendance Rate', 
       value: `${dashboardData.attendanceRate || 0}%`, 
-      change: '+5%', 
-      trend: 'up', 
       icon: <Assessment />, 
       color: theme.palette.warning.main,
     },
@@ -110,12 +100,12 @@ const TrainingAdminDashboard: React.FC = () => {
     status: webinar.status || 'SCHEDULED',
   }));
 
-  const coursePerformance = [
-    { name: 'Tax Filing Basics', enrolled: 245, completed: 198, rate: 81 },
-    { name: 'VAT Fundamentals', enrolled: 189, completed: 142, rate: 75 },
-    { name: 'Business Taxation', enrolled: 156, completed: 109, rate: 70 },
-    { name: 'Income Tax Guide', enrolled: 203, completed: 167, rate: 82 },
-  ];
+  const coursePerformance = (dashboardData.coursePerformance || []).map((course: any) => ({
+    name: course.title || 'Untitled Course',
+    enrolled: course.enrolled || 0,
+    completed: course.completed || 0,
+    rate: course.rate || 0,
+  }));
 
   const quickActions = [
     { label: 'Schedule Webinar', icon: <VideoCall />, path: '/admin/webinar-management', color: 'primary' },
@@ -184,17 +174,6 @@ const TrainingAdminDashboard: React.FC = () => {
                   >
                     {stat.icon}
                   </Box>
-                  <Chip
-                    label={stat.change}
-                    size="small"
-                    icon={stat.trend === 'up' ? <TrendingUp /> : <TrendingDown />}
-                    sx={{
-                      background: alpha(theme.palette.success.main, 0.1),
-                      color: theme.palette.success.main,
-                      fontWeight: 600,
-                      border: 'none',
-                    }}
-                  />
                 </Box>
                 <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5 }}>
                   {stat.value}
@@ -287,6 +266,14 @@ const TrainingAdminDashboard: React.FC = () => {
             <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
               Course Performance
             </Typography>
+            {coursePerformance.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Assessment sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body2" color="text.secondary">
+                  No course performance data available
+                </Typography>
+              </Box>
+            ) : (
             <Grid container spacing={3}>
               {coursePerformance.map((course, index) => (
                 <Grid item xs={12} key={index}>
@@ -321,6 +308,7 @@ const TrainingAdminDashboard: React.FC = () => {
                 </Grid>
               ))}
             </Grid>
+            )}
           </Paper>
         </Grid>
 

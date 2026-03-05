@@ -82,7 +82,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: getDashboardPath() },
+    { text: 'Home', icon: <DashboardIcon />, path: getDashboardPath() },
     { text: 'Course Management', icon: <CourseIcon />, path: '/admin/course-management', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Module Content', icon: <CloudUploadIcon />, path: '/admin/module-content', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Upload Resource', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },

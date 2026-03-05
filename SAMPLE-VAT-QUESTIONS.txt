@@ -1,0 +1,97 @@
+Question 1: What does VAT stand for?
+Type: Practice
+A) Value Added Tax
+B) Variable Annual Tax
+C) Verified Asset Tax
+D) Very Advanced Tax
+Correct Answer: A
+Explanation: VAT stands for Value Added Tax, an indirect tax on consumption of goods and services
+Points: 5
+
+Question 2: VAT is collected at every stage of production and distribution
+Type: Practice
+A) True
+B) False
+Correct Answer: A
+Explanation: VAT is collected at each stage of the supply chain, from manufacturer to retailer to consumer
+Points: 5
+
+Question 3: What is the VAT registration threshold in Ethiopia?
+Type: Practice
+A) 500,000 Birr
+B) 1,000,000 Birr
+C) 2,000,000 Birr
+D) 5,000,000 Birr
+Correct Answer: B
+Explanation: Businesses with annual turnover exceeding 1 million Birr must register for VAT
+Points: 5
+
+Question 4: Are exports subject to VAT in Ethiopia?
+Type: Practice
+A) Yes, at standard rate
+B) Yes, at reduced rate
+C) No, zero-rated
+D) Depends on destination country
+Correct Answer: C
+Explanation: Exports are zero-rated for VAT purposes to promote international trade
+Points: 5
+
+Question 5: Can businesses claim input VAT refunds?
+Type: Practice
+A) Yes, on all purchases
+B) Yes, on business-related purchases only
+C) No, VAT is never refundable
+D) Only for capital goods
+Correct Answer: B
+Explanation: Businesses can claim input VAT on purchases directly related to their taxable business activities
+Points: 5
+
+Question 6: What is the standard VAT rate in Ethiopia?
+Type: Exam
+A) 5%
+B) 10%
+C) 15%
+D) 20%
+Correct Answer: C
+Explanation: The standard VAT rate in Ethiopia is 15%
+Points: 20
+
+Question 7: Who is required to register for VAT?
+Type: Exam
+A) All businesses regardless of size
+B) Businesses with annual turnover above 1 million Birr
+C) Only large corporations
+D) Only exporters and importers
+Correct Answer: B
+Explanation: VAT registration is mandatory for businesses with annual turnover exceeding 1 million Birr
+Points: 20
+
+Question 8: VAT on exports in Ethiopia is
+Type: Exam
+A) Charged at standard rate
+B) Charged at reduced rate
+C) Zero-rated
+D) Exempt
+Correct Answer: C
+Explanation: Exports are zero-rated, meaning no VAT is charged but input VAT can be claimed
+Points: 20
+
+Question 9: Input VAT can be claimed on
+Type: Exam
+A) All purchases including personal items
+B) Only business-related purchases
+C) Only capital equipment
+D) Only imported goods
+Correct Answer: B
+Explanation: Input VAT is claimable only on purchases directly related to taxable business activities
+Points: 20
+
+Question 10: VAT is classified as
+Type: Exam
+A) A direct tax
+B) An indirect tax
+C) A property tax
+D) A wealth tax
+Correct Answer: B
+Explanation: VAT is an indirect tax because it is collected from consumers through businesses
+Points: 20

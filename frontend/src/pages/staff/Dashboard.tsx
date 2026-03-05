@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import { dashboardAPI } from '../../api/dashboard';
+import { useNavigate } from 'react-router-dom';
 
 interface StaffStats {
   totalCourses: number;
@@ -61,6 +62,7 @@ interface ComplianceItem {
 
 const MORStaffDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<StaffStats>({
     totalCourses: 0,
     completedCourses: 0,
@@ -99,65 +101,49 @@ const MORStaffDashboard: React.FC = () => {
         lastTrainingDate: new Date().toLocaleDateString(),
       });
 
-      // Set mock internal courses for now
-      setInternalCourses([
-        {
-          id: 1,
-          title: 'Tax Policy Updates 2024',
-          category: 'Policy',
-          progress: 75,
-          mandatory: true,
-          deadline: '2024-03-15',
-          status: 'in_progress',
+      // Fetch real enrollments from backend
+      const enrollmentsResponse = await fetch(`http://localhost:8080/courses/enrollments/${user?.id || 1}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('itas_token')}`,
         },
-        {
-          id: 2,
-          title: 'Internal Audit Procedures',
-          category: 'Compliance',
-          progress: 100,
-          mandatory: true,
-          status: 'completed',
-        },
-        {
-          id: 3,
-          title: 'Customer Service Excellence',
-          category: 'Soft Skills',
-          progress: 30,
-          mandatory: false,
-          status: 'in_progress',
-        },
-        {
-          id: 4,
-          title: 'Data Security & Privacy',
-          category: 'Security',
-          progress: 0,
-          mandatory: true,
-          deadline: '2024-04-01',
-          status: 'not_started',
-        },
-      ]);
+      });
+      
+      if (enrollmentsResponse.ok) {
+        const enrollmentsData = await enrollmentsResponse.json();
+        const enrollments = enrollmentsData.data || enrollmentsData || [];
+        
+        // Map enrollments to internal courses format
+        const mappedCourses = enrollments.map((enrollment: any) => {
+          const progress = enrollment.progress || 0;
+          let status: 'not_started' | 'in_progress' | 'completed' = 'not_started';
+          if (progress >= 100) status = 'completed';
+          else if (progress > 0) status = 'in_progress';
+          
+          return {
+            id: enrollment.course?.id || enrollment.courseId,
+            title: enrollment.course?.title || 'Course',
+            category: enrollment.course?.category || 'General',
+            progress: progress,
+            mandatory: false, // Can be enhanced with course metadata
+            status: status,
+          };
+        });
+        
+        setInternalCourses(mappedCourses);
+      }
 
+      // Calculate compliance based on course completion
+      const completedCount = stats.completedCourses || 0;
+      const totalCount = stats.totalCourses || 1;
+      const calculatedCompliance = Math.round((completedCount / totalCount) * 100);
+      
       setComplianceItems([
         {
           id: 1,
-          title: 'Annual Ethics Training',
-          status: 'compliant',
-          dueDate: '2024-12-31',
-          description: 'Completed on time',
-        },
-        {
-          id: 2,
-          title: 'Security Awareness Update',
-          status: 'warning',
-          dueDate: '2024-03-01',
-          description: 'Due in 2 weeks',
-        },
-        {
-          id: 3,
-          title: 'Tax Law Certification',
-          status: 'overdue',
-          dueDate: '2024-01-31',
-          description: 'Overdue by 11 days',
+          title: 'Course Completion',
+          status: calculatedCompliance >= 80 ? 'compliant' : calculatedCompliance >= 50 ? 'warning' : 'overdue',
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          description: `${completedCount} of ${totalCount} courses completed`,
         },
       ]);
     } catch (error) {
@@ -341,7 +327,10 @@ const MORStaffDashboard: React.FC = () => {
                       />
                       <Box>
                         {course.status !== 'completed' && (
-                          <IconButton color="primary">
+                          <IconButton 
+                            color="primary"
+                            onClick={() => navigate(`/courses/${course.id}`)}
+                          >
                             <PlayArrow />
                           </IconButton>
                         )}
@@ -402,44 +391,6 @@ const MORStaffDashboard: React.FC = () => {
                   </React.Fragment>
                 ))}
               </List>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<School />}
-                  fullWidth >
-                  Browse All Courses
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<CardMembership />}
-                  fullWidth
-                >
-                  View Certificates
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<Assessment />}
-                  fullWidth
-                >
-                  Compliance Report
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<Notifications />}
-                  fullWidth
-                >
-                  Training Notifications
-                </Button>
-              </Box>
             </CardContent>
           </Card>
         </Grid>

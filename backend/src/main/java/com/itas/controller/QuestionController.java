@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -195,6 +196,116 @@ public class QuestionController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to submit assessment: " + e.getMessage(), null));
+        }
+    }
+    
+    @GetMapping("/module/{moduleId}/practice")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getPracticeQuestions(@PathVariable Long moduleId) {
+        try {
+            List<Question> questions = questionRepository.findByModuleIdAndIsPracticeTrueOrderByOrderAsc(moduleId);
+            return ResponseEntity.ok(new ApiResponse<>("Practice questions retrieved", questions));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to load practice questions: " + e.getMessage(), null));
+        }
+    }
+    
+    @GetMapping("/module/{moduleId}/quiz")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getQuizQuestions(@PathVariable Long moduleId) {
+        try {
+            List<Question> questions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(moduleId);
+            return ResponseEntity.ok(new ApiResponse<>("Quiz questions retrieved", questions));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to load quiz questions: " + e.getMessage(), null));
+        }
+    }
+    
+    @PostMapping("/practice/check-answer")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> checkPracticeAnswer(@RequestBody Map<String, Object> request) {
+        try {
+            Long questionId = ((Number) request.get("questionId")).longValue();
+            Long answerId = ((Number) request.get("answerId")).longValue();
+            
+            Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
+            
+            boolean correct = false;
+            String correctAnswerText = "";
+            
+            for (Answer answer : question.getAnswers()) {
+                if (answer.getId().equals(answerId) && answer.getIsCorrect()) {
+                    correct = true;
+                }
+                if (answer.getIsCorrect()) {
+                    correctAnswerText = answer.getAnswerText();
+                }
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("correct", correct);
+            result.put("explanation", question.getExplanation());
+            result.put("correctAnswer", correctAnswerText);
+            
+            return ResponseEntity.ok(new ApiResponse<>("Answer checked", result));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to check answer: " + e.getMessage(), null));
+        }
+    }
+    
+    @PostMapping("/module-quiz/submit")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> submitModuleQuiz(@RequestBody Map<String, Object> request) {
+        try {
+            Long moduleId = ((Number) request.get("moduleId")).longValue();
+            Long userId = ((Number) request.get("userId")).longValue();
+            
+            @SuppressWarnings("unchecked")
+            Map<String, Object> answers = (Map<String, Object>) request.get("answers");
+            
+            List<Question> questions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(moduleId);
+            
+            int totalPoints = 0;
+            int earnedPoints = 0;
+            
+            for (Question question : questions) {
+                totalPoints += question.getPoints();
+                
+                if (answers.containsKey(question.getId().toString())) {
+                    String userAnswerId = answers.get(question.getId().toString()).toString();
+                    
+                    for (Answer answer : question.getAnswers()) {
+                        if (answer.getId().toString().equals(userAnswerId) && answer.getIsCorrect()) {
+                            earnedPoints += question.getPoints();
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0;
+            boolean passed = percentage >= 70;
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalPoints", totalPoints);
+            result.put("earnedPoints", earnedPoints);
+            result.put("percentage", Math.round(percentage * 100.0) / 100.0);
+            result.put("passed", passed);
+            result.put("nextModuleUnlocked", passed);
+            result.put("feedback", passed ? 
+                "Congratulations! You passed the module quiz. Next module unlocked!" : 
+                "You need at least 70% to pass. Please review the material and try again.");
+            
+            return ResponseEntity.ok(new ApiResponse<>("Module quiz submitted", result));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to submit quiz: " + e.getMessage(), null));
         }
     }
 }

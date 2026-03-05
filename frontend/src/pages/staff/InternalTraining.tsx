@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Grid, Card, CardContent, Typography, Button, Chip,
-  LinearProgress, Avatar, List, ListItem, ListItemText, ListItemIcon,
-  Divider, IconButton, Alert,
+  Avatar, List, ListItem, ListItemText, ListItemIcon,
+  Divider, IconButton, Alert, CircularProgress, LinearProgress,
 } from '@mui/material';
 import {
   Business, PlayArrow, CheckCircle, Schedule, Lock,
@@ -25,65 +25,76 @@ interface InternalCourse {
 
 const InternalTraining: React.FC = () => {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState<InternalCourse[]>([
-    {
-      id: 1,
-      title: 'Tax Policy Updates 2026',
-      description: 'Latest changes in tax policies and regulations for MOR staff',
-      category: 'Policy',
-      progress: 75,
-      mandatory: true,
-      deadline: '2026-03-15',
-      status: 'in_progress',
-      duration: '4 hours',
-      modules: 8,
-    },
-    {
-      id: 2,
-      title: 'Internal Audit Procedures',
-      description: 'Standard operating procedures for internal audits',
-      category: 'Compliance',
-      progress: 100,
-      mandatory: true,
-      status: 'completed',
-      duration: '3 hours',
-      modules: 6,
-    },
-    {
-      id: 3,
-      title: 'Customer Service Excellence',
-      description: 'Improving taxpayer service and communication skills',
-      category: 'Soft Skills',
-      progress: 30,
-      mandatory: false,
-      status: 'in_progress',
-      duration: '2 hours',
-      modules: 4,
-    },
-    {
-      id: 4,
-      title: 'Data Security & Privacy',
-      description: 'Protecting sensitive taxpayer information',
-      category: 'Security',
-      progress: 0,
-      mandatory: true,
-      deadline: '2026-04-01',
-      status: 'not_started',
-      duration: '5 hours',
-      modules: 10,
-    },
-    {
-      id: 5,
-      title: 'Advanced Tax Assessment',
-      description: 'Complex tax assessment techniques',
-      category: 'Technical',
-      progress: 0,
-      mandatory: false,
-      status: 'locked',
-      duration: '6 hours',
-      modules: 12,
-    },
-  ]);
+  const [courses, setCourses] = useState<InternalCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('itas_token');
+      const userId = JSON.parse(localStorage.getItem('itas_user') || '{}').id || 2;
+      
+      // Fetch all courses
+      const coursesResponse = await fetch('http://localhost:8080/courses', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      // Fetch user enrollments
+      const enrollmentsResponse = await fetch(`http://localhost:8080/courses/enrollments/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (coursesResponse.ok && enrollmentsResponse.ok) {
+        const allCoursesData = await coursesResponse.json();
+        const enrollmentsData = await enrollmentsResponse.json();
+        
+        const allCourses = allCoursesData.data || allCoursesData || [];
+        const enrollments = enrollmentsData.data || enrollmentsData || [];
+        
+        // Create a map of enrollments by courseId
+        const enrollmentMap = new Map();
+        enrollments.forEach((enrollment: any) => {
+          enrollmentMap.set(enrollment.course?.id || enrollment.courseId, enrollment);
+        });
+        
+        // Map courses to internal training format
+        const mappedCourses = allCourses.map((course: any) => {
+          const enrollment = enrollmentMap.get(course.id);
+          const progress = enrollment?.progress || 0;
+          let status: 'not_started' | 'in_progress' | 'completed' | 'locked' = 'not_started';
+          
+          if (progress >= 100) status = 'completed';
+          else if (progress > 0) status = 'in_progress';
+          
+          return {
+            id: course.id,
+            title: course.title || 'Untitled Course',
+            description: course.description || 'No description available',
+            category: course.category || 'General',
+            progress: progress,
+            mandatory: false, // Can be enhanced with course metadata
+            status: status,
+            duration: `${course.modules?.length || 0} modules`,
+            modules: course.modules?.length || 0,
+          };
+        });
+        
+        setCourses(mappedCourses);
+      }
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -109,6 +120,14 @@ const InternalTraining: React.FC = () => {
   const optionalCourses = courses.filter(c => !c.mandatory);
   const completedCount = courses.filter(c => c.status === 'completed').length;
   const inProgressCount = courses.filter(c => c.status === 'in_progress').length;
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
     <Box>
