@@ -58,8 +58,14 @@ const PublicResources: React.FC = () => {
       const response = await resourcesAPI.getAllResources();
       setResources(response.data || []);
       setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Failed to load resources:', error);
+    } catch (error: any) {
+      // If 401 error on public page, show empty resources
+      if (error.response?.status === 401) {
+        console.log('Resources require authentication - showing public page without resources');
+        setResources([]);
+      } else {
+        console.error('Failed to load resources:', error);
+      }
     } finally {
       setLoading(false);
     }

@@ -42,7 +42,7 @@ import {
 } from '@mui/icons-material';
 import { coursesAPI } from '../api/courses';
 import { certificatesAPI } from '../api/certificates';
-import axios from 'axios';
+import { apiClient } from '../utils/axiosConfig';
 
 interface ProfileProps {
   user: any;
@@ -116,7 +116,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUserUpdate }) => {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await axios.put(`http://localhost:8080/users/${user.id}`, editForm);
+      const response = await apiClient.put(`/users/${user.id}`, editForm);
       if (response.data.data) {
         setSnackbar({
           open: true,
@@ -129,6 +129,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUserUpdate }) => {
         setEditDialogOpen(false);
       }
     } catch (error) {
+      console.error('Profile update error:', error);
       setSnackbar({
         open: true,
         message: 'Failed to update profile',
@@ -157,7 +158,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUserUpdate }) => {
     }
 
     try {
-      await axios.patch(`http://localhost:8080/users/${user.id}/password`, {
+      await apiClient.patch(`/users/${user.id}/password`, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
@@ -170,6 +171,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUserUpdate }) => {
       setPasswordDialogOpen(false);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error: any) {
+      console.error('Password change error:', error);
       setSnackbar({
         open: true,
         message: error.response?.data?.message || 'Failed to change password',

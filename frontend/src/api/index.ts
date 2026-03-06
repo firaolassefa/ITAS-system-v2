@@ -38,10 +38,29 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('itas_token');
-      localStorage.removeItem('itas_user');
-      window.location.href = '/login';
+      // Only redirect to login if we're not already on a public page
+      const currentPath = window.location.pathname;
+      const isPublicPage = currentPath === '/' || 
+                          currentPath === '/login' || 
+                          currentPath === '/register' || 
+                          currentPath.startsWith('/public');
+      
+      console.log('🔴 [axios default] 401 Error');
+      console.log('   Current path:', currentPath);
+      console.log('   Is public:', isPublicPage);
+      console.log('   Request URL:', error.config?.url);
+      console.log('   Token exists:', !!localStorage.getItem('itas_token'));
+      
+      // TEMPORARILY DISABLED - Don't redirect, just log
+      console.log('   ⚠️ REDIRECT DISABLED FOR DEBUGGING');
+      
+      // if (!isPublicPage) {
+      //   // Token expired or invalid on protected page
+      //   console.log('   ⚠️ Redirecting to login...');
+      //   localStorage.removeItem('itas_token');
+      //   localStorage.removeItem('itas_user');
+      //   window.location.href = '/login';
+      // }
     }
     return Promise.reject(error);
   }

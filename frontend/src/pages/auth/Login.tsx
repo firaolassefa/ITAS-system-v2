@@ -1,36 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Paper,
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-  IconButton,
-  Divider,
-  Chip,
-  Fade,
-  Slide,
-  Grid,
-  useTheme,
-  alpha,
+  Container, Paper, Box, TextField, Button, Typography, Alert,
+  CircularProgress, InputAdornment, IconButton, Divider, Chip,
+  Fade, Slide, Grid, alpha,
 } from '@mui/material';
 import { 
-  School as SchoolIcon, 
-  Lock as LockIcon,
-  Person as PersonIcon,
-  Visibility,
-  VisibilityOff,
-  ArrowForward,
-  Security,
-  Speed,
-  TrendingUp,
+  AccountBalance, Lock as LockIcon, Person as PersonIcon,
+  Visibility, VisibilityOff, ArrowForward, Security, Speed, Verified,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../api/auth';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void;
@@ -44,7 +24,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
-  const theme = useTheme();
+  const { mode } = useThemeMode();
 
   useEffect(() => {
     setMounted(true);
@@ -61,7 +41,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       
       onLogin(user, token);
       
-      // Role-based navigation
       const dashboardMap: Record<string, string> = {
         'SYSTEM_ADMIN': '/admin/system-dashboard',
         'CONTENT_ADMIN': '/admin/content-dashboard',
@@ -83,24 +62,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   const features = [
-    { icon: <Security />, title: 'Secure', desc: 'Bank-level encryption' },
-    { icon: <Speed />, title: 'Fast', desc: 'Lightning quick access' },
-    { icon: <TrendingUp />, title: 'Smart', desc: 'AI-powered learning' },
+    { icon: <Security />, title: 'Secure', desc: 'Government-grade security' },
+    { icon: <Speed />, title: 'Fast', desc: 'Quick access to resources' },
+    { icon: <Verified />, title: 'Official', desc: 'Ministry approved' },
   ];
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        position: 'relative',
-        overflow: 'hidden',
+        background: mode === 'light'
+          ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)'
+          : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      {/* Animated Background Overlay */}
+      {/* Background Pattern */}
       <Box
         sx={{
           position: 'absolute',
@@ -108,33 +89,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: `
-            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%)
-          `,
-          animation: 'backgroundPulse 15s ease-in-out infinite',
+          backgroundImage: `radial-gradient(circle at 20% 50%, ${alpha('#f59e0b', 0.1)} 0%, transparent 50%),
+                           radial-gradient(circle at 80% 80%, ${alpha('#f59e0b', 0.08)} 0%, transparent 50%)`,
         }}
       />
-
-      {/* Floating Particles */}
-      {[...Array(20)].map((_, i) => (
-        <Box
-          key={i}
-          sx={{
-            position: 'absolute',
-            width: 3,
-            height: 3,
-            background: 'rgba(255, 255, 255, 0.6)',
-            borderRadius: '50%',
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${15 + Math.random() * 10}s infinite`,
-            animationDelay: `${Math.random() * 5}s`,
-            boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
-          }}
-        />
-      ))}
 
       <Container maxWidth="lg">
         <Grid container spacing={4} alignItems="center">
@@ -147,79 +105,47 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     display: 'inline-flex',
                     p: 3,
                     borderRadius: '24px',
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    bgcolor: alpha('#fff', 0.1),
+                    border: '2px solid',
+                    borderColor: alpha('#f59e0b', 0.3),
                     mb: 4,
-                    animation: 'floating 3s ease-in-out infinite',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                   }}
                 >
-                  <SchoolIcon sx={{ fontSize: 60, color: '#fff' }} />
+                  <AccountBalance sx={{ fontSize: 60, color: '#f59e0b' }} />
                 </Box>
                 
                 <Typography 
                   variant="h2" 
-                  gutterBottom
                   sx={{ 
                     fontWeight: 800,
-                    background: 'linear-gradient(135deg, #fff 0%, #f0f0f0 50%, #fff 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    mb: 1,
-                    textShadow: '0 2px 20px rgba(255, 255, 255, 0.5)',
-                    position: 'relative',
-                    display: 'inline-block',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: -8,
-                      left: 0,
-                      right: 0,
-                      height: '4px',
-                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
-                      borderRadius: '2px',
-                    },
+                    color: 'white',
+                    mb: 2,
                   }}
                 >
-                  <Box component="span" sx={{ 
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6B6B 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    fontWeight: 900,
-                    letterSpacing: '0.02em',
-                    textShadow: '0 0 30px rgba(255, 215, 0, 0.5)',
-                    filter: 'drop-shadow(0 2px 8px rgba(255, 215, 0, 0.3))',
-                  }}>
-                    ITAS
-                  </Box>
-                  {' '}
-                  <Box component="span" sx={{ color: '#fff' }}>
-                    Portal
-                  </Box>
+                  ITAS Portal
                 </Typography>
                 
                 <Typography 
                   variant="h5" 
                   sx={{ 
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    mb: 4,
-                    fontWeight: 400,
+                    color: '#fbbf24',
+                    mb: 3,
+                    fontWeight: 600,
                   }}
                 >
-                  Tax & Education Support System
+                  Integrated Tax Administration System
                 </Typography>
 
                 <Typography 
                   variant="body1" 
                   sx={{ 
-                    color: 'rgba(255, 255, 255, 0.9)',
+                    color: alpha('#fff', 0.9),
                     mb: 4,
                     lineHeight: 1.8,
                   }}
                 >
-                  Access your personalized learning dashboard, track your progress, 
-                  and unlock your potential with our advanced tax education platform.
+                  Official tax education and training platform by the Ministry of Revenue.
+                  Access courses, resources, and track your learning progress.
                 </Typography>
 
                 {/* Features */}
@@ -229,34 +155,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <Fade in={mounted} timeout={1000 + index * 200}>
                         <Box
                           sx={{
-                            p: 2,
-                            borderRadius: 4,
-                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%)',
-                            backdropFilter: 'blur(20px)',
-                            border: '2px solid rgba(255, 255, 255, 0.4)',
+                            p: 2.5,
+                            borderRadius: 3,
+                            bgcolor: alpha('#fff', 0.1),
+                            border: '1px solid',
+                            borderColor: alpha('#f59e0b', 0.2),
                             textAlign: 'center',
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                            '&::before': {
-                              content: '""',
-                              position: 'absolute',
-                              top: 0,
-                              left: '-100%',
-                              width: '100%',
-                              height: '100%',
-                              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
-                              transition: 'left 0.6s',
-                            },
+                            transition: 'all 0.3s',
                             '&:hover': {
-                              transform: 'translateY(-12px) scale(1.05)',
-                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.25) 100%)',
-                              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
-                              border: '2px solid rgba(255, 255, 255, 0.6)',
-                              '&::before': {
-                                left: '100%',
-                              },
+                              transform: 'translateY(-8px)',
+                              bgcolor: alpha('#fff', 0.15),
+                              borderColor: alpha('#f59e0b', 0.4),
                             },
                           }}
                         >
@@ -265,16 +174,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                               display: 'inline-flex',
                               p: 1.5,
                               borderRadius: '50%',
-                              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%)',
-                              color: '#fff',
+                              bgcolor: alpha('#f59e0b', 0.2),
+                              color: '#fbbf24',
                               mb: 1.5,
-                              boxShadow: '0 4px 20px rgba(255, 255, 255, 0.2)',
-                              border: '2px solid rgba(255, 255, 255, 0.3)',
-                              transition: 'all 0.3s',
-                              '&:hover': {
-                                transform: 'rotate(360deg) scale(1.1)',
-                                boxShadow: '0 6px 30px rgba(255, 255, 255, 0.4)',
-                              },
                             }}
                           >
                             {feature.icon}
@@ -285,8 +187,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                               fontWeight: 700, 
                               color: '#fff', 
                               mb: 0.5,
-                              fontSize: '0.95rem',
-                              textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                             }}
                           >
                             {feature.title}
@@ -294,10 +194,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           <Typography 
                             variant="caption" 
                             sx={{ 
-                              color: 'rgba(255, 255, 255, 0.95)',
-                              fontWeight: 500,
-                              lineHeight: 1.4,
-                              fontSize: '0.8rem',
+                              color: alpha('#fff', 0.8),
                             }}
                           >
                             {feature.desc}
@@ -318,27 +215,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 elevation={0}
                 sx={{ 
                   p: 5, 
-                  borderRadius: 6,
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+                  borderRadius: 4,
+                  bgcolor: mode === 'light' ? 'white' : '#1e293b',
+                  border: '1px solid',
+                  borderColor: mode === 'light' ? alpha('#000', 0.1) : alpha('#f59e0b', 0.2),
                 }}
               >
                 <Box sx={{ textAlign: 'center', mb: 4 }}>
                   <Typography 
                     variant="h4" 
-                    component="h1" 
-                    gutterBottom
                     sx={{ 
                       fontWeight: 700,
-                      color: '#1a1a1a',
+                      color: mode === 'light' ? '#1e3a8a' : '#fff',
+                      mb: 1,
                     }}
                   >
                     Welcome Back
                   </Typography>
-                  <Typography variant="body1" sx={{ color: '#666' }}>
-                    Sign in to continue your learning journey
+                  <Typography variant="body1" color="text.secondary">
+                    Sign in to access your account
                   </Typography>
                 </Box>
 
@@ -346,12 +241,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <Fade in>
                     <Alert 
                       severity="error" 
-                      sx={{ 
-                        mb: 3,
-                        borderRadius: 3,
-                        background: alpha(theme.palette.error.main, 0.1),
-                        border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
-                      }}
+                      sx={{ mb: 3, borderRadius: 2 }}
                       onClose={() => setError('')}
                     >
                       {error}
@@ -371,33 +261,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <PersonIcon sx={{ color: '#667eea' }} />
+                          <PersonIcon color="primary" />
                         </InputAdornment>
                       ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: '#fff',
-                        '& fieldset': {
-                          borderColor: 'rgba(0, 0, 0, 0.1)',
-                          borderWidth: 2,
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: '#666',
-                        '&.Mui-focused': {
-                          color: '#667eea',
-                        },
-                      },
-                      '& .MuiOutlinedInput-input': {
-                        color: '#1a1a1a',
-                      },
                     }}
                   />
                   
@@ -413,7 +279,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <LockIcon sx={{ color: '#667eea' }} />
+                          <LockIcon color="primary" />
                         </InputAdornment>
                       ),
                       endAdornment: (
@@ -421,36 +287,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                           <IconButton
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
-                            sx={{ color: '#666' }}
                           >
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: '#fff',
-                        '& fieldset': {
-                          borderColor: 'rgba(0, 0, 0, 0.1)',
-                          borderWidth: 2,
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                        },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: '#666',
-                        '&.Mui-focused': {
-                          color: '#667eea',
-                        },
-                      },
-                      '& .MuiOutlinedInput-input': {
-                        color: '#1a1a1a',
-                      },
                     }}
                   />
                   
@@ -466,20 +307,31 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       py: 1.8,
                       fontSize: '1.1rem',
                       fontWeight: 600,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
-                        transform: 'translateY(-2px)',
-                      },
-                      transition: 'all 0.3s ease',
                     }}
                     disabled={loading}
                   >
                     {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
                   </Button>
                 </form>
+
+                <Divider sx={{ my: 3 }}>
+                  <Chip label="OR" size="small" />
+                </Divider>
+
+                <Box sx={{ textAlign: 'center' }}>
+                  <Button
+                    onClick={() => navigate('/')}
+                    sx={{ 
+                      color: 'primary.main',
+                      fontWeight: 600,
+                      '&:hover': {
+                        bgcolor: alpha('#1e3a8a', 0.05),
+                      },
+                    }}
+                  >
+                    ← Back to Home
+                  </Button>
+                </Box>
               </Paper>
             </Slide>
           </Grid>

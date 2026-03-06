@@ -1,47 +1,33 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  AppBar,
-  Box,
-  CssBaseline,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography,
-  Avatar,
-  Menu,
-  MenuItem,
-  Divider,
-  Badge,
+  AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
+  ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography,
+  Avatar, Menu, MenuItem, Divider, useTheme, alpha,
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  School as CourseIcon,
-  Description as ResourceIcon,
-  Person as ProfileIcon,
-  ExitToApp as LogoutIcon,
-  Folder as FolderIcon,
+  Menu as MenuIcon, Dashboard as DashboardIcon, School as CourseIcon,
+  Description as ResourceIcon, Person as ProfileIcon, ExitToApp as LogoutIcon,
+  AccountBalance,
 } from '@mui/icons-material';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
+import { useThemeMode } from '../theme/ThemeContext';
 
 interface TaxpayerLayoutProps {
   user: any;
   onLogout: () => void;
 }
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const { mode } = useThemeMode();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -62,17 +48,19 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
   };
 
   const menuItems = [
-    { text: 'Home', icon: <DashboardIcon />, path: '/taxpayer/dashboard' },
-    { text: 'Courses', icon: <CourseIcon />, path: '/taxpayer/courses' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/taxpayer/dashboard' },
+    { text: 'My Courses', icon: <CourseIcon />, path: '/taxpayer/courses' },
     { text: 'Resources', icon: <ResourceIcon />, path: '/taxpayer/resources' },
   ];
 
   const drawer = (
     <Box
       sx={{
-        height: '100%',
-        background: 'linear-gradient(180deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-        backdropFilter: 'blur(20px)',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+        color: 'white',
       }}
     >
       <Toolbar 
@@ -81,43 +69,43 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           flexDirection: 'column',
           py: 3,
           gap: 1,
+          borderBottom: '1px solid',
+          borderColor: alpha('#fff', 0.1),
         }}
       >
         <Box
           sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            width: 56,
+            height: 56,
+            borderRadius: '16px',
+            bgcolor: alpha('#fff', 0.1),
+            backdropFilter: 'blur(10px)',
+            border: '2px solid',
+            borderColor: alpha('#fff', 0.2),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mb: 1,
-            boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
           }}
         >
-          <Typography variant="h5" sx={{ color: 'white', fontWeight: 700 }}>
-            IT
-          </Typography>
+          <AccountBalance sx={{ color: '#f59e0b', fontSize: 32 }} />
         </Box>
         <Typography 
           variant="h6" 
-          noWrap
           sx={{
-            fontWeight: 700,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            fontWeight: 800,
+            color: 'white',
+            letterSpacing: '0.5px',
           }}
         >
           ITAS Portal
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-          Taxpayer Education
+        <Typography variant="caption" sx={{ color: alpha('#fff', 0.7), fontWeight: 500 }}>
+          Tax Education Platform
         </Typography>
       </Toolbar>
-      <Divider sx={{ borderColor: 'rgba(102, 126, 234, 0.1)' }} />
-      <List sx={{ px: 2, py: 2 }}>
+      
+      <List sx={{ px: 2, py: 2, flex: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
             <ListItemButton
@@ -125,29 +113,24 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
               onClick={() => navigate(item.path)}
               sx={{
                 borderRadius: '12px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.3s',
+                color: 'white',
                 '&.Mui-selected': {
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'white',
-                  },
+                  bgcolor: alpha('#f59e0b', 0.2),
+                  borderLeft: '4px solid #f59e0b',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                    transform: 'translateX(8px)',
+                    bgcolor: alpha('#f59e0b', 0.3),
                   },
                 },
                 '&:hover': {
-                  background: 'rgba(102, 126, 234, 0.1)',
-                  transform: 'translateX(8px)',
+                  bgcolor: alpha('#fff', 0.05),
                 },
                 py: 1.5,
               }}
             >
               <ListItemIcon 
                 sx={{ 
-                  color: location.pathname === item.path ? 'white' : '#667eea',
+                  color: location.pathname === item.path ? '#fbbf24' : alpha('#fff', 0.7),
                   minWidth: 40,
                 }}
               >
@@ -156,7 +139,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
               <ListItemText 
                 primary={item.text}
                 primaryTypographyProps={{
-                  fontWeight: location.pathname === item.path ? 700 : 600,
+                  fontWeight: location.pathname === item.path ? 700 : 500,
                   fontSize: '0.95rem',
                 }}
               />
@@ -164,6 +147,12 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           </ListItem>
         ))}
       </List>
+      
+      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: alpha('#fff', 0.1) }}>
+        <Typography variant="caption" sx={{ color: alpha('#fff', 0.5), display: 'block', textAlign: 'center' }}>
+          ITAS v2.0 • Ministry of Revenue
+        </Typography>
+      </Box>
     </Box>
   );
 
@@ -176,82 +165,35 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 4px 30px rgba(102, 126, 234, 0.2)',
+          bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+          borderBottom: '1px solid',
+          borderColor: alpha('#fff', 0.1),
         }}
       >
         <Toolbar sx={{ py: 1 }}>
           <IconButton
             color="inherit"
-            aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ 
-              mr: 2, 
-              display: { sm: 'none' },
-              '&:hover': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease',
-            }}
+            sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
           
           <Box sx={{ flexGrow: 1 }}>
-            <Typography 
-              variant="h6" 
-              noWrap
-              sx={{
-                fontWeight: 700,
-                letterSpacing: '0.5px',
-                textShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
               Taxpayer Portal
             </Typography>
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                opacity: 0.9,
-                display: { xs: 'none', sm: 'block' },
-              }}
-            >
-              Welcome back, {user.fullName}
+            <Typography variant="caption" sx={{ opacity: 0.8 }}>
+              Welcome, {user?.fullName}
             </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton 
-              color="inherit" 
-              onClick={() => navigate('/taxpayer/resources')}
-              sx={{
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'scale(1.1)',
-                },
-              }}
-            >
-              <FolderIcon />
-            </IconButton>
-
+            <ThemeToggle />
             <NotificationBell userRole={user?.userType} userId={user?.id} />
             
-            <IconButton 
-              color="inherit" 
-              onClick={() => navigate('/profile')}
-              sx={{
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'scale(1.1)',
-                },
-              }}
-            >
+            <IconButton color="inherit" onClick={() => navigate('/profile')}>
               <ProfileIcon />
             </IconButton>
 
@@ -264,24 +206,22 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
                 px: 2,
                 py: 0.5,
                 borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                bgcolor: alpha('#fff', 0.1),
+                border: '1px solid',
+                borderColor: alpha('#fff', 0.2),
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.3s',
                 '&:hover': {
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                  bgcolor: alpha('#fff', 0.15),
                 },
               }}
               onClick={handleMenuOpen}
             >
               <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'right' }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                  {user.fullName}
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {user?.fullName}
                 </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>
                   Taxpayer
                 </Typography>
               </Box>
@@ -289,12 +229,11 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
                 sx={{ 
                   width: 40, 
                   height: 40, 
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  bgcolor: '#f59e0b',
                   fontWeight: 700,
                 }}
               >
-                {user.fullName?.charAt(0) || 'U'}
+                {user?.fullName?.charAt(0) || 'U'}
               </Avatar>
             </Box>
           </Box>
@@ -308,47 +247,20 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
             sx: {
               mt: 1.5,
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-              minWidth: 200,
+              bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
               color: 'white',
+              minWidth: 200,
             },
           }}
         >
-          <MenuItem 
-            onClick={() => navigate('/profile')}
-            sx={{
-              py: 1.5,
-              px: 2,
-              borderRadius: '8px',
-              mx: 1,
-              my: 0.5,
-              '&:hover': {
-                background: 'rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          >
+          <MenuItem onClick={() => navigate('/profile')} sx={{ py: 1.5 }}>
             <ListItemIcon>
               <ProfileIcon fontSize="small" sx={{ color: 'white' }} />
             </ListItemIcon>
             <ListItemText>My Profile</ListItemText>
           </MenuItem>
-          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 0.5 }} />
-          <MenuItem 
-            onClick={handleLogout}
-            sx={{
-              py: 1.5,
-              px: 2,
-              borderRadius: '8px',
-              mx: 1,
-              my: 0.5,
-              '&:hover': {
-                background: 'rgba(255, 68, 68, 0.2)',
-              },
-            }}
-          >
+          <Divider sx={{ borderColor: alpha('#fff', 0.1) }} />
+          <MenuItem onClick={handleLogout} sx={{ py: 1.5 }}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" sx={{ color: 'white' }} />
             </ListItemIcon>
@@ -357,10 +269,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         </Menu>
       </AppBar>
 
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
+      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -368,11 +277,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              borderRight: '1px solid rgba(102, 126, 234, 0.1)',
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
         >
           {drawer}
@@ -381,11 +286,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              borderRight: '1px solid rgba(102, 126, 234, 0.1)',
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
           open
         >
@@ -400,6 +301,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           mt: 8,
+          bgcolor: 'background.default',
         }}
       >
         <Outlet />

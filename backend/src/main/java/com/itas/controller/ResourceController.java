@@ -63,7 +63,7 @@ public class ResourceController {
     }
 
     @GetMapping("")
-    @PreAuthorize("isAuthenticated()")
+    // Public endpoint - no authentication required for viewing resources
     public ResponseEntity<?> getAllResources(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String resourceType,
@@ -102,7 +102,7 @@ public class ResourceController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateResource(
             @PathVariable Long id,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -112,6 +112,18 @@ public class ResourceController {
             @RequestParam("category") String category,
             @RequestParam("audience") String audience,
             @AuthenticationPrincipal User currentUser) throws IOException {
+
+        // Check if user is admin or resource owner
+        Resource existingResource = resourceService.getResourceById(id);
+        boolean isAdmin = currentUser.getUserType().name().equals("SYSTEM_ADMIN") || 
+                         currentUser.getUserType().name().equals("CONTENT_ADMIN");
+        boolean isOwner = existingResource.getUploadedBy() != null && 
+                         existingResource.getUploadedBy().getId().equals(currentUser.getId());
+        
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(403)
+                .body(new ApiResponse<>("You don't have permission to update this resource", null));
+        }
 
         Resource resource = new Resource();
         resource.setTitle(title);
@@ -141,8 +153,23 @@ public class ResourceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
-    public ResponseEntity<?> deleteResource(@PathVariable Long id) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteResource(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser) {
+        
+        // Check if user is admin or resource owner
+        Resource existingResource = resourceService.getResourceById(id);
+        boolean isAdmin = currentUser.getUserType().name().equals("SYSTEM_ADMIN") || 
+                         currentUser.getUserType().name().equals("CONTENT_ADMIN");
+        boolean isOwner = existingResource.getUploadedBy() != null && 
+                         existingResource.getUploadedBy().getId().equals(currentUser.getId());
+        
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(403)
+                .body(new ApiResponse<>("You don't have permission to delete this resource", null));
+        }
+        
         resourceService.deleteResource(id);
         return ResponseEntity.ok(new ApiResponse<>("Resource deleted successfully", null));
     }
@@ -243,7 +270,7 @@ public class ResourceController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("isAuthenticated()")
+    // Public endpoint - no authentication required for searching resources
     public ResponseEntity<?> searchResources(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String category,
@@ -258,7 +285,6 @@ public class ResourceController {
      * Get all unique categories from existing resources
      */
     @GetMapping("/categories")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getCategories() {
         List<String> categories = resourceService.getAllCategories();
         return ResponseEntity.ok(new ApiResponse<>("Categories retrieved successfully", categories));
@@ -268,9 +294,17 @@ public class ResourceController {
      * Get all unique audiences from existing resources
      */
     @GetMapping("/audiences")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getAudiences() {
         List<String> audiences = resourceService.getAllAudiences();
         return ResponseEntity.ok(new ApiResponse<>("Audiences retrieved successfully", audiences));
+    }
+    
+    /**
+     * Get all unique resource types from existing resources
+     */
+    @GetMapping("/types")
+    public ResponseEntity<?> getResourceTypes() {
+        List<String> types = resourceService.getAllResourceTypes();
+        return ResponseEntity.ok(new ApiResponse<>("Resource types retrieved successfully", types));
     }
 }

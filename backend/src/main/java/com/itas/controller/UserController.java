@@ -42,16 +42,36 @@ public class UserController {
     }
     
     @PutMapping("/{userId}")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User userUpdates) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User userUpdates,
+                                       org.springframework.security.core.Authentication authentication) {
+        // Get current user
+        String currentUsername = authentication.getName();
+        User currentUser = userRepository.findByUsername(currentUsername)
+            .orElseThrow(() -> new RuntimeException("Current user not found"));
+        
+        // Check if user is updating their own profile or is an admin
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_SYSTEM_ADMIN"));
+        boolean isOwnProfile = currentUser.getId().equals(userId);
+        
+        if (!isAdmin && !isOwnProfile) {
+            return ResponseEntity.status(403).body(new ApiResponse<>("You can only update your own profile", null));
+        }
+        
         return userRepository.findById(userId)
             .map(user -> {
+                // Allow updating basic profile fields
                 if (userUpdates.getFullName() != null) user.setFullName(userUpdates.getFullName());
                 if (userUpdates.getEmail() != null) user.setEmail(userUpdates.getEmail());
                 if (userUpdates.getTaxNumber() != null) user.setTaxNumber(userUpdates.getTaxNumber());
                 if (userUpdates.getCompanyName() != null) user.setCompanyName(userUpdates.getCompanyName());
                 if (userUpdates.getPhoneNumber() != null) user.setPhoneNumber(userUpdates.getPhoneNumber());
-                if (userUpdates.getUserType() != null) user.setUserType(userUpdates.getUserType());
+                
+                // Only admins can change user type
+                if (isAdmin && userUpdates.getUserType() != null) {
+                    user.setUserType(userUpdates.getUserType());
+                }
                 
                 User updatedUser = userRepository.save(user);
                 updatedUser.setPassword(null);

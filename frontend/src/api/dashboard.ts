@@ -3,7 +3,7 @@ import { apiClient } from '../utils/axiosConfig';
 export const dashboardAPI = {
   // Get taxpayer dashboard
   getTaxpayerDashboard: async (userId: number) => {
-    const response = await apiClient.get(`/dashboard/taxpayer/${userId}`);
+    const response = await apiClient.get(`/dashboard/user/${userId}`);
     return response.data;
   },
 

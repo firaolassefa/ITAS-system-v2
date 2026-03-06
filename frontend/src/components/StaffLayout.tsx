@@ -35,6 +35,9 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
+import { useThemeMode } from '../theme/ThemeContext';
+import { alpha, useTheme } from '@mui/material';
 
 const drawerWidth = 240;
 
@@ -48,6 +51,8 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const theme = useTheme();
+  const { mode } = useThemeMode();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -128,8 +133,8 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
     <Box
       sx={{
         height: '100%',
-        background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)',
-        backdropFilter: 'blur(20px)',
+        bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+        color: 'white',
       }}
     >
       <Toolbar sx={{ py: 3 }}>
@@ -139,14 +144,13 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               width: 48,
               height: 48,
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              bgcolor: alpha('#fff', 0.1),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
             }}
           >
-            <Business sx={{ color: 'white', fontSize: 28 }} />
+            <Business sx={{ color: '#fbbf24', fontSize: 28 }} />
           </Box>
           <Box>
             <Typography 
@@ -154,9 +158,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               noWrap
               sx={{
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: 'white',
               }}
             >
               MOR Staff
@@ -164,7 +166,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
             <Typography 
               variant="caption" 
               sx={{ 
-                color: 'text.secondary',
+                color: alpha('#fff', 0.7),
                 fontWeight: 500,
               }}
             >
@@ -173,7 +175,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
           </Box>
         </Box>
       </Toolbar>
-      <Divider sx={{ borderColor: 'rgba(16, 185, 129, 0.1)' }} />
+      <Divider sx={{ borderColor: alpha('#fff', 0.1) }} />
       <List sx={{ px: 2, py: 2 }}>
         {menuItems.map((item) => (
           <Tooltip key={item.text} title={item.description} placement="right">
@@ -184,31 +186,23 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
                 sx={{
                   borderRadius: '12px',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  color: 'white',
                   '&.Mui-selected': {
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                    color: 'white',
-                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
-                    '& .MuiListItemIcon-root': {
-                      color: 'white',
-                    },
-                    '& .MuiListItemText-secondary': {
-                      color: 'rgba(255, 255, 255, 0.8)',
-                    },
+                    bgcolor: alpha('#fbbf24', 0.2),
+                    borderLeft: '4px solid #fbbf24',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-                      transform: 'translateX(8px)',
+                      bgcolor: alpha('#fbbf24', 0.3),
                     },
                   },
                   '&:hover': {
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    transform: 'translateX(8px)',
+                    bgcolor: alpha('#fff', 0.05),
                   },
                   py: 1.5,
                 }}
               >
                 <ListItemIcon
                   sx={{ 
-                    color: location.pathname === item.path ? 'white' : '#10B981',
+                    color: location.pathname === item.path ? '#fbbf24' : alpha('#fff', 0.7),
                     minWidth: 40,
                   }}
                 >
@@ -251,10 +245,9 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 4px 30px rgba(16, 185, 129, 0.2)',
+          bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+          borderBottom: '1px solid',
+          borderColor: alpha('#fff', 0.1),
         }}
       >
         <Toolbar sx={{ py: 1 }}>
@@ -300,6 +293,8 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ThemeToggle />
+            
             <NotificationBell userRole={user?.userType} />
             
             <Box
@@ -417,16 +412,13 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
           sx: {
             mt: 1.5,
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-            minWidth: 220,
+            bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
             color: 'white',
+            minWidth: 220,
           },
         }}
       >
-        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: alpha('#fff', 0.1) }}>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {user?.fullName || 'Staff Member'}
           </Typography>
@@ -435,7 +427,10 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
           </Typography>
         </Box>
         <MenuItem 
-          onClick={() => navigate('/profile')}
+          onClick={() => {
+            handleProfileMenuClose();
+            navigate('/profile');
+          }}
           sx={{
             py: 1.5,
             px: 2,
@@ -443,7 +438,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
             mx: 1,
             my: 0.5,
             '&:hover': {
-              background: 'rgba(255, 255, 255, 0.1)',
+              bgcolor: alpha('#fff', 0.1),
             },
           }}
         >
@@ -452,6 +447,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
           </ListItemIcon>
           Profile
         </MenuItem>
+        <Divider sx={{ borderColor: alpha('#fff', 0.1), my: 0.5 }} />
         <MenuItem 
           onClick={handleLogout}
           sx={{
@@ -461,7 +457,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
             mx: 1,
             my: 0.5,
             '&:hover': {
-              background: 'rgba(255, 68, 68, 0.2)',
+              bgcolor: 'rgba(239, 68, 68, 0.2)',
             },
           }}
         >

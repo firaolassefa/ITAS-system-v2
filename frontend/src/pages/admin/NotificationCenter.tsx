@@ -65,19 +65,20 @@ const NotificationCenter: React.FC = () => {
       const campaignData = response.data || response || [];
       const campaignsArray = Array.isArray(campaignData) ? campaignData : [];
       
+      // Map notifications to campaigns with real data
       setCampaigns(campaignsArray.slice(0, 5).map((n: any) => ({
         id: n.id,
-        title: n.title || n.message?.substring(0, 30),
-        audience: n.role || 'ALL',
-        sent: n.sentCount || Math.floor(Math.random() * 1000) + 100,
-        opened: n.openedCount || Math.floor(Math.random() * 800) + 50,
+        title: n.title || 'Untitled Notification',
+        audience: n.targetAudience || n.role || 'ALL',
+        sent: n.sentCount || 0,
+        opened: n.openedCount || 0,
         sentAt: n.createdAt || new Date().toISOString(),
-        channel: n.notificationType || 'EMAIL',
+        channel: n.notificationType || 'IN_APP',
       })));
 
-      // Calculate stats
-      const totalSent = campaignsArray.reduce((sum: number, c: any) => sum + (c.sentCount || 100), 0);
-      const totalOpened = campaignsArray.reduce((sum: number, c: any) => sum + (c.openedCount || 70), 0);
+      // Calculate stats from real data
+      const totalSent = campaignsArray.reduce((sum: number, c: any) => sum + (c.sentCount || 0), 0);
+      const totalOpened = campaignsArray.reduce((sum: number, c: any) => sum + (c.openedCount || 0), 0);
       
       setStats({
         totalSent,

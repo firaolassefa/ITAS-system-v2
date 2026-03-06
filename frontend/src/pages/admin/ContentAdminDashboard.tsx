@@ -1,59 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  IconButton,
-  LinearProgress,
-  Avatar,
-  Container,
-  Fade,
-  Zoom,
+  Container, Grid, Typography, Box, Card, CardContent,
+  Avatar, Paper, Chip, alpha, LinearProgress,
 } from '@mui/material';
 import {
-  CloudUpload,
-  Folder,
-  Image,
-  VideoLibrary,
-  PictureAsPdf,
-  TrendingUp,
-  TrendingDown,
-  MoreVert,
-  CheckCircle,
-  Schedule,
-  Archive,
-  Edit,
-  ArrowUpward,
-  InsertDriveFile,
-  Visibility,
-  Download,
+  CloudUpload, TrendingUp, Assessment, School,
+  Folder, CheckCircle, Schedule, Visibility,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { dashboardAPI } from '../../api/dashboard';
-import CircularProgress from '@mui/material/CircularProgress';
+import { apiClient } from '../../utils/axiosConfig';
 
 const ContentAdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState<any>({});
+  const [data, setData] = useState<any>({});
+  const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
   useEffect(() => {
-    setMounted(true);
     loadDashboard();
   }, []);
 
   const loadDashboard = async () => {
     try {
-      const response = await dashboardAPI.getContentAdminDashboard();
-      setDashboardData(response.data || response);
+      const cacheKey = `dashboard_CONTENT_ADMIN_${user.id}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const cachedData = JSON.parse(cached);
+        if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
+          setData(cachedData.data);
+          setLoading(false);
+        }
+      }
+
+      const response = await apiClient.get('/dashboard/content-admin');
+      const freshData = response.data.data || response.data;
+      
+      setData(freshData);
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data: freshData,
+        timestamp: Date.now(),
+      }));
     } catch (error) {
-      console.error('Failed to load dashboard:', error);
+      console.error('Dashboard load error:', error);
     } finally {
       setLoading(false);
     }
@@ -61,563 +48,191 @@ const ContentAdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress size={60} />
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" color="text.secondary">Loading...</Typography>
+        </Box>
       </Container>
     );
   }
 
   const stats = [
-    { 
-      title: 'Total Resources', 
-      value: (dashboardData.totalResources || 0).toString(), 
-      icon: <Folder />, 
-      color: '#667eea',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    },
-    { 
-      title: 'Pending Approval', 
-      value: (dashboardData.pendingApproval || 0).toString(), 
-      icon: <Schedule />, 
-      color: '#F59E0B',
-      gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-    },
-    { 
-      title: 'Published', 
-      value: (dashboardData.publishedResources || 0).toString(), 
-      icon: <CheckCircle />, 
-      color: '#10B981',
-      gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-    },
-    { 
-      title: 'Total Views', 
-      value: (dashboardData.totalViews || 0).toString(), 
-      icon: <Visibility />, 
-      color: '#8B5CF6',
-      gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-    },
+    { label: 'Total Resources', value: data.totalResources || 0, icon: <Folder />, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
+    { label: 'Published Today', value: data.publishedToday || 0, icon: <TrendingUp />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
+    { label: 'Pending Approval', value: data.pendingApproval || 0, icon: <Schedule />, color: '#EF4444', bg: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' },
+    { label: 'Total Views', value: data.totalViews || 0, icon: <Visibility />, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
   ];
 
-  const resourceTypes = Array.isArray(dashboardData.resourceTypes) 
-    ? dashboardData.resourceTypes 
-    : [];
-  const recentUploads = Array.isArray(dashboardData.recentUploads)
-    ? dashboardData.recentUploads
-    : [];
-
-  const quickActions = [
-    { label: 'Upload Resource', icon: <CloudUpload />, path: '/admin/upload-resource', color: '#667eea', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    { label: 'Manage Content', icon: <Edit />, path: '/admin/content-management', color: '#10B981', gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
-    { label: 'Archive Old', icon: <Archive />, path: '/admin/archive', color: '#F59E0B', gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
-    { label: 'Version Control', icon: <Folder />, path: '/admin/resource-version', color: '#8B5CF6', gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
+  const contentStats = [
+    { type: 'PDF Documents', count: data.pdfCount || 0, percentage: 45, color: '#EF4444' },
+    { type: 'Video Content', count: data.videoCount || 0, percentage: 30, color: '#8B5CF6' },
+    { type: 'Images', count: data.imageCount || 0, percentage: 15, color: '#10B981' },
+    { type: 'Other Files', count: data.otherCount || 0, percentage: 10, color: '#F59E0B' },
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
-      <Fade in={mounted} timeout={600}>
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Box
+      <Box sx={{ mb: 5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+          <Box>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 1,
+              }}
+            >
+              Content Management Studio
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Welcome back, {user?.fullName || 'Content Admin'} • Manage all educational content
+            </Typography>
+          </Box>
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+              fontSize: '2rem',
+              fontWeight: 700,
+              boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            {user?.fullName?.charAt(0) || 'C'}
+          </Avatar>
+        </Box>
+      </Box>
+
+      {/* Main Stats */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {stats.map((stat, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Card
+              elevation={0}
               sx={{
-                p: 2,
+                position: 'relative',
+                overflow: 'hidden',
+                height: '100%',
+                background: 'white',
+                border: '1px solid #e5e7eb',
                 borderRadius: 3,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                mr: 3,
-                boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
-                animation: 'iconPulse 2s ease-in-out infinite',
-                '@keyframes iconPulse': {
-                  '0%, 100%': { transform: 'scale(1)' },
-                  '50%': { transform: 'scale(1.05)' },
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-8px) scale(1.02)',
+                  boxShadow: `0 20px 40px ${alpha(stat.color, 0.25)}`,
+                  borderColor: stat.color,
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '5px',
+                  background: stat.bg,
                 },
               }}
             >
-              <CloudUpload sx={{ fontSize: 40, color: 'white' }} />
-            </Box>
-            <Box>
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontWeight: 800,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 1,
-                }}
-              >
-                Content Management Studio
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Upload, manage, and organize educational resources
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      </Fade>
-
-      {/* Stats Grid */}
-      <Grid container spacing={2.5} sx={{ mb: 4 }}>
-        {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
-            <Zoom in={mounted} timeout={600 + index * 100}>
-              <Card
-                elevation={0}
-                sx={{
-                  position: 'relative',
-                  overflow: 'visible',
-                  background: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 3,
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  animation: `cardFloat 3s ease-in-out ${index * 0.2}s infinite`,
-                  '@keyframes cardFloat': {
-                    '0%, 100%': { transform: 'translateY(0px)' },
-                    '50%': { transform: 'translateY(-8px)' },
-                  },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '4px',
-                    background: stat.gradient,
-                    borderRadius: '12px 12px 0 0',
-                  },
-                  '&:hover': {
-                    transform: 'translateY(-12px) scale(1.02)',
-                    boxShadow: `0 20px 40px ${stat.color}30`,
-                    borderColor: stat.color,
-                    '& .stat-icon': {
-                      transform: 'scale(1.15) rotate(5deg)',
-                      background: stat.gradient,
-                    },
-                    '& .stat-value': {
-                      transform: 'scale(1.08)',
-                    },
-                    '& .stat-glow': {
-                      opacity: 1,
-                    },
-                  },
-                }}
-              >
-                <Box
-                  className="stat-glow"
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '200%',
-                    height: '200%',
-                    background: `radial-gradient(circle, ${stat.color}15 0%, transparent 70%)`,
-                    opacity: 0,
-                    transition: 'opacity 0.4s ease',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <CardContent sx={{ p: 2.5, position: 'relative', zIndex: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box
-                      className="stat-icon"
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2.5,
-                        background: `${stat.color}15`,
-                        color: stat.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.3s ease',
-                        boxShadow: `0 4px 12px ${stat.color}20`,
-                      }}
-                    >
-                      {React.cloneElement(stat.icon, { sx: { fontSize: 22 } })}
-                    </Box>
-                  </Box>
-                  <Typography 
-                    className="stat-value"
-                    variant="h4" 
-                    sx={{ 
-                      fontWeight: 800, 
-                      mb: 0.5,
-                      background: stat.gradient,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      transition: 'all 0.3s ease',
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 3,
+                      background: stat.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      boxShadow: `0 8px 24px ${alpha(stat.color, 0.3)}`,
                     }}
                   >
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.85rem' }}>
-                    {stat.title}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Zoom>
+                    {stat.icon}
+                  </Box>
+                </Box>
+                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1, color: stat.color }}>
+                  {stat.value}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                  {stat.label}
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
         ))}
       </Grid>
 
-      <Grid container spacing={3}>
-        {/* Resource Types */}
-        <Grid item xs={12} lg={8}>
-          <Fade in={mounted} timeout={1000}>
-            <Paper 
-              sx={{ 
-                p: 3, 
-                mb: 3, 
-                background: 'white', 
-                border: '1px solid #e5e7eb', 
-                borderRadius: 3, 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: '-100%',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent)',
-                  animation: 'shimmer 3s infinite',
-                  '@keyframes shimmer': {
-                    '0%': { left: '-100%' },
-                    '100%': { left: '100%' },
-                  },
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    display: 'flex',
-                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                    animation: 'iconBounce 2s ease-in-out infinite',
-                    '@keyframes iconBounce': {
-                      '0%, 100%': { transform: 'translateY(0)' },
-                      '50%': { transform: 'translateY(-5px)' },
-                    },
-                  }}
-                >
-                  <InsertDriveFile />
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                  Resource Distribution
-                </Typography>
-              </Box>
-              {resourceTypes.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <InsertDriveFile sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    No resource data available
-                  </Typography>
-                </Box>
-              ) : (
-              <Grid container spacing={3}>
-                {resourceTypes.map((resource, index) => (
-                  <Grid item xs={12} key={index}>
-                    <Zoom in={mounted} timeout={800 + index * 100}>
-                      <Box
-                        sx={{
-                          p: 2.5,
-                          borderRadius: 2,
-                          background: '#f9fafb',
-                          border: '1px solid #e5e7eb',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateX(8px)',
-                            background: 'white',
-                            boxShadow: `0 8px 20px ${resource.color}20`,
-                            borderColor: resource.color,
-                          },
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                background: `${resource.color}15`,
-                                color: resource.color,
-                              }}
-                            >
-                              {resource.icon}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                                {resource.type}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {resource.count} files uploaded
-                              </Typography>
-                            </Box>
-                          </Box>
-                          <Chip
-                            label={`${resource.percentage}%`}
-                            sx={{
-                              background: resource.gradient,
-                              color: 'white',
-                              fontWeight: 700,
-                              fontSize: '0.9rem',
-                              height: 32,
-                              boxShadow: `0 4px 12px ${resource.color}30`,
-                            }}
-                          />
-                        </Box>
-                        <Box sx={{ position: 'relative' }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={resource.percentage}
-                            sx={{
-                              height: 10,
-                              borderRadius: 5,
-                              background: '#e5e7eb',
-                              '& .MuiLinearProgress-bar': {
-                                borderRadius: 5,
-                                background: resource.gradient,
-                                position: 'relative',
-                                animation: 'progressGrow 1.5s ease-out',
-                                '&::after': {
-                                  content: '""',
-                                  position: 'absolute',
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 0,
-                                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                                  animation: 'progressShine 2s infinite',
-                                },
-                                '@keyframes progressGrow': {
-                                  from: { width: 0 },
-                                },
-                                '@keyframes progressShine': {
-                                  '0%': { transform: 'translateX(-100%)' },
-                                  '100%': { transform: 'translateX(100%)' },
-                                },
-                              },
-                            }}
-                          />
-                        </Box>
-                      </Box>
-                    </Zoom>
-                  </Grid>
-                ))}
-              </Grid>
-              )}
-            </Paper>
-          </Fade>
-
-          {/* Recent Uploads */}
-          <Fade in={mounted} timeout={1200}>
-            <Paper 
-              sx={{ 
-                p: 3, 
-                background: 'white', 
-                border: '1px solid #e5e7eb', 
-                borderRadius: 3, 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                      color: 'white',
-                      display: 'flex',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                    }}
-                  >
-                    <CloudUpload />
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                    Recent Uploads
-                  </Typography>
-                </Box>
-                <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                  <MoreVert />
-                </IconButton>
-              </Box>
-              <Grid container spacing={2}>
-                {recentUploads.map((upload, index) => (
-                  <Grid item xs={12} key={index}>
-                    <Zoom in={mounted} timeout={1000 + index * 100}>
-                      <Paper
-                        sx={{
-                          p: 2.5,
-                          background: '#f9fafb',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: 2,
-                          transition: 'all 0.3s ease',
-                          cursor: 'pointer',
-                          animation: `slideIn 0.5s ease ${index * 0.1}s both`,
-                          '@keyframes slideIn': {
-                            from: { opacity: 0, transform: 'translateX(-20px)' },
-                            to: { opacity: 1, transform: 'translateX(0)' },
-                          },
-                          '&:hover': {
-                            background: 'white',
-                            transform: 'translateX(8px)',
-                            boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-                            borderColor: '#667eea',
-                          },
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar
-                              sx={{
-                                width: 44,
-                                height: 44,
-                                background: upload.type === 'PDF' 
-                                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                  : upload.type === 'Video'
-                                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-                                  : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                                boxShadow: upload.type === 'PDF'
-                                  ? '0 4px 12px rgba(102, 126, 234, 0.3)'
-                                  : upload.type === 'Video'
-                                  ? '0 4px 12px rgba(239, 68, 68, 0.3)'
-                                  : '0 4px 12px rgba(16, 185, 129, 0.3)',
-                              }}
-                            >
-                              {upload.type === 'PDF' ? <PictureAsPdf /> : upload.type === 'Video' ? <VideoLibrary /> : <Image />}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
-                                {upload.title}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {upload.size} • {upload.time}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          <Chip
-                            label={upload.status}
-                            size="small"
-                            sx={{
-                              background: upload.status === 'published' 
-                                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                                : upload.status === 'pending'
-                                ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                                : 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',
-                              color: 'white',
-                              fontWeight: 600,
-                              textTransform: 'capitalize',
-                              boxShadow: upload.status === 'published'
-                                ? '0 2px 8px rgba(16, 185, 129, 0.3)'
-                                : upload.status === 'pending'
-                                ? '0 2px 8px rgba(245, 158, 11, 0.3)'
-                                : '0 2px 8px rgba(107, 114, 128, 0.3)',
-                            }}
-                          />
-                        </Box>
-                        {upload.status === 'published' && (
-                          <Box sx={{ display: 'flex', gap: 3, mt: 1.5, pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <Visibility sx={{ fontSize: 16, color: '#667eea' }} />
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                                {upload.views} views
-                              </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <Download sx={{ fontSize: 16, color: '#10B981' }} />
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                                {upload.downloads} downloads
-                              </Typography>
-                            </Box>
-                          </Box>
-                        )}
-                      </Paper>
-                    </Zoom>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Fade>
-        </Grid>
-
-        {/* Upload Zone */}
-        <Grid item xs={12} lg={4}>
-          <Fade in={mounted} timeout={1400}>
-            <Paper
-              sx={{
-                p: 4,
-                textAlign: 'center',
-                border: '2px dashed #667eea',
-                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                borderRadius: 3,
-                cursor: 'pointer',
-                transition: 'all 0.4s ease',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: '-100%',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.2), transparent)',
-                  animation: 'shimmer 3s infinite',
-                },
-                '&:hover': {
-                  borderColor: '#764ba2',
-                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-                  transform: 'scale(1.02)',
-                  boxShadow: '0 12px 30px rgba(102, 126, 234, 0.2)',
-                  '& .upload-icon': {
-                    transform: 'translateY(-10px) scale(1.1)',
-                  },
-                },
-              }}
-              onClick={() => navigate('/admin/upload-resource')}
-            >
+      {/* Content Distribution */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 4, 
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)',
+          border: '1px solid #fde68a',
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 4 }}>
+          Content Distribution
+        </Typography>
+        <Grid container spacing={3}>
+          {contentStats.map((item, index) => (
+            <Grid item xs={12} sm={6} key={index}>
               <Box
-                className="upload-icon"
                 sx={{
-                  display: 'inline-flex',
-                  p: 2.5,
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  mb: 2,
-                  boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
-                  transition: 'all 0.4s ease',
+                  p: 3,
+                  borderRadius: 2,
+                  background: 'white',
+                  border: `2px solid ${alpha(item.color, 0.2)}`,
+                  transition: 'all 0.3s',
+                  '&:hover': {
+                    borderColor: item.color,
+                    transform: 'translateX(8px)',
+                    boxShadow: `0 8px 24px ${alpha(item.color, 0.2)}`,
+                  },
                 }}
               >
-                <CloudUpload sx={{ fontSize: 48 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                    {item.type}
+                  </Typography>
+                  <Chip 
+                    label={`${item.count} files`}
+                    size="small"
+                    sx={{
+                      background: alpha(item.color, 0.1),
+                      color: item.color,
+                      fontWeight: 700,
+                      border: `1px solid ${alpha(item.color, 0.3)}`,
+                    }}
+                  />
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={item.percentage}
+                  sx={{
+                    height: 10,
+                    borderRadius: 5,
+                    background: alpha(item.color, 0.1),
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 5,
+                      background: `linear-gradient(90deg, ${item.color} 0%, ${alpha(item.color, 0.7)} 100%)`,
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  {item.percentage}% of total content
+                </Typography>
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
-                Drag & Drop Files
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                or click to browse
-              </Typography>
-              <Chip
-                label="Supports PDF, MP4, JPG, PNG (Max 100MB)"
-                size="small"
-                sx={{
-                  background: 'rgba(102, 126, 234, 0.1)',
-                  color: '#667eea',
-                  fontWeight: 600,
-                  border: '1px solid rgba(102, 126, 234, 0.3)',
-                }}
-              />
-            </Paper>
-          </Fade>
+            </Grid>
+          ))}
         </Grid>
-      </Grid>
+      </Paper>
     </Container>
   );
 };

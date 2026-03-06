@@ -49,6 +49,10 @@ public class QuestionController {
                 ((Number) request.get("points")).intValue() : 1;
             Integer order = request.get("order") != null ? 
                 ((Number) request.get("order")).intValue() : 0;
+            Boolean isPractice = request.get("isPractice") != null ? 
+                (Boolean) request.get("isPractice") : false;
+            String explanation = request.get("explanation") != null ? 
+                (String) request.get("explanation") : null;
             
             Module module = moduleRepository.findById(moduleId)
                 .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
@@ -59,6 +63,8 @@ public class QuestionController {
             question.setQuestionType(QuestionType.valueOf(questionType));
             question.setPoints(points);
             question.setOrder(order);
+            question.setIsPractice(isPractice);
+            question.setExplanation(explanation);
             question.setCreatedAt(LocalDateTime.now());
             
             // Add answers if provided
@@ -107,6 +113,12 @@ public class QuestionController {
             if (request.containsKey("order")) {
                 question.setOrder(((Number) request.get("order")).intValue());
             }
+            if (request.containsKey("isPractice")) {
+                question.setIsPractice((Boolean) request.get("isPractice"));
+            }
+            if (request.containsKey("explanation")) {
+                question.setExplanation((String) request.get("explanation"));
+            }
             
             // Update answers if provided
             if (request.containsKey("answers")) {
@@ -148,6 +160,114 @@ public class QuestionController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to delete question: " + e.getMessage(), null));
+        }
+    }
+    
+    @PostMapping("/bulk-delete")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    public ResponseEntity<?> bulkDeleteQuestions(@RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<Number> ids = (List<Number>) request.get("ids");
+            
+            if (ids == null || ids.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("No question IDs provided", null));
+            }
+            
+            int deletedCount = 0;
+            for (Number id : ids) {
+                try {
+                    questionRepository.deleteById(id.longValue());
+                    deletedCount++;
+                } catch (Exception e) {
+                    // Continue deleting other questions even if one fails
+                    System.err.println("Failed to delete question " + id + ": " + e.getMessage());
+                }
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("deletedCount", deletedCount);
+            result.put("totalRequested", ids.size());
+            
+            return ResponseEntity.ok(new ApiResponse<>(
+                deletedCount + " question(s) deleted successfully", result));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to delete questions: " + e.getMessage(), null));
+        }
+    }
+    
+    @PostMapping("/duplicate/{id}")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    public ResponseEntity<?> duplicateQuestion(@PathVariable Long id) {
+        try {
+            Question original = questionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+            
+            Question duplicate = new Question();
+            duplicate.setModule(original.getModule());
+            duplicate.setQuestionText(original.getQuestionText() + " (Copy)");
+            duplicate.setQuestionType(original.getQuestionType());
+            duplicate.setPoints(original.getPoints());
+            duplicate.setOrder(original.getOrder() + 1);
+            duplicate.setIsPractice(original.getIsPractice());
+            duplicate.setExplanation(original.getExplanation());
+            duplicate.setCreatedAt(LocalDateTime.now());
+            
+            // Duplicate answers
+            for (Answer originalAnswer : original.getAnswers()) {
+                Answer duplicateAnswer = new Answer();
+                duplicateAnswer.setQuestion(duplicate);
+                duplicateAnswer.setAnswerText(originalAnswer.getAnswerText());
+                duplicateAnswer.setIsCorrect(originalAnswer.getIsCorrect());
+                duplicateAnswer.setOrder(originalAnswer.getOrder());
+                duplicate.getAnswers().add(duplicateAnswer);
+            }
+            
+            Question saved = questionRepository.save(duplicate);
+            return ResponseEntity.ok(new ApiResponse<>("Question duplicated successfully", saved));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to duplicate question: " + e.getMessage(), null));
+        }
+    }
+    
+    @GetMapping("/module/{moduleId}/statistics")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    public ResponseEntity<?> getModuleQuestionStatistics(@PathVariable Long moduleId) {
+        try {
+            List<Question> allQuestions = questionRepository.findByModuleIdOrderByOrderAsc(moduleId);
+            List<Question> practiceQuestions = questionRepository.findByModuleIdAndIsPracticeTrueOrderByOrderAsc(moduleId);
+            List<Question> quizQuestions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(moduleId);
+            
+            int totalPoints = allQuestions.stream().mapToInt(Question::getPoints).sum();
+            int practicePoints = practiceQuestions.stream().mapToInt(Question::getPoints).sum();
+            int quizPoints = quizQuestions.stream().mapToInt(Question::getPoints).sum();
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalQuestions", allQuestions.size());
+            stats.put("practiceQuestions", practiceQuestions.size());
+            stats.put("quizQuestions", quizQuestions.size());
+            stats.put("totalPoints", totalPoints);
+            stats.put("practicePoints", practicePoints);
+            stats.put("quizPoints", quizPoints);
+            
+            // Question type breakdown
+            Map<String, Long> typeBreakdown = allQuestions.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    q -> q.getQuestionType().toString(),
+                    java.util.stream.Collectors.counting()
+                ));
+            stats.put("typeBreakdown", typeBreakdown);
+            
+            return ResponseEntity.ok(new ApiResponse<>("Statistics retrieved", stats));
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Failed to get statistics: " + e.getMessage(), null));
         }
     }
     

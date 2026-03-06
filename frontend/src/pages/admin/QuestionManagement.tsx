@@ -8,19 +8,7 @@ import {
 import {
   Add, Edit, Delete, Quiz, CheckCircle, Cancel, Upload,
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('itas_token');
-  return {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  };
-};
+import { apiClient } from '../../utils/axiosConfig';
 
 interface Question {
   id?: number;
@@ -85,7 +73,7 @@ const QuestionManagement: React.FC = () => {
 
   const loadCourses = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/courses`, getAuthHeaders());
+      const response = await apiClient.get('/courses');
       setCourses(response.data.data || response.data || []);
     } catch (error) {
       console.error('Failed to load courses:', error);
@@ -94,7 +82,7 @@ const QuestionManagement: React.FC = () => {
 
   const loadModules = async (courseId: number) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/modules/course/${courseId}`, getAuthHeaders());
+      const response = await apiClient.get(`/modules/course/${courseId}`);
       setModules(response.data.data || response.data || []);
       setSelectedModule('');
       setQuestions([]);
@@ -106,7 +94,7 @@ const QuestionManagement: React.FC = () => {
   const loadQuestions = async (moduleId: number) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/questions/module/${moduleId}`, getAuthHeaders());
+      const response = await apiClient.get(`/questions/module/${moduleId}`);
       setQuestions(response.data.data || response.data || []);
     } catch (error) {
       console.error('Failed to load questions:', error);
@@ -196,14 +184,10 @@ const QuestionManagement: React.FC = () => {
     try {
       setLoading(true);
       if (editingQuestion) {
-        await axios.put(
-          `${API_BASE_URL}/questions/${editingQuestion.id}`,
-          formData,
-          getAuthHeaders()
-        );
+        await apiClient.put(`/questions/${editingQuestion.id}`, formData);
         setMessage({ type: 'success', text: 'Question updated successfully!' });
       } else {
-        await axios.post(`${API_BASE_URL}/questions`, formData, getAuthHeaders());
+        await apiClient.post('/questions', formData);
         setMessage({ type: 'success', text: 'Question created successfully!' });
       }
 
@@ -224,7 +208,7 @@ const QuestionManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/questions/${id}`, getAuthHeaders());
+        await apiClient.delete(`/questions/${id}`);
         await loadQuestions(selectedModule as number);
       } catch (error) {
         alert('Failed to delete question');
@@ -244,27 +228,11 @@ const QuestionManagement: React.FC = () => {
       formData.append('file', uploadFile);
       formData.append('moduleId', selectedModule.toString());
 
-      const token = localStorage.getItem('itas_token');
-      
-      // Check if token exists
-      if (!token) {
-        setMessage({ type: 'error', text: 'Session expired. Please login again.' });
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-        return;
-      }
-
-      const response = await axios.post(
-        `${API_BASE_URL}/assessment-definitions/import`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const response = await apiClient.post('/assessment-definitions/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       const data = response.data.data || response.data;
       setMessage({ 
@@ -275,17 +243,10 @@ const QuestionManagement: React.FC = () => {
       setUploadFile(null);
       await loadQuestions(selectedModule as number);
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        setMessage({ type: 'error', text: 'Session expired. Please login again.' });
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      } else {
-        setMessage({ 
-          type: 'error', 
-          text: error.response?.data?.message || 'Failed to upload file' 
-        });
-      }
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to upload file' 
+      });
     } finally {
       setLoading(false);
     }

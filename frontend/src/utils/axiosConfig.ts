@@ -26,13 +26,22 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error('Authentication failed - token may be expired');
+      console.error('🔴 [apiClient] Authentication failed - token may be expired');
+      console.log('   Current path:', window.location.pathname);
+      console.log('   Request URL:', error.config?.url);
+      console.log('   Token exists:', !!localStorage.getItem('itas_token'));
+      
       // Only redirect if we're not already on the login page
       if (!window.location.pathname.includes('/login')) {
         // Clear invalid token and redirect to login
+        console.log('   ⚠️ Redirecting to login...');
         localStorage.removeItem('itas_token');
         localStorage.removeItem('itas_user');
-        window.location.href = '/login';
+        
+        // Add a small delay to prevent redirect loop
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
       }
     }
     return Promise.reject(error);

@@ -20,6 +20,10 @@ import {
   Card,
   CardContent,
   Grid,
+  alpha,
+  Avatar,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -31,14 +35,21 @@ import {
   Quiz as QuizIcon,
   EmojiEvents as TrophyIcon,
   Psychology as PracticeIcon,
+  Lock as LockIcon,
+  Star as StarIcon,
+  TrendingUp,
+  MenuBook,
+  Assignment,
 } from '@mui/icons-material';
 import { coursesAPI } from '../../api/courses';
 import { modulesAPI } from '../../api/modules';
 import AssessmentQuiz from '../../components/taxpayer/AssessmentQuiz';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { mode } = useThemeMode();
   const [course, setCourse] = useState<any>(null);
   const [modules, setModules] = useState<any[]>([]);
   const [enrollment, setEnrollment] = useState<any>(null);
@@ -241,132 +252,294 @@ const CourseDetail: React.FC = () => {
   const completedModules = Math.floor(moduleProgress);
 
   return (
-    <Container maxWidth="lg">
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => navigate('/taxpayer/courses')}
-          sx={{ mb: 2 }}
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Back Button */}
+      <Button
+        startIcon={<BackIcon />}
+        onClick={() => navigate('/taxpayer/courses')}
+        sx={{ 
+          mb: 3,
+          color: mode === 'light' ? '#1e3a8a' : '#3b82f6',
+          fontWeight: 600,
+          '&:hover': {
+            bgcolor: mode === 'light' ? alpha('#1e3a8a', 0.05) : alpha('#3b82f6', 0.05),
+          },
+        }}
+      >
+        Back to Courses
+      </Button>
+
+      {/* Certificate Completion Alert */}
+      {showCertificateAlert && (
+        <Alert 
+          severity="success" 
+          sx={{ 
+            mb: 4,
+            background: mode === 'light'
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)'
+              : 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)',
+            border: '2px solid #10B981',
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(16, 185, 129, 0.2)',
+          }}
+          onClose={() => setShowCertificateAlert(false)}
         >
-          Back to Courses
-        </Button>
-
-        {/* Certificate Completion Alert */}
-        {showCertificateAlert && (
-          <Alert 
-            severity="success" 
-            sx={{ 
-              mb: 3,
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
-              border: '2px solid #10B981',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)',
-            }}
-            onClose={() => setShowCertificateAlert(false)}
-          >
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, color: '#059669' }}>
-              🎉 Congratulations! Course Completed!
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              You have successfully completed all modules in this course. Your certificate has been automatically generated and is now available.
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => navigate('/taxpayer/certificates')}
-                sx={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                  fontWeight: 600,
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  },
-                }}
-              >
-                View My Certificate
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => navigate('/taxpayer/courses')}
-                sx={{
-                  borderColor: '#10B981',
-                  color: '#059669',
-                  fontWeight: 600,
-                  '&:hover': {
-                    borderColor: '#059669',
-                    background: 'rgba(16, 185, 129, 0.1)',
-                  },
-                }}
-              >
-                Browse More Courses
-              </Button>
-            </Box>
-          </Alert>
-        )}
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 3 }}>
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              {course.title}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <Chip label={course.category} color="primary" />
-              <Chip label={course.difficulty} color="secondary" />
-              <Chip 
-                icon={<ScheduleIcon />} 
-                label={`${course.durationHours} hours`} 
-                variant="outlined" 
-              />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Avatar sx={{ bgcolor: '#10B981', width: 56, height: 56 }}>
+              <TrophyIcon sx={{ fontSize: 32 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#059669', mb: 0.5 }}>
+                🎉 Congratulations! Course Completed!
+              </Typography>
+              <Typography variant="body1">
+                You have successfully completed all modules. Your certificate is ready!
+              </Typography>
             </Box>
           </Box>
-          
-          {isEnrolled && (
-            <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="body2" color="text.secondary">
-                Your Progress
-              </Typography>
-              <Typography variant="h5">
-                {Math.round(enrollment.progress)}%
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={enrollment.progress} 
-                sx={{ width: 100, mt: 1 }}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<TrophyIcon />}
+              onClick={() => navigate('/taxpayer/certificates')}
+              sx={{
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                },
+              }}
+            >
+              View Certificate
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => navigate('/taxpayer/courses')}
+              sx={{
+                borderColor: '#10B981',
+                color: '#059669',
+                fontWeight: 600,
+              }}
+            >
+              Browse More Courses
+            </Button>
+          </Box>
+        </Alert>
+      )}
+
+      {/* Course Hero Section */}
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 4,
+          p: 4,
+          borderRadius: 4,
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)'
+            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Background Pattern */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '50%',
+            height: '100%',
+            opacity: 0.1,
+            backgroundImage: `radial-gradient(circle at 20% 50%, ${alpha('#f59e0b', 0.3)} 0%, transparent 50%)`,
+          }}
+        />
+
+        <Grid container spacing={4} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+          <Grid item xs={12} md={8}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <Chip 
+                label={course.category} 
+                sx={{ 
+                  bgcolor: alpha('#fff', 0.2),
+                  color: 'white',
+                  fontWeight: 600,
+                  border: `1px solid ${alpha('#fff', 0.3)}`,
+                }} 
+              />
+              <Chip 
+                label={course.difficulty} 
+                sx={{ 
+                  bgcolor: alpha('#f59e0b', 0.2),
+                  color: '#fbbf24',
+                  fontWeight: 600,
+                  border: `1px solid ${alpha('#f59e0b', 0.3)}`,
+                }} 
+              />
+              <Chip 
+                icon={<ScheduleIcon sx={{ color: 'white !important' }} />} 
+                label={`${course.durationHours} hours`} 
+                sx={{ 
+                  bgcolor: alpha('#fff', 0.2),
+                  color: 'white',
+                  fontWeight: 600,
+                  border: `1px solid ${alpha('#fff', 0.3)}`,
+                }} 
               />
             </Box>
+            
+            <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+              {course.title}
+            </Typography>
+            
+            <Typography variant="h6" sx={{ opacity: 0.95, lineHeight: 1.6, mb: 3 }}>
+              {course.description}
+            </Typography>
+
+            {!isEnrolled && (
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<SchoolIcon />}
+                onClick={() => coursesAPI.enroll(1, course.id).then(() => loadCourseData())}
+                sx={{
+                  bgcolor: '#f59e0b',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  py: 1.5,
+                  px: 4,
+                  '&:hover': {
+                    bgcolor: '#d97706',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 24px rgba(245, 158, 11, 0.4)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                Enroll in This Course
+              </Button>
+            )}
+          </Grid>
+
+          {isEnrolled && (
+            <Grid item xs={12} md={4}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  bgcolor: alpha('#fff', 0.15),
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${alpha('#fff', 0.2)}`,
+                }}
+              >
+                <Box sx={{ textAlign: 'center', mb: 2 }}>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+                    Your Progress
+                  </Typography>
+                  <Typography variant="h2" sx={{ fontWeight: 800, mb: 1 }}>
+                    {Math.round(enrollment.progress)}%
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={enrollment.progress} 
+                    sx={{ 
+                      height: 10,
+                      borderRadius: 5,
+                      bgcolor: alpha('#fff', 0.2),
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: '#f59e0b',
+                        borderRadius: 5,
+                      },
+                    }}
+                  />
+                </Box>
+                <Divider sx={{ my: 2, borderColor: alpha('#fff', 0.2) }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {completedModules}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                      Completed
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {totalModules}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                      Total Modules
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {totalModules - completedModules}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                      Remaining
+                    </Typography>
+                  </Box>
+                </Box>
+              </Paper>
+            </Grid>
           )}
-        </Box>
+        </Grid>
+      </Paper>
 
-        <Typography variant="body1" paragraph>
-          {course.description}
-        </Typography>
-      </Box>
-
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {/* Left Column - Course Content */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} lg={8}>
           {!isEnrolled ? (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <SchoolIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" gutterBottom>
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 6, 
+                textAlign: 'center',
+                borderRadius: 4,
+                border: `2px dashed ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 100,
+                  height: 100,
+                  bgcolor: mode === 'light' ? alpha('#1e3a8a', 0.1) : alpha('#3b82f6', 0.2),
+                  color: mode === 'light' ? '#1e3a8a' : '#3b82f6',
+                  mx: 'auto',
+                  mb: 3,
+                }}
+              >
+                <SchoolIcon sx={{ fontSize: 50 }} />
+              </Avatar>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                 Enroll to Access Course Content
               </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Enroll in this course to access all modules, videos, and assessments.
+              <Typography variant="body1" color="text.secondary" paragraph>
+                Enroll in this course to access all modules, videos, practice questions, and assessments.
               </Typography>
               <Button
                 variant="contained"
                 size="large"
+                startIcon={<SchoolIcon />}
                 onClick={() => coursesAPI.enroll(1, course.id).then(() => loadCourseData())}
+                sx={{
+                  mt: 2,
+                  py: 1.5,
+                  px: 4,
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                }}
               >
-                Enroll Now
+                Enroll Now - It's Free!
               </Button>
             </Paper>
           ) : showAssessment ? (
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 4 }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
                 Module Assessment: {currentModule}
               </Typography>
               <AssessmentQuiz
@@ -376,235 +549,471 @@ const CourseDetail: React.FC = () => {
               />
             </Paper>
           ) : (
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
-                Module {activeModule + 1}: {currentModule}
-              </Typography>
-              
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="body1" paragraph>
-                  This module covers essential concepts and practical applications.
-                  Review all learning materials, then take the assessment to complete this module.
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            <Box>
+              {/* Module Header */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 3,
+                  borderRadius: 4,
+                  background: mode === 'light'
+                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)'
+                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
+                  border: `1px solid ${mode === 'light' ? alpha('#3b82f6', 0.2) : alpha('#3b82f6', 0.3)}`,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      bgcolor: mode === 'light' ? '#3b82f6' : alpha('#3b82f6', 0.3),
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '1.5rem',
+                    }}
+                  >
+                    {activeModule + 1}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
+                      Module {activeModule + 1} of {totalModules}
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                      {currentModule}
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Alert 
+                  severity="info" 
+                  icon={<MenuBook />}
+                  sx={{ 
+                    mt: 3,
+                    borderRadius: 2,
+                    '& .MuiAlert-icon': {
+                      fontSize: 28,
+                    },
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
                     📚 How to Complete This Module:
                   </Typography>
                   <Typography variant="body2" component="div">
-                    1. Watch the video lecture (optional but recommended)<br/>
-                    2. Read the PDF guide (optional but recommended)<br/>
-                    3. Click "Take Module Assessment" below<br/>
-                    4. Score 70% or higher to pass and move to the next module
+                    1. Review the learning materials (video & PDF)<br/>
+                    2. Practice with unlimited practice questions<br/>
+                    3. Take the module quiz to test your knowledge<br/>
+                    4. Score 70% or higher to unlock the next module
                   </Typography>
                 </Alert>
-              </Box>
+              </Paper>
 
-              {/* Module Content */}
-              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PlayIcon sx={{ mr: 1, color: '#667eea' }} /> Video Lecture
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {currentModuleData?.videoUrl 
-                      ? 'Watch the instructional video covering key concepts.'
-                      : 'Video content will be available soon.'}
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    disabled={!currentModuleData?.videoUrl}
-                    onClick={() => {
-                      if (currentModuleData?.videoUrl) {
-                        const videoUrl = currentModuleData.videoUrl.startsWith('http') 
-                          ? currentModuleData.videoUrl 
-                          : `http://localhost:8080/api${currentModuleData.videoUrl}`;
-                        window.open(videoUrl, '_blank');
-                      }
-                    }}
+              {/* Learning Materials */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                {/* Video Lecture */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    elevation={0}
                     sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
+                      height: '100%',
+                      borderRadius: 3,
+                      border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        borderColor: '#667eea',
-                        background: 'rgba(102, 126, 234, 0.1)',
+                        transform: 'translateY(-4px)',
+                        boxShadow: mode === 'light' 
+                          ? '0 12px 24px rgba(0,0,0,0.1)'
+                          : '0 12px 24px rgba(0,0,0,0.3)',
                       },
                     }}
                   >
-                    {currentModuleData?.videoUrl ? 'Watch Video' : 'Video Not Available'}
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <Avatar sx={{ bgcolor: alpha('#ef4444', 0.1), color: '#ef4444' }}>
+                          <PlayIcon />
+                        </Avatar>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          Video Lecture
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 40 }}>
+                        {currentModuleData?.videoUrl 
+                          ? 'Watch the instructional video covering key concepts and examples.'
+                          : 'Video content will be available soon.'}
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        disabled={!currentModuleData?.videoUrl}
+                        startIcon={<PlayIcon />}
+                        onClick={() => {
+                          if (currentModuleData?.videoUrl) {
+                            const videoUrl = currentModuleData.videoUrl.startsWith('http') 
+                              ? currentModuleData.videoUrl 
+                              : `http://localhost:9090/api${currentModuleData.videoUrl}`;
+                            window.open(videoUrl, '_blank');
+                          }
+                        }}
+                        sx={{
+                          bgcolor: '#ef4444',
+                          '&:hover': {
+                            bgcolor: '#dc2626',
+                          },
+                        }}
+                      >
+                        {currentModuleData?.videoUrl ? 'Watch Video' : 'Coming Soon'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <BookIcon sx={{ mr: 1, color: '#667eea' }} /> Reading Material
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {currentModuleData?.contentUrl 
-                      ? 'Read the detailed guide and reference materials.'
-                      : 'Reading materials will be available soon.'}
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    disabled={!currentModuleData?.contentUrl}
-                    onClick={() => {
-                      if (currentModuleData?.contentUrl) {
-                        const contentUrl = currentModuleData.contentUrl.startsWith('http') 
-                          ? currentModuleData.contentUrl 
-                          : `http://localhost:8080/api${currentModuleData.contentUrl}`;
-                        window.open(contentUrl, '_blank');
-                      }
-                    }}
+                {/* Reading Material */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    elevation={0}
                     sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
+                      height: '100%',
+                      borderRadius: 3,
+                      border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        borderColor: '#667eea',
-                        background: 'rgba(102, 126, 234, 0.1)',
+                        transform: 'translateY(-4px)',
+                        boxShadow: mode === 'light' 
+                          ? '0 12px 24px rgba(0,0,0,0.1)'
+                          : '0 12px 24px rgba(0,0,0,0.3)',
                       },
                     }}
                   >
-                    {currentModuleData?.contentUrl ? 'Open PDF Guide' : 'PDF Not Available'}
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <Avatar sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}>
+                          <BookIcon />
+                        </Avatar>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          Reading Material
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 40 }}>
+                        {currentModuleData?.contentUrl 
+                          ? 'Read the detailed guide with examples and reference materials.'
+                          : 'Reading materials will be available soon.'}
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        disabled={!currentModuleData?.contentUrl}
+                        startIcon={<BookIcon />}
+                        onClick={() => {
+                          if (currentModuleData?.contentUrl) {
+                            const contentUrl = currentModuleData.contentUrl.startsWith('http') 
+                              ? currentModuleData.contentUrl 
+                              : `http://localhost:9090/api${currentModuleData.contentUrl}`;
+                            window.open(contentUrl, '_blank');
+                          }
+                        }}
+                        sx={{
+                          bgcolor: '#8b5cf6',
+                          '&:hover': {
+                            bgcolor: '#7c3aed',
+                          },
+                        }}
+                      >
+                        {currentModuleData?.contentUrl ? 'Open PDF Guide' : 'Coming Soon'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-              {/* Practice Questions - New Feature */}
-              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PracticeIcon sx={{ mr: 1, color: '#3b82f6' }} /> Practice Questions
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Test your understanding with unlimited practice questions. Get instant feedback and explanations.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    disabled={!currentModuleData?.id}
-                    onClick={() => navigate(`/taxpayer/module/${currentModuleData?.id}/practice`)}
+
+              {/* Practice & Assessment Actions */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                {/* Practice Questions */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    elevation={0}
                     sx={{
-                      borderColor: '#3b82f6',
-                      color: '#3b82f6',
+                      height: '100%',
+                      borderRadius: 3,
+                      border: `2px solid ${mode === 'light' ? '#10b981' : alpha('#10b981', 0.3)}`,
+                      background: mode === 'light'
+                        ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)'
+                        : 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        borderColor: '#3b82f6',
-                        background: 'rgba(59, 130, 246, 0.1)',
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 12px 24px rgba(16, 185, 129, 0.2)',
                       },
                     }}
                   >
-                    Practice Now
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <Avatar sx={{ bgcolor: alpha('#10b981', 0.15), color: '#10b981', width: 48, height: 48 }}>
+                          <PracticeIcon />
+                        </Avatar>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          Practice Questions
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 60 }}>
+                        Test your understanding with unlimited practice questions. Get instant feedback and detailed explanations.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        disabled={!currentModuleData?.id}
+                        startIcon={<PracticeIcon />}
+                        onClick={() => navigate(`/taxpayer/courses/${id}/modules/${currentModuleData?.id}/practice`)}
+                        sx={{
+                          bgcolor: '#10b981',
+                          fontWeight: 600,
+                          '&:hover': {
+                            bgcolor: '#059669',
+                          },
+                        }}
+                      >
+                        Practice Now
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-              {/* Module Quiz - New Feature */}
-              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%)' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <QuizIcon sx={{ mr: 1, color: '#f59e0b' }} /> Module Quiz
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Take the official module quiz. Score 70% or higher to unlock the next module. (15 minutes)
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    disabled={!currentModuleData?.id}
-                    onClick={() => navigate(`/taxpayer/module/${currentModuleData?.id}/quiz`)}
+                {/* Module Quiz */}
+                <Grid item xs={12} md={6}>
+                  <Card
+                    elevation={0}
                     sx={{
-                      borderColor: '#f59e0b',
-                      color: '#f59e0b',
+                      height: '100%',
+                      borderRadius: 3,
+                      border: `2px solid ${mode === 'light' ? '#f59e0b' : alpha('#f59e0b', 0.3)}`,
+                      background: mode === 'light'
+                        ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%)'
+                        : 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        borderColor: '#f59e0b',
-                        background: 'rgba(245, 158, 11, 0.1)',
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 12px 24px rgba(245, 158, 11, 0.2)',
                       },
                     }}
                   >
-                    Take Module Quiz
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <Avatar sx={{ bgcolor: alpha('#f59e0b', 0.15), color: '#f59e0b', width: 48, height: 48 }}>
+                          <QuizIcon />
+                        </Avatar>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          Module Quiz
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 60 }}>
+                        Take the official module quiz. Score 70% or higher to unlock the next module. Time: 15 minutes.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        disabled={!currentModuleData?.id}
+                        startIcon={<QuizIcon />}
+                        onClick={() => navigate(`/taxpayer/module/${currentModuleData?.id}/quiz`)}
+                        sx={{
+                          bgcolor: '#f59e0b',
+                          fontWeight: 600,
+                          '&:hover': {
+                            bgcolor: '#d97706',
+                          },
+                        }}
+                      >
+                        Take Quiz
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-              {/* Take Assessment Button - Primary Action */}
-              <Card sx={{ mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CheckIcon sx={{ mr: 1 }} /> Module Assessment
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
-                    Ready to test your knowledge? Take the assessment to complete this module.
-                    You need to score 70% or higher to pass.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => setShowAssessment(true)}
-                    sx={{
-                      background: 'white',
-                      color: '#667eea',
-                      fontWeight: 600,
-                      '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.9)',
-                      },
-                    }}
-                  >
-                    Take Module Assessment
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Full Lesson & Assessment */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  mb: 3,
+                  borderRadius: 4,
+                  background: mode === 'light'
+                    ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)'
+                    : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                  color: 'white',
+                }}
+              >
+                <Grid container spacing={3} alignItems="center">
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Avatar sx={{ bgcolor: alpha('#fff', 0.2), width: 56, height: 56 }}>
+                        <MenuBook sx={{ fontSize: 32 }} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          Full Lesson Content
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          Complete lesson with objectives & materials
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      fullWidth
+                      disabled={!currentModuleData?.id}
+                      startIcon={<MenuBook />}
+                      onClick={() => navigate(`/taxpayer/courses/${id}/modules/${currentModuleData?.id}/lesson`)}
+                      sx={{
+                        bgcolor: 'white',
+                        color: '#1e3a8a',
+                        fontWeight: 700,
+                        '&:hover': {
+                          bgcolor: alpha('#fff', 0.9),
+                        },
+                      }}
+                    >
+                      View Full Lesson
+                    </Button>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Avatar sx={{ bgcolor: alpha('#f59e0b', 0.3), width: 56, height: 56 }}>
+                        <Assignment sx={{ fontSize: 32 }} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          Module Assessment
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          Score 70% or higher to pass
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      fullWidth
+                      startIcon={<CheckIcon />}
+                      onClick={() => setShowAssessment(true)}
+                      sx={{
+                        bgcolor: '#f59e0b',
+                        color: 'white',
+                        fontWeight: 700,
+                        '&:hover': {
+                          bgcolor: '#d97706',
+                        },
+                      }}
+                    >
+                      Take Assessment
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Paper>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+              {/* Navigation Buttons */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 3 }}>
                 <Button
+                  variant="outlined"
+                  size="large"
                   disabled={activeModule === 0}
                   onClick={() => setActiveModule(activeModule - 1)}
                   sx={{
-                    borderColor: '#667eea',
-                    color: '#667eea',
+                    flex: 1,
+                    fontWeight: 600,
                   }}
                 >
-                  Previous Module
+                  ← Previous Module
                 </Button>
                 
                 <Button
                   variant="outlined"
+                  size="large"
                   disabled={activeModule >= modules.length - 1}
                   onClick={() => setActiveModule(activeModule + 1)}
                   sx={{
-                    borderColor: '#667eea',
-                    color: '#667eea',
-                    '&:hover': {
-                      borderColor: '#667eea',
-                      background: 'rgba(102, 126, 234, 0.1)',
-                    },
+                    flex: 1,
+                    fontWeight: 600,
                   }}
                 >
-                  Skip to Next Module
+                  Next Module →
                 </Button>
               </Box>
 
               {/* Final Exam - Show when all modules are completed */}
               {completedModules >= totalModules && totalModules > 0 && (
-                <Card sx={{ mt: 4, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: 'white' }}>
-                  <CardContent>
-                    <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', fontWeight: 700 }}>
-                      <TrophyIcon sx={{ mr: 1, fontSize: 32 }} /> Ready for Final Exam!
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                    color: 'white',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Background Pattern */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -50,
+                      right: -50,
+                      width: 200,
+                      height: 200,
+                      borderRadius: '50%',
+                      bgcolor: alpha('#fff', 0.1),
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -30,
+                      left: -30,
+                      width: 150,
+                      height: 150,
+                      borderRadius: '50%',
+                      bgcolor: alpha('#fff', 0.08),
+                    }}
+                  />
+
+                  <Box sx={{ position: 'relative', zIndex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      <Avatar sx={{ bgcolor: alpha('#fff', 0.2), width: 72, height: 72 }}>
+                        <TrophyIcon sx={{ fontSize: 40 }} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+                          Ready for Final Exam!
+                        </Typography>
+                        <Typography variant="h6" sx={{ opacity: 0.95 }}>
+                          🎉 All modules completed - Earn your certificate
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Typography variant="body1" sx={{ mb: 3, opacity: 0.95, fontSize: '1.1rem' }}>
+                      Congratulations! You've completed all modules. Take the final exam to earn your certificate.
+                      You need to score 80% or higher to pass. Time limit: 60 minutes.
                     </Typography>
-                    <Typography variant="body1" sx={{ mb: 3, opacity: 0.95 }}>
-                      🎉 Congratulations! You've completed all modules. Take the final exam to earn your certificate.
-                      You need to score 80% or higher to pass. (60 minutes)
-                    </Typography>
+                    
                     <Button
                       variant="contained"
                       size="large"
+                      startIcon={<TrophyIcon />}
                       onClick={() => navigate(`/taxpayer/course/${id}/final-exam`)}
                       sx={{
-                        background: 'white',
+                        bgcolor: 'white',
                         color: '#059669',
                         fontWeight: 700,
                         fontSize: '1.1rem',
-                        py: 1.5,
-                        px: 4,
+                        py: 2,
+                        px: 5,
                         '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.9)',
+                          bgcolor: alpha('#fff', 0.9),
                           transform: 'scale(1.05)',
                         },
                         transition: 'all 0.3s ease',
@@ -612,33 +1021,112 @@ const CourseDetail: React.FC = () => {
                     >
                       Take Final Exam & Get Certificate
                     </Button>
-                  </CardContent>
-                </Card>
+                  </Box>
+                </Paper>
               )}
-            </Paper>
+            </Box>
           )}
         </Grid>
 
         {/* Right Column - Modules & Progress */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+        <Grid item xs={12} lg={4}>
+          {/* Course Modules */}
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 3, 
+              mb: 3,
+              borderRadius: 4,
+              border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
               Course Modules
             </Typography>
             <Stepper activeStep={completedModules} orientation="vertical">
               {(modules.length > 0 ? modules : course.modules || []).map((module: any, index: number) => {
                 const moduleName = typeof module === 'string' ? module : module.title;
+                const isCompleted = index < completedModules;
+                const isCurrent = index === activeModule;
+                const isLocked = index > completedModules;
+                
                 return (
                   <Step key={index}>
                     <StepLabel
-                      icon={index < completedModules ? <CheckIcon color="success" /> : undefined}
+                      icon={
+                        isCompleted ? (
+                          <CheckIcon sx={{ color: '#10b981', fontSize: 28 }} />
+                        ) : isLocked ? (
+                          <LockIcon sx={{ color: '#9ca3af', fontSize: 24 }} />
+                        ) : (
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: isCurrent ? '#3b82f6' : alpha('#3b82f6', 0.1),
+                              color: isCurrent ? 'white' : '#3b82f6',
+                              fontSize: '0.875rem',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {index + 1}
+                          </Avatar>
+                        )
+                      }
                     >
-                      <Typography variant="body2">
-                        Module {index + 1}: {moduleName}
-                      </Typography>
-                      {index === activeModule && !showAssessment && (
-                        <Chip label="Current" size="small" color="primary" sx={{ ml: 1 }} />
-                      )}
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: isCurrent ? 700 : 600,
+                            color: isLocked ? 'text.disabled' : 'text.primary',
+                          }}
+                        >
+                          {moduleName}
+                        </Typography>
+                        {isCurrent && !showAssessment && (
+                          <Chip 
+                            label="Current" 
+                            size="small" 
+                            sx={{ 
+                              mt: 0.5,
+                              height: 20,
+                              bgcolor: alpha('#3b82f6', 0.1),
+                              color: '#3b82f6',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                            }} 
+                          />
+                        )}
+                        {isCompleted && (
+                          <Chip 
+                            label="Completed" 
+                            size="small" 
+                            sx={{ 
+                              mt: 0.5,
+                              height: 20,
+                              bgcolor: alpha('#10b981', 0.1),
+                              color: '#10b981',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                            }} 
+                          />
+                        )}
+                        {isLocked && (
+                          <Chip 
+                            label="Locked" 
+                            size="small" 
+                            sx={{ 
+                              mt: 0.5,
+                              height: 20,
+                              bgcolor: alpha('#9ca3af', 0.1),
+                              color: '#9ca3af',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                            }} 
+                          />
+                        )}
+                      </Box>
                     </StepLabel>
                   </Step>
                 );
@@ -646,36 +1134,96 @@ const CourseDetail: React.FC = () => {
             </Stepper>
           </Paper>
 
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          {/* Course Statistics */}
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 3,
+              borderRadius: 4,
+              border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
               Course Statistics
             </Typography>
-            <List>
-              <ListItem>
+            <List disablePadding>
+              <ListItem sx={{ px: 0, py: 1.5 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#3b82f6', 0.1), color: '#3b82f6' }}>
+                    <TrendingUp fontSize="small" />
+                  </Avatar>
+                </ListItemIcon>
                 <ListItemText
-                  primary="Modules Completed"
-                  secondary={`${completedModules} of ${totalModules}`}
+                  primary={
+                    <Typography variant="body2" color="text.secondary">
+                      Modules Completed
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {completedModules} of {totalModules}
+                    </Typography>
+                  }
                 />
               </ListItem>
               <Divider />
-              <ListItem>
+              <ListItem sx={{ px: 0, py: 1.5 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#f59e0b', 0.1), color: '#f59e0b' }}>
+                    <ScheduleIcon fontSize="small" />
+                  </Avatar>
+                </ListItemIcon>
                 <ListItemText
-                  primary="Time Required"
-                  secondary={`${course.durationHours} hours`}
+                  primary={
+                    <Typography variant="body2" color="text.secondary">
+                      Time Required
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {course.durationHours} hours
+                    </Typography>
+                  }
                 />
               </ListItem>
               <Divider />
-              <ListItem>
+              <ListItem sx={{ px: 0, py: 1.5 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}>
+                    <StarIcon fontSize="small" />
+                  </Avatar>
+                </ListItemIcon>
                 <ListItemText
-                  primary="Difficulty Level"
-                  secondary={course.difficulty}
+                  primary={
+                    <Typography variant="body2" color="text.secondary">
+                      Difficulty Level
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {course.difficulty}
+                    </Typography>
+                  }
                 />
               </ListItem>
               <Divider />
-              <ListItem>
+              <ListItem sx={{ px: 0, py: 1.5 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#10b981', 0.1), color: '#10b981' }}>
+                    <BookIcon fontSize="small" />
+                  </Avatar>
+                </ListItemIcon>
                 <ListItemText
-                  primary="Category"
-                  secondary={course.category}
+                  primary={
+                    <Typography variant="body2" color="text.secondary">
+                      Category
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {course.category}
+                    </Typography>
+                  }
                 />
               </ListItem>
             </List>

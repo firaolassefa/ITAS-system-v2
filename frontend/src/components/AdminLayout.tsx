@@ -1,52 +1,34 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  AppBar,
-  Box,
-  CssBaseline,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography,
-  Avatar,
-  Menu,
-  MenuItem,
-  Divider,
-  Badge,
-  Chip,
+  AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
+  ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography,
+  Avatar, Menu, MenuItem, Divider, Chip, useTheme, alpha,
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Upload as UploadIcon,
-  Analytics as AnalyticsIcon,
-  People as PeopleIcon,
-  Settings as SettingsIcon,
-  School as CourseIcon,
-  ExitToApp as LogoutIcon,
-  Person as ProfileIcon,
-  CloudUpload as CloudUploadIcon,
-  Quiz as QuizIcon,
+  Menu as MenuIcon, Dashboard as DashboardIcon, Upload as UploadIcon,
+  Analytics as AnalyticsIcon, People as PeopleIcon, Settings as SettingsIcon,
+  School as CourseIcon, ExitToApp as LogoutIcon, Person as ProfileIcon,
+  CloudUpload as CloudUploadIcon, Quiz as QuizIcon, AccountBalance,
 } from '@mui/icons-material';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
+import { useThemeMode } from '../theme/ThemeContext';
 
 interface AdminLayoutProps {
   user: any;
   onLogout: () => void;
 }
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const { mode } = useThemeMode();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -66,7 +48,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
     navigate('/login');
   };
 
-  // Get role-specific dashboard path
   const getDashboardPath = () => {
     if (!user) return '/admin/system-dashboard';
     
@@ -82,10 +63,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
   };
 
   const menuItems = [
-    { text: 'Home', icon: <DashboardIcon />, path: getDashboardPath() },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: getDashboardPath() },
     { text: 'Course Management', icon: <CourseIcon />, path: '/admin/course-management', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Module Content', icon: <CloudUploadIcon />, path: '/admin/module-content', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
-    { text: 'Upload Resource', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Resource Management', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Question Management', icon: <QuizIcon />, path: '/admin/question-management', roles: ['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Webinar Management', icon: <UploadIcon />, path: '/admin/webinar-management', roles: ['TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Notification Center', icon: <SettingsIcon />, path: '/admin/notification-center', roles: ['COMM_OFFICER', 'SYSTEM_ADMIN'] },
@@ -97,16 +78,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
     <Box
       sx={{
         height: '100vh',
-        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        background: 'linear-gradient(180deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-        backgroundSize: '100% 200%',
-        animation: 'gradientShift 8s ease infinite',
-        '@keyframes gradientShift': {
-          '0%, 100%': { backgroundPosition: '0% 0%' },
-          '50%': { backgroundPosition: '0% 100%' },
-        },
+        bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+        color: 'white',
       }}
     >
       <Toolbar 
@@ -115,52 +90,50 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           flexDirection: 'column', 
           py: 3,
           gap: 1,
+          borderBottom: '1px solid',
+          borderColor: alpha('#fff', 0.1),
         }}
       >
         <Box
           sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '12px',
-            background: 'rgba(255, 255, 255, 0.2)',
+            width: 56,
+            height: 56,
+            borderRadius: '16px',
+            bgcolor: alpha('#fff', 0.1),
             backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
+            border: '2px solid',
+            borderColor: alpha('#fff', 0.2),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mb: 1,
-            boxShadow: '0 8px 24px rgba(255, 255, 255, 0.2)',
           }}
         >
-          <SettingsIcon sx={{ color: 'white', fontSize: 28 }} />
+          <AccountBalance sx={{ color: '#f59e0b', fontSize: 32 }} />
         </Box>
         <Typography 
           variant="h6" 
-          noWrap 
-          gutterBottom
           sx={{
-            fontWeight: 700,
+            fontWeight: 800,
             color: 'white',
-            textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            letterSpacing: '0.5px',
           }}
         >
           ITAS Admin
         </Typography>
         <Chip 
-          label="Administrator" 
+          label={user?.userType?.replace('_', ' ') || 'Administrator'}
           size="small"
           sx={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            color: 'white',
+            bgcolor: alpha('#f59e0b', 0.2),
+            color: '#fbbf24',
             fontWeight: 600,
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(255, 255, 255, 0.1)',
+            border: '1px solid',
+            borderColor: alpha('#f59e0b', 0.3),
           }}
         />
       </Toolbar>
-      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+      
       <List sx={{ px: 2, py: 2, flex: 1, overflowY: 'auto' }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
@@ -169,31 +142,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
               onClick={() => navigate(item.path)}
               sx={{
                 borderRadius: '12px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.3s',
+                color: 'white',
                 '&.Mui-selected': {
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  color: 'white',
-                  boxShadow: '0 8px 24px rgba(255, 255, 255, 0.2)',
-                  '& .MuiListItemIcon-root': {
-                    color: 'white',
-                  },
+                  bgcolor: alpha('#f59e0b', 0.2),
+                  borderLeft: '4px solid #f59e0b',
                   '&:hover': {
-                    background: 'rgba(255, 255, 255, 0.3)',
-                    transform: 'translateX(8px)',
+                    bgcolor: alpha('#f59e0b', 0.3),
                   },
                 },
                 '&:hover': {
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'translateX(8px)',
+                  bgcolor: alpha('#fff', 0.05),
                 },
                 py: 1.5,
               }}
             >
               <ListItemIcon 
                 sx={{ 
-                  color: location.pathname === item.path ? 'white' : 'rgba(255, 255, 255, 0.8)',
+                  color: location.pathname === item.path ? '#fbbf24' : alpha('#fff', 0.7),
                   minWidth: 40,
                 }}
               >
@@ -202,15 +168,20 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
               <ListItemText 
                 primary={item.text}
                 primaryTypographyProps={{
-                  fontWeight: location.pathname === item.path ? 700 : 600,
+                  fontWeight: location.pathname === item.path ? 700 : 500,
                   fontSize: '0.95rem',
-                  color: 'white',
                 }}
               />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
+      
+      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: alpha('#fff', 0.1) }}>
+        <Typography variant="caption" sx={{ color: alpha('#fff', 0.5), display: 'block', textAlign: 'center' }}>
+          ITAS v2.0 • Ministry of Revenue
+        </Typography>
+      </Box>
     </Box>
   );
 
@@ -223,75 +194,35 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-          backgroundSize: '200% 200%',
-          animation: 'gradientShift 8s ease infinite',
-          '@keyframes gradientShift': {
-            '0%': { backgroundPosition: '0% 50%' },
-            '50%': { backgroundPosition: '100% 50%' },
-            '100%': { backgroundPosition: '0% 50%' },
-          },
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 4px 30px rgba(102, 126, 234, 0.3)',
+          bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+          borderBottom: '1px solid',
+          borderColor: alpha('#fff', 0.1),
         }}
       >
         <Toolbar sx={{ py: 1 }}>
           <IconButton
             color="inherit"
-            aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ 
-              mr: 2, 
-              display: { sm: 'none' },
-              '&:hover': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease',
-            }}
+            sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
           
           <Box sx={{ flexGrow: 1 }}>
-            <Typography 
-              variant="h6" 
-              noWrap
-              sx={{
-                fontWeight: 700,
-                letterSpacing: '0.5px',
-                textShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
               System Administration
             </Typography>
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                opacity: 0.9,
-                display: { xs: 'none', sm: 'block' },
-              }}
-            >
-              Welcome back, {user.fullName}
+            <Typography variant="caption" sx={{ opacity: 0.8 }}>
+              Welcome, {user?.fullName}
             </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ThemeToggle />
             <NotificationBell userRole={user?.userType} userId={user?.id} />
             
-            <IconButton 
-              color="inherit" 
-              onClick={() => navigate('/profile')}
-              sx={{
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'scale(1.1)',
-                },
-              }}
-            >
+            <IconButton color="inherit" onClick={() => navigate('/profile')}>
               <ProfileIcon />
             </IconButton>
 
@@ -304,24 +235,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
                 px: 2,
                 py: 0.5,
                 borderRadius: '12px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                bgcolor: alpha('#fff', 0.1),
+                border: '1px solid',
+                borderColor: alpha('#fff', 0.2),
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.3s',
                 '&:hover': {
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                  bgcolor: alpha('#fff', 0.15),
                 },
               }}
               onClick={handleMenuOpen}
             >
               <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'right' }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                  {user.fullName}
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {user?.fullName}
                 </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>
                   Administrator
                 </Typography>
               </Box>
@@ -329,12 +258,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
                 sx={{ 
                   width: 40, 
                   height: 40, 
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  bgcolor: '#f59e0b',
                   fontWeight: 700,
                 }}
               >
-                {user.fullName?.charAt(0) || 'A'}
+                {user?.fullName?.charAt(0) || 'A'}
               </Avatar>
             </Box>
           </Box>
@@ -348,62 +276,20 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
             sx: {
               mt: 1.5,
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-              backgroundSize: '200% 200%',
-              animation: 'gradientShift 8s ease infinite',
-              '@keyframes gradientShift': {
-                '0%': { backgroundPosition: '0% 50%' },
-                '50%': { backgroundPosition: '100% 50%' },
-                '100%': { backgroundPosition: '0% 50%' },
-              },
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-              minWidth: 220,
+              bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
               color: 'white',
+              minWidth: 220,
             },
           }}
         >
-          <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {user.fullName}
-            </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
-              {user.email}
-            </Typography>
-          </Box>
-          <MenuItem 
-            onClick={() => navigate('/profile')}
-            sx={{
-              py: 1.5,
-              px: 2,
-              borderRadius: '8px',
-              mx: 1,
-              my: 0.5,
-              '&:hover': {
-                background: 'rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          >
+          <MenuItem onClick={() => navigate('/profile')} sx={{ py: 1.5 }}>
             <ListItemIcon>
               <ProfileIcon fontSize="small" sx={{ color: 'white' }} />
             </ListItemIcon>
             <ListItemText>My Profile</ListItemText>
           </MenuItem>
-          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 0.5 }} />
-          <MenuItem 
-            onClick={handleLogout}
-            sx={{
-              py: 1.5,
-              px: 2,
-              borderRadius: '8px',
-              mx: 1,
-              my: 0.5,
-              '&:hover': {
-                background: 'rgba(255, 68, 68, 0.2)',
-              },
-            }}
-          >
+          <Divider sx={{ borderColor: alpha('#fff', 0.1) }} />
+          <MenuItem onClick={handleLogout} sx={{ py: 1.5 }}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" sx={{ color: 'white' }} />
             </ListItemIcon>
@@ -412,10 +298,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
         </Menu>
       </AppBar>
 
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
+      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -423,12 +306,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              height: '100vh',
-              borderRight: '1px solid rgba(245, 158, 11, 0.1)',
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
         >
           {drawer}
@@ -437,12 +315,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              height: '100vh',
-              borderRight: '1px solid rgba(245, 158, 11, 0.1)',
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
           open
         >
@@ -458,7 +331,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           mt: 8,
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          bgcolor: 'background.default',
         }}
       >
         <Outlet />

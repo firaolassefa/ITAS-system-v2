@@ -1,1367 +1,423 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, Fade, Grow, alpha, useScrollTrigger, Chip, Paper, IconButton, Tooltip, Avatar, CardActions } from '@mui/material';
+import React from 'react';
+import {
+  Container, Typography, Button, Box, Grid, Card, CardContent,
+  AppBar, Toolbar, Stack, Chip, alpha, IconButton,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  School, MenuBook, VideoLibrary, PersonAdd, Login, TrendingUp, People,
-  Security, Analytics, Notifications, ArrowForward, PlayArrow, CheckCircle,
-  Brightness4, Brightness7, AutoAwesome, Rocket, EmojiEvents,
-  PictureAsPdf, Description, Download as DownloadIcon,
+import {
+  School, Login, PersonAdd, TrendingUp, Security,
+  EmojiEvents, CheckCircle, ArrowForward, MenuBook,
+  VideoLibrary, Assessment, Verified, Brightness4, Brightness7,
 } from '@mui/icons-material';
-import { resourcesAPI } from '../../api/resources';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const ModernHome: React.FC = () => {
   const navigate = useNavigate();
-  const [mounted, setMounted] = useState(false);
-  const [statsVisible, setStatsVisible] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [resources, setResources] = useState<any[]>([]);
-  const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 100 });
-
-  useEffect(() => {
-    setMounted(true);
-    const timer = setTimeout(() => setStatsVisible(true), 800);
-    loadResources();
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Auto-refresh resources every 30 seconds for real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadResources();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadResources = async () => {
-    try {
-      const response = await resourcesAPI.getAllResources();
-      setResources((response.data || []).slice(0, 6));
-    } catch (error) {
-      console.error('Failed to load resources:', error);
-    }
-  };
-
-  const handleLoginClick = () => {
-    window.location.href = '/login';
-  };
-
-  const handleRegisterClick = () => {
-    window.location.href = '/register';
-  };
-
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'PDF':
-        return <PictureAsPdf sx={{ fontSize: 40, color: '#EF4444' }} />;
-      case 'VIDEO':
-        return <VideoLibrary sx={{ fontSize: 40, color: '#8B5CF6' }} />;
-      default:
-        return <Description sx={{ fontSize: 40, color: '#10B981' }} />;
-    }
-  };
-
-  const handleDownload = (resource: any) => {
-    if (resource.filePath) {
-      let fileUrl: string;
-      
-      // Check if it's an external URL (starts with http/https)
-      if (resource.filePath.startsWith('http')) {
-        fileUrl = resource.filePath;
-      } else {
-        // For local files, use the download endpoint
-        fileUrl = `http://localhost:8080/api/resources/${resource.id}/download`;
-      }
-      
-      window.open(fileUrl, '_blank');
-    }
-  };
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
-  const bgColor = darkMode ? '#0A0F1E' : '#F8FAFC';
-  const textPrimary = darkMode ? '#F8FAFC' : '#0A0F1E';
-  const textSecondary = darkMode ? alpha('#F8FAFC', 0.7) : '#64748B';
-  const cardBg = darkMode ? alpha('#1a1f3a', 0.5) : '#FFFFFF';
-  const borderColor = darkMode ? alpha('#00E0FF', 0.2) : alpha('#000', 0.1);
-  const accentColor = '#00E0FF';
+  const { mode, toggleTheme } = useThemeMode();
 
   const features = [
     {
-      icon: <School sx={{ fontSize: 48 }} />,
-      title: 'Smart Learning Management',
-      description: 'Enroll, track progress, complete modules, and earn certificates',
-      color: '#667eea',
+      icon: <School sx={{ fontSize: 48, color: '#667eea' }} />,
+      title: 'Comprehensive Courses',
+      description: 'Expert-designed tax education courses covering all aspects of Ethiopian tax law',
     },
     {
-      icon: <MenuBook sx={{ fontSize: 48 }} />,
-      title: 'Advanced Content Library',
-      description: 'Searchable, filterable educational resources',
-      color: '#8B5CF6',
+      icon: <VideoLibrary sx={{ fontSize: 48, color: '#764ba2' }} />,
+      title: 'Interactive Learning',
+      description: 'Video tutorials, PDFs, and interactive quizzes for effective learning',
     },
     {
-      icon: <Analytics sx={{ fontSize: 48 }} />,
-      title: 'Real-Time Analytics',
-      description: 'Track performance and engagement trends',
-      color: '#10B981',
+      icon: <Assessment sx={{ fontSize: 48, color: '#f093fb' }} />,
+      title: 'Practice & Assessments',
+      description: 'Test your knowledge with practice questions and final exams',
     },
     {
-      icon: <Notifications sx={{ fontSize: 48 }} />,
-      title: 'Smart Notifications',
-      description: 'Targeted communication via email and SMS',
-      color: '#F59E0B',
-    },
-    {
-      icon: <VideoLibrary sx={{ fontSize: 48 }} />,
-      title: 'Webinar Management',
-      description: 'Schedule and manage live training sessions',
-      color: '#EF4444',
-    },
-    {
-      icon: <Security sx={{ fontSize: 48 }} />,
-      title: 'Secure Access',
-      description: 'SSO login with granular permissions',
-      color: '#22D3EE',
+      icon: <EmojiEvents sx={{ fontSize: 48, color: '#F59E0B' }} />,
+      title: 'Earn Certificates',
+      description: 'Get certified upon course completion to validate your expertise',
     },
   ];
 
   const stats = [
-    { value: '10K+', label: 'Active Users', color: accentColor },
-    { value: '95%', label: 'Completion Rate', color: '#10B981' },
-    { value: '50+', label: 'Resources', color: '#8B5CF6' },
-    { value: '100+', label: 'Users Trained', color: '#F59E0B' },
-  ];
-
-  const roles = [
-    { name: 'Taxpayer', icon: '👤', desc: 'Access courses & certificates', color: '#667eea' },
-    { name: 'Content Admin', icon: '📚', desc: 'Manage resources', color: '#8B5CF6' },
-    { name: 'Training Admin', icon: '🎓', desc: 'Schedule webinars', color: '#10B981' },
-    { name: 'Comm Officer', icon: '📢', desc: 'Send notifications', color: '#F59E0B' },
-    { name: 'Manager', icon: '📊', desc: 'View analytics', color: '#06B6D4' },
-    { name: 'System Admin', icon: '⚙️', desc: 'Full control', color: '#EF4444' },
+    { value: '1000+', label: 'Active Learners' },
+    { value: '50+', label: 'Expert Courses' },
+    { value: '95%', label: 'Success Rate' },
+    { value: '24/7', label: 'Support' },
   ];
 
   return (
-    <Box sx={{ bgcolor: bgColor, minHeight: '100vh', position: 'relative', overflow: 'hidden', transition: 'background-color 0.3s' }}>
-      {/* Animated Grid Background */}
-      {darkMode && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: `
-              linear-gradient(${alpha('#00E0FF', 0.1)} 1px, transparent 1px),
-              linear-gradient(90deg, ${alpha('#00E0FF', 0.1)} 1px, transparent 1px)
-            `,
-            backgroundSize: '50px 50px',
-            animation: 'gridMove 20s linear infinite',
-            opacity: 0.3,
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-
-      {/* Glowing Orbs */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: '10%',
-          left: '10%',
-          width: 500,
-          height: 500,
-          borderRadius: '50%',
-          background: darkMode 
-            ? `radial-gradient(circle, ${alpha('#00E0FF', 0.3)} 0%, transparent 70%)`
-            : `radial-gradient(circle, ${alpha('#667eea', 0.15)} 0%, transparent 70%)`,
-          filter: 'blur(80px)',
-          animation: 'pulse 8s ease-in-out infinite',
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      />
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: '10%',
-          right: '10%',
-          width: 600,
-          height: 600,
-          borderRadius: '50%',
-          background: darkMode
-            ? `radial-gradient(circle, ${alpha('#8B5CF6', 0.3)} 0%, transparent 70%)`
-            : `radial-gradient(circle, ${alpha('#764ba2', 0.15)} 0%, transparent 70%)`,
-          filter: 'blur(100px)',
-          animation: 'pulse 10s ease-in-out infinite 2s',
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* Floating Particles with Glow */}
-      {[...Array(30)].map((_, i) => (
-        <Box
-          key={i}
-          sx={{
-            position: 'fixed',
-            width: Math.random() * 4 + 2,
-            height: Math.random() * 4 + 2,
-            background: darkMode 
-              ? (i % 3 === 0 ? '#00E0FF' : i % 3 === 1 ? '#8B5CF6' : '#F59E0B')
-              : alpha('#667eea', 0.4),
-            borderRadius: '50%',
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `particleFloat ${15 + Math.random() * 10}s infinite`,
-            animationDelay: `${Math.random() * 5}s`,
-            zIndex: 0,
-            pointerEvents: 'none',
-            boxShadow: darkMode 
-              ? `0 0 20px ${i % 3 === 0 ? '#00E0FF' : i % 3 === 1 ? '#8B5CF6' : '#F59E0B'}`
-              : '0 0 10px rgba(102, 126, 234, 0.3)',
-          }}
-        />
-      ))}
-
-      {/* Navigation */}
-      <AppBar 
-        position="sticky" 
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8f9fa' }}>
+      {/* Header */}
+      <AppBar
+        position="sticky"
         elevation={0}
-        sx={{ 
-          bgcolor: trigger 
-            ? (darkMode ? alpha('#0A0F1E', 0.95) : alpha('#FFFFFF', 0.95))
-            : 'transparent',
-          backdropFilter: trigger ? 'blur(40px)' : 'none',
-          borderBottom: trigger ? `1px solid ${borderColor}` : 'none',
-          transition: 'all 0.3s',
-          zIndex: 10,
-          boxShadow: trigger && darkMode ? `0 0 30px ${alpha('#00E0FF', 0.1)}` : 'none',
+        sx={{
+          bgcolor: 'white',
+          borderBottom: '1px solid #e0e0e0',
         }}
       >
-        <Toolbar sx={{ py: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Box
-              sx={{
-                display: 'inline-flex',
-                p: 1.5,
-                borderRadius: 3,
-                background: darkMode 
-                  ? `linear-gradient(135deg, ${alpha('#00E0FF', 0.2)} 0%, ${alpha('#8B5CF6', 0.2)} 100%)`
-                  : `linear-gradient(135deg, ${alpha('#667eea', 0.15)} 0%, ${alpha('#764ba2', 0.15)} 100%)`,
-                border: `1px solid ${darkMode ? alpha('#00E0FF', 0.3) : alpha('#667eea', 0.3)}`,
-                mr: 2,
-                boxShadow: darkMode ? `0 0 30px ${alpha('#00E0FF', 0.3)}` : 'none',
-              }}
-            >
-              <School sx={{ fontSize: 28, color: darkMode ? '#00E0FF' : '#667eea' }} />
-            </Box>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 900,
-                background: darkMode 
-                  ? 'linear-gradient(135deg, #00E0FF 0%, #8B5CF6 100%)'
-                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '0.05em',
-                textShadow: darkMode ? `0 0 30px ${alpha('#00E0FF', 0.5)}` : 'none',
-              }}
-            >
+        <Toolbar sx={{ py: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+            <School sx={{ fontSize: 32, color: '#667eea' }} />
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
               ITAS
             </Typography>
+            <Chip label="Tax Education" size="small" sx={{ ml: 1 }} />
           </Box>
-          
-          {/* Resources Button */}
-          <Button
-            variant="outlined"
-            startIcon={<MenuBook />}
-            onClick={() => window.location.href = '/public/resources'}
-            sx={{ 
-              mr: 2,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              borderWidth: 2,
-              borderColor: darkMode ? alpha('#00E0FF', 0.5) : alpha('#667eea', 0.5),
-              color: textPrimary,
-              '&:hover': {
-                borderWidth: 2,
-                borderColor: darkMode ? '#00E0FF' : '#667eea',
-                background: darkMode ? alpha('#00E0FF', 0.1) : alpha('#667eea', 0.1),
-              },
-            }}
-          >
-            Resources
-          </Button>
-
-          {/* Dark Mode Toggle */}
-          <Tooltip title={darkMode ? "Light Mode" : "Dark Mode"}>
-            <IconButton 
-              onClick={toggleDarkMode}
-              sx={{ 
-                mr: 2,
-                color: textPrimary,
-                background: darkMode ? alpha('#00E0FF', 0.1) : alpha('#667eea', 0.1),
-                border: `1px solid ${darkMode ? alpha('#00E0FF', 0.3) : alpha('#667eea', 0.3)}`,
+          <Stack direction="row" spacing={2}>
+            <IconButton
+              onClick={toggleTheme}
+              sx={{
+                color: 'text.primary',
+                border: '2px solid',
+                borderColor: 'divider',
+                transition: 'all 0.3s ease',
                 '&:hover': {
-                  background: darkMode ? alpha('#00E0FF', 0.2) : alpha('#667eea', 0.2),
-                  boxShadow: darkMode ? `0 0 20px ${alpha('#00E0FF', 0.4)}` : 'none',
+                  transform: 'rotate(180deg)',
+                  borderColor: 'primary.main',
+                  bgcolor: alpha('#667eea', 0.1),
                 },
               }}
             >
-              {darkMode ? <Brightness7 /> : <Brightness4 />}
+              {mode === 'light' ? <Brightness4 /> : <Brightness7 />}
             </IconButton>
-          </Tooltip>
-
-          {/* Check if user is logged in */}
-          {(() => {
-            const user = localStorage.getItem('itas_user');
-            if (user) {
-              const userData = JSON.parse(user);
-              return (
-                <Button 
-                  variant="outlined"
-                  onClick={() => {
-                    localStorage.removeItem('itas_user');
-                    localStorage.removeItem('itas_token');
-                    window.location.reload();
-                  }}
-                  sx={{ 
-                    mr: 2,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    borderWidth: 2,
-                    borderColor: darkMode ? alpha('#F59E0B', 0.5) : alpha('#EF4444', 0.5),
-                    color: darkMode ? '#F59E0B' : '#EF4444',
-                    '&:hover': {
-                      borderWidth: 2,
-                      borderColor: darkMode ? '#F59E0B' : '#EF4444',
-                      background: darkMode ? alpha('#F59E0B', 0.1) : alpha('#EF4444', 0.1),
-                    },
-                  }}
-                >
-                  Logout ({userData.username})
-                </Button>
-              );
-            }
-            return null;
-          })()}
-
-          <Button 
-            variant="outlined"
-            startIcon={<Login />}
-            onClick={handleLoginClick}
-            sx={{ 
-              mr: 2,
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 700,
-              borderWidth: 2,
-              borderColor: darkMode ? alpha('#00E0FF', 0.5) : alpha('#667eea', 0.5),
-              color: textPrimary,
-              '&:hover': {
-                borderWidth: 2,
-                borderColor: darkMode ? '#00E0FF' : '#667eea',
-                background: darkMode ? alpha('#00E0FF', 0.1) : alpha('#667eea', 0.1),
-                boxShadow: darkMode ? `0 0 20px ${alpha('#00E0FF', 0.3)}` : 'none',
-              },
-            }}
-          >
-            Login
-          </Button>
-          <Button 
-            variant="contained"
-            startIcon={<PersonAdd />}
-            onClick={handleRegisterClick}
-            sx={{ 
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 700,
-              background: darkMode 
-                ? 'linear-gradient(135deg, #00E0FF 0%, #8B5CF6 100%)'
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: darkMode ? `0 0 30px ${alpha('#00E0FF', 0.4)}` : '0 8px 25px rgba(102, 126, 234, 0.4)',
-              '&:hover': {
-                background: darkMode
-                  ? 'linear-gradient(135deg, #8B5CF6 0%, #00E0FF 100%)'
-                  : 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                transform: 'translateY(-2px)',
-                boxShadow: darkMode ? `0 0 40px ${alpha('#00E0FF', 0.6)}` : '0 8px 25px rgba(102, 126, 234, 0.4)',
-              },
-              transition: 'all 0.3s',
-            }}
-          >
-            Sign Up
-          </Button>
+            <Button
+              variant="outlined"
+              startIcon={<Login />}
+              onClick={() => navigate('/login')}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+              }}
+            >
+              Login
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<PersonAdd />}
+              onClick={() => navigate('/register')}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              }}
+            >
+              Get Started
+            </Button>
+          </Stack>
         </Toolbar>
       </AppBar>
 
-      {/* Hero Section - Enhanced */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: { xs: 6, md: 10 } }}>
-        <Grid container spacing={6} alignItems="center">
-          {/* Left Side - Content */}
-          <Grid item xs={12} md={6}>
-            <Fade in={mounted} timeout={1000}>
-              <Box>
-                <Chip 
-                  icon={<Rocket sx={{ fontSize: 18 }} />}
-                  label="Transforming Tax Education" 
-                  sx={{ 
-                    mb: 3,
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha('#667eea', 0.2)} 0%, ${alpha('#764ba2', 0.2)} 100%)`
-                      : alpha('#667eea', 0.1),
+      {/* Hero Section */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          color: 'white',
+          py: 12,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Chip
+                icon={<Verified />}
+                label="Ministry of Revenue Approved"
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  mb: 3,
+                  fontWeight: 600,
+                }}
+              />
+              <Typography variant="h2" sx={{ fontWeight: 800, mb: 2, lineHeight: 1.2 }}>
+                Master Ethiopian Tax Law
+              </Typography>
+              <Typography variant="h5" sx={{ mb: 4, opacity: 0.95, fontWeight: 400 }}>
+                Professional tax education and certification platform for taxpayers and MOR staff
+              </Typography>
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowForward />}
+                  onClick={() => navigate('/register')}
+                  sx={{
+                    bgcolor: 'white',
                     color: '#667eea',
-                    border: `2px solid ${alpha('#667eea', 0.4)}`,
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: '12px',
+                    textTransform: 'none',
                     fontWeight: 700,
-                    fontSize: '0.95rem',
-                    py: 2.5,
-                    px: 1,
-                    boxShadow: darkMode ? `0 0 30px ${alpha('#667eea', 0.3)}` : 'none',
+                    fontSize: '1.1rem',
                     '&:hover': {
-                      background: darkMode 
-                        ? `linear-gradient(135deg, ${alpha('#667eea', 0.3)} 0%, ${alpha('#764ba2', 0.3)} 100%)`
-                        : alpha('#667eea', 0.15),
-                      transform: 'scale(1.05)',
-                      boxShadow: darkMode ? `0 0 40px ${alpha('#667eea', 0.5)}` : 'none',
-                    },
-                    transition: 'all 0.3s',
-                  }}
-                />
-                <Typography 
-                  variant="h1" 
-                  sx={{
-                    fontSize: { xs: '2.5rem', md: '4rem' },
-                    fontWeight: 900,
-                    mb: 2,
-                    color: textPrimary,
-                    lineHeight: 1.1,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  Master Tax Education
-                </Typography>
-            
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 4,
-                    color: textSecondary,
-                    lineHeight: 1.8,
-                    fontWeight: 400,
-                    maxWidth: '500px',
-                  }}
-                >
-                  ITAS empowers taxpayers and staff with modern learning tools, 
-                  smart analytics, and seamless training management
-                </Typography>
-                
-                {/* Feature Pills */}
-                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 4 }}>
-                  {['Smart Learning', 'Real-time Analytics', 'Secure Access'].map((feature, index) => (
-                    <Chip
-                      key={index}
-                      icon={<CheckCircle sx={{ fontSize: 16 }} />}
-                      label={feature}
-                      sx={{
-                        background: darkMode 
-                          ? alpha('#10B981', 0.15)
-                          : alpha('#10B981', 0.1),
-                        color: '#10B981',
-                        border: `2px solid ${alpha('#10B981', 0.3)}`,
-                        fontWeight: 700,
-                        py: 2,
-                        px: 1,
-                        fontSize: '0.9rem',
-                        boxShadow: darkMode ? `0 0 20px ${alpha('#10B981', 0.2)}` : 'none',
-                        '&:hover': {
-                          background: alpha('#10B981', 0.2),
-                          transform: 'scale(1.05)',
-                        },
-                        transition: 'all 0.3s',
-                      }}
-                    />
-                  ))}
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    endIcon={<ArrowForward />}
-                    onClick={() => window.location.href = '/register'}
-                    sx={{ 
-                      px: 4, 
-                      py: 1.8,
-                      fontSize: '1.1rem',
-                      borderRadius: 3,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      boxShadow: darkMode 
-                        ? `0 10px 40px ${alpha('#667eea', 0.5)}`
-                        : '0 8px 25px rgba(102, 126, 234, 0.35)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                        transform: 'translateY(-3px)',
-                        boxShadow: darkMode 
-                          ? `0 15px 50px ${alpha('#667eea', 0.7)}`
-                          : '0 12px 35px rgba(102, 126, 234, 0.5)',
-                      },
-                    }}
-                  >
-                    Get Started Free
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    startIcon={<PlayArrow />}
-                    sx={{ 
-                      px: 4,
-                      py: 1.8,
-                      fontSize: '1.1rem',
-                      borderRadius: 3,
-                      color: textPrimary, 
-                      borderColor: borderColor,
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      borderWidth: 2,
-                      '&:hover': {
-                        borderColor: '#667eea',
-                        background: alpha('#667eea', 0.1),
-                        borderWidth: 2,
-                        transform: 'translateY(-3px)',
-                      },
-                    }}
-                  >
-                    Watch Demo
-                  </Button>
-                </Box>
-              </Box>
-            </Fade>
-          </Grid>
-
-          {/* Right Side - Dashboard Preview */}
-          <Grid item xs={12} md={6}>
-            <Fade in={mounted} timeout={1200}>
-              <Box sx={{ position: 'relative' }}>
-                {/* Main Card */}
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    borderRadius: 5,
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha('#667eea', 0.15)} 0%, ${alpha('#764ba2', 0.15)} 100%)`
-                      : '#FFFFFF',
-                    border: `3px solid ${darkMode ? alpha('#667eea', 0.3) : alpha('#667eea', 0.2)}`,
-                    boxShadow: darkMode 
-                      ? `0 25px 70px ${alpha('#667eea', 0.4)}`
-                      : '0 20px 60px rgba(102, 126, 234, 0.2)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '4px',
-                      background: 'linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+                      bgcolor: '#f8f9fa',
+                      transform: 'translateY(-2px)',
                     },
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Avatar
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        mr: 2,
-                        boxShadow: darkMode ? `0 0 30px ${alpha('#667eea', 0.5)}` : 'none',
-                      }}
-                    >
-                      <School sx={{ fontSize: 32 }} />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 800, color: textPrimary }}>
-                        ITAS Dashboard
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: textSecondary }}>
-                        Your Learning Hub
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Progress Bars */}
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: textPrimary }}>
-                        Tax Filing Basics
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: '#667eea' }}>
-                        85%
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        height: 10,
-                        borderRadius: 5,
-                        background: darkMode ? alpha('#fff', 0.1) : alpha('#000', 0.05),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '85%',
-                          height: '100%',
-                          background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                          borderRadius: 5,
-                          boxShadow: darkMode ? `0 0 15px ${alpha('#667eea', 0.6)}` : 'none',
-                        }}
-                      />
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, color: textPrimary }}>
-                        VAT Fundamentals
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: '#10B981' }}>
-                        100%
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        height: 10,
-                        borderRadius: 5,
-                        background: darkMode ? alpha('#fff', 0.1) : alpha('#000', 0.05),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
-                          borderRadius: 5,
-                          boxShadow: darkMode ? `0 0 15px ${alpha('#10B981', 0.6)}` : 'none',
-                        }}
-                      />
-                    </Box>
-                  </Box>
-
-                  {/* Stats */}
-                  <Grid container spacing={2}>
-                    <Grid item xs={4}>
-                      <Box sx={{ textAlign: 'center', p: 1.5, borderRadius: 3, background: alpha('#667eea', 0.1) }}>
-                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#667eea' }}>
-                          12
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: textSecondary, fontWeight: 600 }}>
-                          Courses
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <Box sx={{ textAlign: 'center', p: 1.5, borderRadius: 3, background: alpha('#10B981', 0.1) }}>
-                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#10B981' }}>
-                          8
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: textSecondary, fontWeight: 600 }}>
-                          Completed
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <Box sx={{ textAlign: 'center', p: 1.5, borderRadius: 3, background: alpha('#F59E0B', 0.1) }}>
-                        <Typography variant="h5" sx={{ fontWeight: 900, color: '#F59E0B' }}>
-                          4
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: textSecondary, fontWeight: 600 }}>
-                          Certificates
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Paper>
-
-                {/* Floating Badge */}
-                <Box
+                  Start Learning
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<MenuBook />}
+                  onClick={() => navigate('/public/resources')}
                   sx={{
-                    position: 'absolute',
-                    top: -15,
-                    right: -15,
-                    animation: 'floating 3s ease-in-out infinite',
+                    borderColor: 'white',
+                    color: 'white',
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    '&:hover': {
+                      borderColor: 'white',
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                    },
                   }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      borderRadius: 3,
-                      background: darkMode 
-                        ? alpha('#10B981', 0.2)
-                        : '#FFFFFF',
-                      border: `3px solid ${alpha('#10B981', 0.4)}`,
-                      boxShadow: darkMode 
-                        ? `0 10px 40px ${alpha('#10B981', 0.4)}`
-                        : '0 8px 25px rgba(16, 185, 129, 0.3)',
-                    }}
-                  >
-                    <EmojiEvents sx={{ fontSize: 36, color: '#10B981' }} />
-                  </Paper>
-                </Box>
-
-                {/* Floating Notification */}
+                  Browse Resources
+                </Button>
+              </Stack>
+              <Typography variant="body2" sx={{ mt: 2, opacity: 0.9 }}>
+                ✓ Free access to resources • No login required
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
                 <Box
                   sx={{
-                    position: 'absolute',
-                    bottom: -15,
-                    left: -15,
-                    animation: 'floating 3s ease-in-out infinite 1s',
+                    width: '100%',
+                    maxWidth: 400,
+                    aspectRatio: '1',
+                    borderRadius: '24px',
+                    bgcolor: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: 2,
                   }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      pr: 3,
-                      borderRadius: 3,
-                      background: darkMode 
-                        ? alpha('#667eea', 0.2)
-                        : '#FFFFFF',
-                      border: `3px solid ${alpha('#667eea', 0.4)}`,
-                      boxShadow: darkMode 
-                        ? `0 10px 40px ${alpha('#667eea', 0.4)}`
-                        : '0 8px 25px rgba(102, 126, 234, 0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <AutoAwesome sx={{ fontSize: 22, color: '#667eea' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: textPrimary }}>
-                      New course available!
-                    </Typography>
-                  </Paper>
+                  <School sx={{ fontSize: 120, opacity: 0.9 }} />
+                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    ITAS
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                    Tax Education Platform
+                  </Typography>
                 </Box>
               </Box>
-            </Fade>
+            </Grid>
           </Grid>
-        </Grid>
-      </Container>
+        </Container>
+      </Box>
 
       {/* Stats Section */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: 6 }}>
+      <Container maxWidth="lg" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
         <Grid container spacing={3}>
           {stats.map((stat, index) => (
             <Grid item xs={6} md={3} key={index}>
-              <Fade in={statsVisible} timeout={600 + index * 200}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    p: 3,
-                    textAlign: 'center',
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha(stat.color, 0.1)} 0%, ${alpha(stat.color, 0.05)} 100%)`
-                      : cardBg,
-                    backdropFilter: 'blur(20px)',
-                    border: `2px solid ${alpha(stat.color, 0.3)}`,
-                    borderRadius: 4,
-                    transition: 'all 0.4s',
-                    boxShadow: darkMode ? `0 0 30px ${alpha(stat.color, 0.2)}` : '0 4px 20px rgba(0, 0, 0, 0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: `linear-gradient(90deg, ${stat.color}, ${alpha(stat.color, 0.5)})`,
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-12px) scale(1.05)',
-                      boxShadow: `0 25px 50px ${alpha(stat.color, 0.4)}`,
-                      border: `2px solid ${stat.color}`,
-                    },
-                  }}
-                >
-                  <Typography variant="h2" sx={{ fontWeight: 900, color: stat.color, mb: 1 }}>
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: textSecondary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {stat.label}
-                  </Typography>
-                </Card>
-              </Fade>
+              <Card
+                elevation={0}
+                sx={{
+                  textAlign: 'center',
+                  py: 3,
+                  borderRadius: '16px',
+                  border: '1px solid #e0e0e0',
+                  bgcolor: 'white',
+                }}
+              >
+                <Typography variant="h3" sx={{ fontWeight: 800, color: '#667eea', mb: 1 }}>
+                  {stat.value}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                  {stat.label}
+                </Typography>
+              </Card>
             </Grid>
           ))}
         </Grid>
       </Container>
 
       {/* Features Section */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: 8 }}>
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography 
-            variant="h2" 
-            sx={{ 
-              fontWeight: 900,
-              mb: 2,
-              color: textPrimary,
-              fontSize: { xs: '2rem', md: '2.5rem' },
-            }}
-          >
-            Everything You Need in One Platform
+      <Container maxWidth="lg" sx={{ py: 10 }}>
+        <Box sx={{ textAlign: 'center', mb: 8 }}>
+          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+            Why Choose ITAS?
           </Typography>
-          <Typography variant="body1" sx={{ color: textSecondary, maxWidth: '600px', mx: 'auto' }}>
-            Comprehensive tools and resources for modern tax education
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
+            Everything you need to master Ethiopian tax law and advance your career
           </Typography>
         </Box>
-        <Grid container spacing={3}>
-          {features.slice(0, 3).map((feature, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Grow in={mounted} timeout={800 + index * 100}>
-                <Card 
-                  elevation={0}
-                  sx={{ 
-                    height: '100%',
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha(feature.color, 0.1)} 0%, ${alpha(feature.color, 0.05)} 100%)`
-                      : cardBg,
-                    backdropFilter: 'blur(20px)',
-                    border: `2px solid ${alpha(feature.color, 0.2)}`,
-                    borderRadius: 4,
-                    transition: 'all 0.4s',
-                    boxShadow: darkMode ? `0 0 30px ${alpha(feature.color, 0.1)}` : '0 4px 20px rgba(0, 0, 0, 0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: `linear-gradient(90deg, ${feature.color}, ${alpha(feature.color, 0.5)})`,
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-15px) scale(1.03)',
-                      boxShadow: `0 25px 60px ${alpha(feature.color, 0.4)}`,
-                      border: `2px solid ${feature.color}`,
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 4 }}>
-                    <Box 
-                      sx={{ 
-                        display: 'inline-flex',
-                        p: 2,
-                        borderRadius: 3,
-                        background: alpha(feature.color, 0.15),
-                        color: feature.color,
-                        mb: 2,
-                        boxShadow: darkMode ? `0 0 20px ${alpha(feature.color, 0.3)}` : 'none',
-                      }}
-                    >
-                      {feature.icon}
-                    </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5, color: textPrimary }}>
-                      {feature.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: textSecondary, lineHeight: 1.7 }}>
-                      {feature.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grow>
-            </Grid>
-          ))}
-        </Grid>
-        <Grid container spacing={3} sx={{ mt: 1 }}>
-          {features.slice(3).map((feature, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index + 3}>
-              <Grow in={mounted} timeout={1100 + index * 100}>
-                <Card 
-                  elevation={0}
-                  sx={{ 
-                    height: '100%',
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha(feature.color, 0.1)} 0%, ${alpha(feature.color, 0.05)} 100%)`
-                      : cardBg,
-                    backdropFilter: 'blur(20px)',
-                    border: `2px solid ${alpha(feature.color, 0.2)}`,
-                    borderRadius: 4,
-                    transition: 'all 0.4s',
-                    boxShadow: darkMode ? `0 0 30px ${alpha(feature.color, 0.1)}` : '0 4px 20px rgba(0, 0, 0, 0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: `linear-gradient(90deg, ${feature.color}, ${alpha(feature.color, 0.5)})`,
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-15px) scale(1.03)',
-                      boxShadow: `0 25px 60px ${alpha(feature.color, 0.4)}`,
-                      border: `2px solid ${feature.color}`,
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 4 }}>
-                    <Box 
-                      sx={{ 
-                        display: 'inline-flex',
-                        p: 2,
-                        borderRadius: 3,
-                        background: alpha(feature.color, 0.15),
-                        color: feature.color,
-                        mb: 2,
-                        boxShadow: darkMode ? `0 0 20px ${alpha(feature.color, 0.3)}` : 'none',
-                      }}
-                    >
-                      {feature.icon}
-                    </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800, mb: 1.5, color: textPrimary }}>
-                      {feature.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: textSecondary, lineHeight: 1.7 }}>
-                      {feature.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grow>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
 
-      {/* Roles Section */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: 8 }}>
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography variant="h2" sx={{ fontWeight: 900, mb: 2, color: textPrimary, fontSize: { xs: '2rem', md: '2.5rem' } }}>
-            Designed for Every Role
-          </Typography>
-          <Typography variant="body1" sx={{ color: textSecondary }}>
-            Role-based access with tailored dashboards
-          </Typography>
-        </Box>
-        
-        {/* First Row - 3 Cards */}
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          {roles.slice(0, 3).map((role, index) => (
-            <Grid item xs={12} sm={4} key={index}>
-              <Fade in={mounted} timeout={1000 + index * 100}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    textAlign: 'center',
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha(role.color, 0.15)} 0%, ${alpha(role.color, 0.05)} 100%)`
-                      : cardBg,
-                    backdropFilter: 'blur(20px)',
-                    border: `2px solid ${alpha(role.color, 0.3)}`,
-                    borderRadius: 4,
-                    transition: 'all 0.4s',
-                    cursor: 'pointer',
-                    boxShadow: darkMode ? `0 0 30px ${alpha(role.color, 0.2)}` : '0 4px 20px rgba(0, 0, 0, 0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: `linear-gradient(90deg, ${role.color}, ${alpha(role.color, 0.5)})`,
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-12px) scale(1.05)',
-                      background: darkMode 
-                        ? `linear-gradient(135deg, ${alpha(role.color, 0.25)} 0%, ${alpha(role.color, 0.15)} 100%)`
-                        : alpha(role.color, 0.05),
-                      border: `2px solid ${role.color}`,
-                      boxShadow: `0 20px 50px ${alpha(role.color, 0.4)}`,
-                    },
-                  }}
-                >
-                  <Typography variant="h2" sx={{ mb: 2, fontSize: '3rem' }}>{role.icon}</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 800, color: textPrimary, mb: 1 }}>
-                    {role.name}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: textSecondary, fontWeight: 600 }}>
-                    {role.desc}
-                  </Typography>
-                </Paper>
-              </Fade>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Second Row - 3 Cards */}
-        <Grid container spacing={3}>
-          {roles.slice(3).map((role, index) => (
-            <Grid item xs={12} sm={4} key={index + 3}>
-              <Fade in={mounted} timeout={1300 + index * 100}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    textAlign: 'center',
-                    background: darkMode 
-                      ? `linear-gradient(135deg, ${alpha(role.color, 0.15)} 0%, ${alpha(role.color, 0.05)} 100%)`
-                      : cardBg,
-                    backdropFilter: 'blur(20px)',
-                    border: `2px solid ${alpha(role.color, 0.3)}`,
-                    borderRadius: 4,
-                    transition: 'all 0.4s',
-                    cursor: 'pointer',
-                    boxShadow: darkMode ? `0 0 30px ${alpha(role.color, 0.2)}` : '0 4px 20px rgba(0, 0, 0, 0.05)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: `linear-gradient(90deg, ${role.color}, ${alpha(role.color, 0.5)})`,
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-12px) scale(1.05)',
-                      background: darkMode 
-                        ? `linear-gradient(135deg, ${alpha(role.color, 0.25)} 0%, ${alpha(role.color, 0.15)} 100%)`
-                        : alpha(role.color, 0.05),
-                      border: `2px solid ${role.color}`,
-                      boxShadow: `0 20px 50px ${alpha(role.color, 0.4)}`,
-                    },
-                  }}
-                >
-                  <Typography variant="h2" sx={{ mb: 2, fontSize: '3rem' }}>{role.icon}</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 800, color: textPrimary, mb: 1 }}>
-                    {role.name}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: textSecondary, fontWeight: 600 }}>
-                    {role.desc}
-                  </Typography>
-                </Paper>
-              </Fade>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* CTA Section */}
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, py: 8, textAlign: 'center' }}>
-        <Box
-          sx={{
-            p: 5,
-            borderRadius: 6,
-            background: darkMode 
-              ? `linear-gradient(135deg, ${alpha('#667eea', 0.2)} 0%, ${alpha('#764ba2', 0.2)} 100%)`
-              : `linear-gradient(135deg, ${alpha('#667eea', 0.1)} 0%, ${alpha('#764ba2', 0.1)} 100%)`,
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${alpha('#667eea', 0.3)}`,
-            boxShadow: darkMode ? 'none' : '0 20px 60px rgba(102, 126, 234, 0.15)',
-          }}
-        >
-          <CheckCircle sx={{ fontSize: 60, color: '#10B981', mb: 2 }} />
-          <Typography variant="h3" sx={{ fontWeight: 800, mb: 1.5, color: textPrimary }}>
-            Ready to Modernize Tax Education?
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 4, color: textSecondary, maxWidth: '600px', mx: 'auto' }}>
-            Experience a secure, scalable, and intelligent education management system
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              size="large"
-              endIcon={<ArrowForward />}
-              onClick={() => window.location.href = '/register'}
-              sx={{ 
-                px: 5, 
-                py: 1.8,
-                fontSize: '1.05rem',
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                textTransform: 'none',
-                fontWeight: 700,
-                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 12px 35px rgba(102, 126, 234, 0.6)',
-                },
-              }}
-            >
-              Get Started
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={handleLoginClick}
-              sx={{ 
-                px: 5,
-                py: 1.8,
-                fontSize: '1.05rem',
-                borderRadius: 3,
-                color: textPrimary, 
-                borderColor: borderColor,
-                textTransform: 'none',
-                fontWeight: 700,
-                borderWidth: 2,
-                '&:hover': {
-                  borderColor: '#667eea',
-                  background: alpha('#667eea', 0.05),
-                  borderWidth: 2,
-                },
-              }}
-            >
-              Request Demo
-            </Button>
-          </Box>
-        </Box>
-      </Container>
-
-      {/* Resources Section */}
-      <Container maxWidth="lg" sx={{ py: 10, position: 'relative', zIndex: 1 }}>
-        <Fade in timeout={1200}>
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography 
-              variant="h3" 
-              gutterBottom 
-              fontWeight="bold"
-              sx={{ mb: 2, color: textPrimary }}
-            >
-              Resources for Use
-            </Typography>
-            <Typography variant="h6" sx={{ maxWidth: '700px', mx: 'auto', mb: 4, color: textSecondary }}>
-              Access our library of tax education materials including videos, guides, and documents - no login required
-            </Typography>
-          </Box>
-        </Fade>
-
-        {resources.length > 0 ? (
-          <>
-            <Grid container spacing={3}>
-              {resources.map((resource, index) => (
-                <Grid item xs={12} md={6} lg={4} key={resource.id}>
-                  <Grow in timeout={800 + index * 100}>
-                    <Card 
-                      sx={{ 
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        borderRadius: 4,
-                        transition: 'all 0.3s',
-                        border: `2px solid ${borderColor}`,
-                        bgcolor: cardBg,
-                        backdropFilter: 'blur(20px)',
-                        '&:hover': {
-                          transform: 'translateY(-8px)',
-                          boxShadow: darkMode 
-                            ? `0 12px 40px ${alpha(accentColor, 0.3)}`
-                            : '0 12px 40px rgba(0,0,0,0.15)',
-                          borderColor: darkMode ? accentColor : '#667eea',
-                        },
-                      }}
-                    >
-                      <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          {getResourceIcon(resource.type)}
-                          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: textPrimary }}>
-                            {resource.title}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" paragraph sx={{ color: textSecondary }}>
-                          {resource.description}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          <Chip 
-                            label={resource.type} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: darkMode ? alpha(accentColor, 0.2) : alpha('#667eea', 0.1),
-                              color: darkMode ? accentColor : '#667eea',
-                              fontWeight: 600,
-                            }}
-                          />
-                          {resource.category && (
-                            <Chip 
-                              label={resource.category} 
-                              size="small" 
-                              variant="outlined"
-                              sx={{ 
-                                borderColor: darkMode ? alpha(accentColor, 0.3) : borderColor,
-                                color: textSecondary,
-                              }}
-                            />
-                          )}
-                        </Box>
-                      </CardContent>
-                      <CardActions sx={{ p: 2, pt: 0 }}>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          startIcon={<DownloadIcon />}
-                          onClick={() => handleDownload(resource)}
-                          sx={{
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            background: darkMode 
-                              ? `linear-gradient(135deg, ${accentColor} 0%, #8B5CF6 100%)`
-                              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            '&:hover': {
-                              transform: 'scale(1.02)',
-                              boxShadow: darkMode 
-                                ? `0 8px 24px ${alpha(accentColor, 0.4)}`
-                                : '0 8px 24px rgba(102, 126, 234, 0.4)',
-                            },
-                          }}
-                        >
-                          {resource.type === 'VIDEO' ? 'Watch Video' : 'Download'}
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grow>
-                </Grid>
-              ))}
-            </Grid>
-            
-            <Box sx={{ textAlign: 'center', mt: 6 }}>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<MenuBook />}
-                onClick={() => window.location.href = '/public/resources'}
-                sx={{ 
-                  px: 5, 
-                  py: 2,
-                  fontSize: '1.1rem',
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  background: darkMode 
-                    ? `linear-gradient(135deg, ${accentColor} 0%, #8B5CF6 100%)`
-                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  boxShadow: darkMode 
-                    ? `0 8px 20px ${alpha(accentColor, 0.3)}`
-                    : '0 8px 20px rgba(102, 126, 234, 0.3)',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: darkMode 
-                      ? `0 12px 28px ${alpha(accentColor, 0.4)}`
-                      : '0 12px 28px rgba(102, 126, 234, 0.4)',
-                  },
+        <Grid container spacing={4}>
+          {features.map((feature, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <Card
+                elevation={0}
+                sx={{
+                  height: '100%',
+                  p: 3,
+                  borderRadius: '16px',
+                  border: '1px solid #e0e0e0',
                   transition: 'all 0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-8px)',
+                    boxShadow: '0 12px 40px rgba(102, 126, 234, 0.2)',
+                    borderColor: '#667eea',
+                  },
                 }}
               >
-                View All Resources
-              </Button>
-            </Box>
-          </>
-        ) : (
-          <Grid container spacing={3}>
-            {[
-              {
-                icon: <VideoLibrary sx={{ fontSize: 48, color: '#EF4444' }} />,
-                title: 'Video Tutorials',
-                description: 'Step-by-step video guides on tax compliance, filing procedures, and best practices',
-                color: '#EF4444',
-              },
-              {
-                icon: <MenuBook sx={{ fontSize: 48, color: '#8B5CF6' }} />,
-                title: 'PDF Guides',
-                description: 'Comprehensive handbooks, manuals, and reference materials for tax agents',
-                color: '#8B5CF6',
-              },
-              {
-                icon: <School sx={{ fontSize: 48, color: '#10B981' }} />,
-                title: 'Learning Materials',
-                description: 'Articles, presentations, and documents covering various tax topics',
-                color: '#10B981',
-              },
-            ].map((item, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <Grow in timeout={1000 + index * 200}>
-                  <Card 
-                    sx={{ 
-                      height: '100%',
-                      textAlign: 'center',
-                      borderRadius: 4,
-                      transition: 'all 0.3s',
-                      border: `2px solid ${borderColor}`,
-                      bgcolor: cardBg,
-                      cursor: 'pointer',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 12px 40px ${item.color}40`,
-                        borderColor: item.color,
-                      },
-                    }}
-                    onClick={() => window.location.href = '/public/resources'}
-                  >
-                    <CardContent sx={{ py: 5, px: 3 }}>
-                      <Box 
-                        sx={{ 
-                          mb: 3,
-                          display: 'inline-block',
-                          p: 2,
-                          borderRadius: '50%',
-                          bgcolor: `${item.color}15`,
-                        }}
-                      >
-                        {item.icon}
-                      </Box>
-                      <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: textPrimary }}>
-                        {item.title}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: textSecondary }}>
-                        {item.description}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grow>
-              </Grid>
-            ))}
-          </Grid>
-        )}
+                <Box sx={{ mb: 2 }}>{feature.icon}</Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                  {feature.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {feature.description}
+                </Typography>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       </Container>
 
-      {/* Footer */}
-      <Box sx={{ position: 'relative', zIndex: 1, borderTop: `1px solid ${borderColor}`, py: 4, mt: 10 }}>
+      {/* Benefits Section */}
+      <Box sx={{ bgcolor: 'white', py: 10 }}>
         <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <School sx={{ fontSize: 32, color: '#667eea', mr: 1 }} />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 800,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              ITAS
+          <Grid container spacing={6} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Typography variant="h3" sx={{ fontWeight: 800, mb: 3 }}>
+                Learn at Your Own Pace
+              </Typography>
+              <Stack spacing={2}>
+                {[
+                  'Access courses anytime, anywhere',
+                  'Track your progress in real-time',
+                  'Practice with unlimited quizzes',
+                  'Earn recognized certificates',
+                  'Get expert support 24/7',
+                ].map((benefit, index) => (
+                  <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <CheckCircle sx={{ color: '#10B981', fontSize: 28 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                      {benefit}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  p: 4,
+                  borderRadius: '24px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                }}
+              >
+                <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
+                  Ready to Get Started?
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 4, opacity: 0.95 }}>
+                  Join thousands of professionals who have advanced their careers with ITAS
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  endIcon={<ArrowForward />}
+                  onClick={() => navigate('/register')}
+                  sx={{
+                    bgcolor: 'white',
+                    color: '#667eea',
+                    py: 2,
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    '&:hover': {
+                      bgcolor: '#f8f9fa',
+                    },
+                  }}
+                >
+                  Create Free Account
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Footer */}
+      <Box sx={{ bgcolor: '#1a1a1a', color: 'white', py: 6 }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <School sx={{ fontSize: 32 }} />
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  ITAS
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                Integrated Tax Administration System - Professional tax education platform
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                Quick Links
+              </Typography>
+              <Stack spacing={1}>
+                <Button
+                  sx={{ justifyContent: 'flex-start', color: 'white', textTransform: 'none' }}
+                  onClick={() => navigate('/public/resources')}
+                  startIcon={<MenuBook />}
+                >
+                  Browse Resources (Free)
+                </Button>
+                <Button
+                  sx={{ justifyContent: 'flex-start', color: 'white', textTransform: 'none' }}
+                  onClick={() => navigate('/login')}
+                >
+                  Login
+                </Button>
+                <Button
+                  sx={{ justifyContent: 'flex-start', color: 'white', textTransform: 'none' }}
+                  onClick={() => navigate('/register')}
+                >
+                  Register
+                </Button>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                Contact
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                Ministry of Revenue<br />
+                Addis Ababa, Ethiopia<br />
+                support@itas.gov.et
+              </Typography>
+            </Grid>
+          </Grid>
+          <Box sx={{ mt: 4, pt: 4, borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ opacity: 0.7 }}>
+              © 2026 ITAS - Integrated Tax Administration System. All rights reserved.
             </Typography>
           </Box>
         </Container>

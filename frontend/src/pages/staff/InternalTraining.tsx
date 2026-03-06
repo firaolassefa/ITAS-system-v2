@@ -9,6 +9,7 @@ import {
   Download, Assignment, TrendingUp,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../../utils/axiosConfig';
 
 interface InternalCourse {
   id: number;
@@ -35,60 +36,49 @@ const InternalTraining: React.FC = () => {
   const loadCourses = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('itas_token');
       const userId = JSON.parse(localStorage.getItem('itas_user') || '{}').id || 2;
       
       // Fetch all courses
-      const coursesResponse = await fetch('http://localhost:8080/courses', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const coursesResponse = await apiClient.get('/courses');
       
       // Fetch user enrollments
-      const enrollmentsResponse = await fetch(`http://localhost:8080/courses/enrollments/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const enrollmentsResponse = await apiClient.get(`/courses/enrollments/${userId}`);
+      
+      const allCoursesData = coursesResponse.data;
+      const enrollmentsData = enrollmentsResponse.data;
+      
+      const allCourses = allCoursesData.data || allCoursesData || [];
+      const enrollments = enrollmentsData.data || enrollmentsData || [];
+      
+      // Create a map of enrollments by courseId
+      const enrollmentMap = new Map();
+      enrollments.forEach((enrollment: any) => {
+        enrollmentMap.set(enrollment.course?.id || enrollment.courseId, enrollment);
       });
       
-      if (coursesResponse.ok && enrollmentsResponse.ok) {
-        const allCoursesData = await coursesResponse.json();
-        const enrollmentsData = await enrollmentsResponse.json();
+      // Map courses to internal training format
+      const mappedCourses = allCourses.map((course: any) => {
+        const enrollment = enrollmentMap.get(course.id);
+        const progress = enrollment?.progress || 0;
+        let status: 'not_started' | 'in_progress' | 'completed' | 'locked' = 'not_started';
         
-        const allCourses = allCoursesData.data || allCoursesData || [];
-        const enrollments = enrollmentsData.data || enrollmentsData || [];
+        if (progress >= 100) status = 'completed';
+        else if (progress > 0) status = 'in_progress';
         
-        // Create a map of enrollments by courseId
-        const enrollmentMap = new Map();
-        enrollments.forEach((enrollment: any) => {
-          enrollmentMap.set(enrollment.course?.id || enrollment.courseId, enrollment);
-        });
-        
-        // Map courses to internal training format
-        const mappedCourses = allCourses.map((course: any) => {
-          const enrollment = enrollmentMap.get(course.id);
-          const progress = enrollment?.progress || 0;
-          let status: 'not_started' | 'in_progress' | 'completed' | 'locked' = 'not_started';
-          
-          if (progress >= 100) status = 'completed';
-          else if (progress > 0) status = 'in_progress';
-          
-          return {
-            id: course.id,
-            title: course.title || 'Untitled Course',
-            description: course.description || 'No description available',
-            category: course.category || 'General',
-            progress: progress,
-            mandatory: false, // Can be enhanced with course metadata
-            status: status,
-            duration: `${course.modules?.length || 0} modules`,
-            modules: course.modules?.length || 0,
-          };
-        });
-        
-        setCourses(mappedCourses);
-      }
+        return {
+          id: course.id,
+          title: course.title || 'Untitled Course',
+          description: course.description || 'No description available',
+          category: course.category || 'General',
+          progress: progress,
+          mandatory: false, // Can be enhanced with course metadata
+          status: status,
+          duration: `${course.modules?.length || 0} modules`,
+          modules: course.modules?.length || 0,
+        };
+      });
+      
+      setCourses(mappedCourses);
     } catch (error) {
       console.error('Failed to load courses:', error);
     } finally {

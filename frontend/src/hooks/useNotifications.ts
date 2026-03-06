@@ -7,6 +7,12 @@ export const useNotifications = (userRole?: string, userId?: number) => {
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = async () => {
+    if (!userId || userId <= 0) {
+      console.log('useNotifications: Skipping fetchNotifications - invalid userId:', userId);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       console.log('Fetching notifications with role:', userRole, 'userId:', userId);
@@ -25,6 +31,11 @@ export const useNotifications = (userRole?: string, userId?: number) => {
   };
 
   const fetchUnreadCount = async () => {
+    if (!userId || userId <= 0) {
+      console.log('useNotifications: Skipping fetchUnreadCount - invalid userId:', userId);
+      return;
+    }
+    
     try {
       console.log('Fetching unread count with role:', userRole, 'userId:', userId);
       const response = await notificationAPI.getUnreadCount(userRole, userId);
@@ -60,7 +71,9 @@ export const useNotifications = (userRole?: string, userId?: number) => {
   };
 
   useEffect(() => {
-    if (userRole || userId) {
+    // Only fetch if we have valid user data
+    if ((userRole || userId) && userId && userId > 0) {
+      console.log('useNotifications: Fetching with role:', userRole, 'userId:', userId);
       fetchNotifications();
       fetchUnreadCount();
 
@@ -70,6 +83,9 @@ export const useNotifications = (userRole?: string, userId?: number) => {
       }, 30000);
 
       return () => clearInterval(interval);
+    } else {
+      console.log('useNotifications: Skipping fetch - invalid user data', { userRole, userId });
+      setLoading(false);
     }
   }, [userRole, userId]);
 

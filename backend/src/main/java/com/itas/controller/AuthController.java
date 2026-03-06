@@ -8,6 +8,12 @@ import com.itas.model.UserType;
 import com.itas.repository.UserRepository;
 import com.itas.repository.UserRoleRepository;
 import com.itas.security.JwtTokenProvider;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +30,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Authentication", description = "User authentication and authorization endpoints")
 public class AuthController {
     
     @Autowired
@@ -42,6 +49,22 @@ public class AuthController {
     private JwtTokenProvider tokenProvider;
     
     @PostMapping("/login")
+    @Operation(
+        summary = "User login",
+        description = "Authenticate user with username and password. Returns JWT token and user details.",
+        security = {}
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Login successful",
+            content = @Content(schema = @Schema(implementation = LoginResponse.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "Invalid credentials"
+        )
+    })
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             System.out.println("=== LOGIN ATTEMPT ===");
@@ -181,17 +204,46 @@ public class AuthController {
             return ResponseEntity.ok("User '" + username + "' NOT FOUND in database");
         }
         
-        // Test password matching
-        String testPassword = "Taxpayer@123";
-        boolean passwordMatches = passwordEncoder.matches(testPassword, user.getPassword());
+        // Test both passwords
+        String testPassword1 = "Taxpayer@123";
+        String testPassword2 = "password123";
+        boolean passwordMatches1 = passwordEncoder.matches(testPassword1, user.getPassword());
+        boolean passwordMatches2 = passwordEncoder.matches(testPassword2, user.getPassword());
         
         Map<String, Object> result = new HashMap<>();
         result.put("username", username);
         result.put("exists", true);
         result.put("active", user.isActive());
-        result.put("passwordHash", user.getPassword().substring(0, 20) + "...");
-        result.put("testPassword", testPassword);
-        result.put("passwordMatches", passwordMatches);
+        result.put("userType", user.getUserType());
+        result.put("passwordHash", user.getPassword().substring(0, 30) + "...");
+        result.put("testPassword1", testPassword1);
+        result.put("passwordMatches1", passwordMatches1);
+        result.put("testPassword2", testPassword2);
+        result.put("passwordMatches2", passwordMatches2);
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/fix-password/{username}")
+    public ResponseEntity<?> fixPassword(@PathVariable String username, @RequestBody Map<String, String> request) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.isEmpty()) {
+            return ResponseEntity.badRequest().body("newPassword is required");
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "Password updated successfully for user: " + username);
+        result.put("newPassword", newPassword);
         
         return ResponseEntity.ok(result);
     }

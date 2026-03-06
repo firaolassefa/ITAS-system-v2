@@ -1,5 +1,7 @@
 package com.itas.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,5 +16,12 @@ public class TestController {
     @GetMapping("/health")
     public String health() {
         return "{\"status\": \"UP\"}";
+    }
+    
+    @GetMapping("/auth")
+    @PreAuthorize("isAuthenticated()")
+    public String testAuth(Authentication authentication) {
+        return "Authenticated as: " + authentication.getName() + 
+               ", Authorities: " + authentication.getAuthorities();
     }
 }

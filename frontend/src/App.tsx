@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
+
+// Theme
+import { ThemeProvider } from './theme/ThemeContext';
 
 // Pages
 import Login from './pages/auth/Login';
@@ -16,6 +17,7 @@ import PublicResources from './pages/public/Resources';
 import TaxpayerDashboard from './pages/taxpayer/Dashboard';
 import TaxpayerCourses from './pages/taxpayer/Courses';
 import CourseDetail from './pages/taxpayer/CourseDetail';
+import ModuleLesson from './pages/taxpayer/ModuleLesson';
 import TaxpayerResources from './pages/taxpayer/Resources';
 import TaxpayerCertificates from './pages/taxpayer/Certificates';
 import PracticeQuestions from './pages/taxpayer/PracticeQuestions';
@@ -33,6 +35,7 @@ import ManagerDashboard from './pages/admin/ManagerDashboard';
 import AuditorDashboard from './pages/admin/AuditorDashboard';
 
 import UploadResource from './pages/admin/UploadResource';
+import ResourceManagement from './pages/admin/ResourceManagement';
 import Analytics from './pages/admin/Analytics';
 import ResourceVersion from './pages/admin/ResourceVersion';
 import WebinarManagement from './pages/admin/WebinarManagement';
@@ -57,20 +60,10 @@ import MORStaffDashboard from './pages/staff/Dashboard';
 import InternalTraining from './pages/staff/InternalTraining';
 import StaffCertificates from './pages/staff/Certificates';
 import StaffCompliance from './pages/staff/Compliance';
+import StaffAssessments from './pages/staff/Assessments';
 
 // Shared Components
 import PlaceholderPage from './components/PlaceholderPage';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
 
 function App() {
   const [user, setUser] = useState<any>(() => {
@@ -93,9 +86,16 @@ function App() {
   });
 
   const handleLogin = (userData: any, token: string) => {
+    console.log('🟢 handleLogin called');
+    console.log('   User data:', userData);
+    console.log('   Token:', token?.substring(0, 20) + '...');
+    
     localStorage.setItem('itas_user', JSON.stringify(userData));
     localStorage.setItem('itas_token', token);
     setUser(userData);
+    
+    console.log('   ✅ User and token saved to localStorage');
+    console.log('   ✅ User state updated');
   };
 
   const handleLogout = () => {
@@ -174,8 +174,7 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeProvider>
       <Router>
         <Routes>
           {/* Public Routes */}
@@ -203,10 +202,14 @@ function App() {
             <Route path="dashboard" element={<TaxpayerDashboard user={user} />} />
             <Route path="courses" element={<TaxpayerCourses user={user} />} />
             <Route path="course/:id" element={<CourseDetail />} />
+            <Route path="courses/:courseId/modules/:moduleId/lesson" element={<ModuleLesson />} />
+            <Route path="courses/:courseId/modules/:moduleId/practice" element={<PracticeQuestions />} />
+            <Route path="courses/:courseId/modules/:moduleId/quiz" element={<ModuleQuiz />} />
             <Route path="module/:moduleId/practice" element={<PracticeQuestions />} />
             <Route path="module/:moduleId/practice-quiz" element={<PracticeQuiz />} />
             <Route path="module/:moduleId/quiz" element={<ModuleQuiz />} />
             <Route path="course/:courseId/final-exam" element={<FinalExam />} />
+            <Route path="courses/:courseId/final-exam" element={<FinalExam />} />
             <Route path="assessment/:assessmentId" element={<TakeAssessment />} />
             <Route path="resources" element={<TaxpayerResources user={user} />} />
             <Route path="certificates" element={<TaxpayerCertificates />} />
@@ -219,11 +222,23 @@ function App() {
             </StaffRoute>
           }>
             <Route index element={<Navigate to="dashboard" />} />
-            <Route path="dashboard" element={<MORStaffDashboard />} />
+            <Route path="dashboard" element={<MORStaffDashboard user={user} />} />
+            <Route path="training" element={<InternalTraining />} />
             <Route path="internal-training" element={<InternalTraining />} />
             <Route path="courses" element={<TaxpayerCourses user={user} />} />
+            <Route path="course/:id" element={<CourseDetail />} />
+            <Route path="courses/:courseId" element={<CourseDetail />} />
+            <Route path="courses/:courseId/modules/:moduleId/lesson" element={<ModuleLesson />} />
+            <Route path="courses/:courseId/modules/:moduleId/practice" element={<PracticeQuestions />} />
+            <Route path="courses/:courseId/modules/:moduleId/quiz" element={<ModuleQuiz />} />
+            <Route path="module/:moduleId/practice" element={<PracticeQuestions />} />
+            <Route path="module/:moduleId/practice-quiz" element={<PracticeQuiz />} />
+            <Route path="module/:moduleId/quiz" element={<ModuleQuiz />} />
+            <Route path="course/:courseId/final-exam" element={<FinalExam />} />
+            <Route path="courses/:courseId/final-exam" element={<FinalExam />} />
+            <Route path="assessment/:assessmentId" element={<TakeAssessment />} />
             <Route path="progress" element={<PlaceholderPage title="My Progress" />} />
-            <Route path="assessments" element={<PlaceholderPage title="Assessments" />} />
+            <Route path="assessments" element={<StaffAssessments />} />
             <Route path="certificates" element={<StaffCertificates />} />
             <Route path="compliance" element={<StaffCompliance />} />
             <Route path="resources" element={<TaxpayerResources user={user} />} />
@@ -279,6 +294,11 @@ function App() {
             <Route path="upload-resource" element={
               <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
                 <UploadResource />
+              </ProtectedRoute>
+            } />
+            <Route path="resource-management" element={
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
+                <ResourceManagement />
               </ProtectedRoute>
             } />
             <Route path="resource-version" element={

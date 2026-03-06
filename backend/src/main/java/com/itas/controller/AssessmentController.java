@@ -136,4 +136,22 @@ public class AssessmentController {
                     .body(new ApiResponse<>(e.getMessage(), null));
         }
     }
+    
+    /**
+     * Check if user is eligible to take final exam
+     * GET /api/assessments/course/{courseId}/final-exam/eligibility?userId={userId}
+     */
+    @GetMapping("/course/{courseId}/final-exam/eligibility")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> checkFinalExamEligibility(
+            @PathVariable Long courseId,
+            @RequestParam Long userId) {
+        try {
+            Map<String, Object> result = assessmentService.checkFinalExamEligibility(userId, courseId);
+            return ResponseEntity.ok(new ApiResponse<>("Eligibility checked", result));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(e.getMessage(), null));
+        }
+    }
 }

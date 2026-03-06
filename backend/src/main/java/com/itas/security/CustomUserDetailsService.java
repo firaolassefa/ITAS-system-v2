@@ -29,27 +29,49 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        System.out.println("=== CustomUserDetailsService.loadUserByUsername ===");
+        System.out.println("Loading user: " + username);
+        
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        System.out.println("User found - ID: " + user.getId() + ", Active: " + user.isActive());
+        System.out.println("Password hash from DB: " + (user.getPassword() != null ? user.getPassword().substring(0, 20) + "..." : "NULL"));
+        
         if (!user.isActive()) {
             throw new UsernameNotFoundException("User account is disabled: " + username);
         }
 
-        // Get user roles
-        List<UserRole> userRoles = userRoleRepository.findByUser(user);
+        // Get user roles by user ID instead of User object
+        List<UserRole> userRoles = userRoleRepository.findByUserId(user.getId());
+        System.out.println("Found " + userRoles.size() + " roles for user");
         
         List<GrantedAuthority> authorities = new ArrayList<>();
         
         // Add user type as a role
         authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getUserType().name()));
+        System.out.println("Added role: ROLE_" + user.getUserType().name());
         
-        // Add specific permissions
-        authorities.addAll(userRoles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getRoleName()))
-                .collect(Collectors.toList()));
+        // Add specific permissions from user roles
+        for (UserRole role : userRoles) {
+            // Add role name
+            if (role.getRoleName() != null) {
+                authorities.add(new SimpleGrantedAuthority(role.getRoleName()));
+                System.out.println("Added role: " + role.getRoleName());
+            }
+            // Add individual permissions if they exist
+            if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
+                String[] permissions = role.getPermissions().split(",");
+                for (String permission : permissions) {
+                    authorities.add(new SimpleGrantedAuthority(permission.trim()));
+                    System.out.println("Added permission: " + permission.trim());
+                }
+            }
+        }
 
-        return org.springframework.security.core.userdetails.User.builder()
+        System.out.println("Total authorities: " + authorities.size());
+        
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(authorities)
@@ -58,5 +80,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .credentialsExpired(false)
                 .disabled(!user.isActive())
                 .build();
+        
+        System.out.println("UserDetails created successfully");
+        return userDetails;
     }
 }

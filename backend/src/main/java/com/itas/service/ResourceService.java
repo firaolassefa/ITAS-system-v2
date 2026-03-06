@@ -253,4 +253,16 @@ public class ResourceService {
                 .sorted()
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * Get all unique resource types from existing resources
+     */
+    public List<String> getAllResourceTypes() {
+        return resourceRepository.findAll().stream()
+                .map(Resource::getResourceType)
+                .filter(type -> type != null && !type.isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }

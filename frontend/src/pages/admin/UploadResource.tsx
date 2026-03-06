@@ -1,748 +1,734 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  Alert,
-  Grid,
-  Card,
-  CardContent,
-  SelectChangeEvent,
-  LinearProgress,
-  Fade,
-  Zoom,
-  IconButton,
+  Container, Grid, Paper, Typography, Box, Button, IconButton,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  Select, MenuItem, FormControl, InputLabel, Chip, Alert,
+  CircularProgress, Tooltip, InputAdornment, Card, CardContent,
 } from '@mui/material';
 import {
-  CloudUpload as UploadIcon,
-  Description as DocumentIcon,
-  VideoLibrary as VideoIcon,
-  Article as ArticleIcon,
-  CheckCircle as CheckIcon,
-  Close as CloseIcon,
-  InsertDriveFile as FileIcon,
+  Edit, Delete, Search, Visibility, Add,
+  Refresh, PictureAsPdf, VideoLibrary,
+  Image as ImageIcon, Description, CloudUpload, AudioFile,
 } from '@mui/icons-material';
-import { resourcesAPI } from '../../api/resources';
-import { COURSE_CATEGORIES, RESOURCE_TYPES } from '../../utils/constants';
+import { apiClient } from '../../utils/axiosConfig';
+
+interface Resource {
+  id: number;
+  title: string;
+  description: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  resourceType: string;
+  category: string;
+  audience: string;
+  status: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  updatedAt?: string;
+  viewCount: number;
+  downloadCount: number;
+}
 
 const UploadResource: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openUploadDialog, setOpenUploadDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Dynamic options from backend
+  const [categories, setCategories] = useState<string[]>([]);
+  const [resourceTypes, setResourceTypes] = useState<string[]>([]);
+  const [audiences, setAudiences] = useState<string[]>([]);
+
+  // Form state for upload
+  const [uploadFormData, setUploadFormData] = useState({
     title: '',
     description: '',
-    resourceType: 'PDF',
-    category: 'VAT',
-    audience: 'ALL',
+    resourceType: '',
+    category: '',
+    audience: '',
     file: null as File | null,
-    customCategory: '',
-    customAudience: '',
   });
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const [dragActive, setDragActive] = useState(false);
-  const [showCustomCategory, setShowCustomCategory] = useState(false);
-  const [showCustomAudience, setShowCustomAudience] = useState(false);
-  
-  // Dynamic categories and audiences - fetched from backend
-  const [categories, setCategories] = useState<string[]>([]);
-  const [audiences, setAudiences] = useState<string[]>([]);
-  const [loadingOptions, setLoadingOptions] = useState(true);
 
+  // Form state for edit
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    resourceType: '',
+    category: '',
+    audience: '',
+    file: null as File | null,
+  });
+
+  // Load dynamic options and resources on component mount
   useEffect(() => {
     loadDynamicOptions();
+    loadResources();
   }, []);
+
+  // Filter resources when search/filter changes
+  useEffect(() => {
+    filterResources();
+  }, [searchQuery, filterCategory, filterType, resources]);
 
   const loadDynamicOptions = async () => {
     try {
-      setLoadingOptions(true);
-      const token = localStorage.getItem('itas_token');
-      
-      // Fetch categories from backend
-      const categoriesResponse = await fetch('http://localhost:8080/resources/categories', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      // Fetch audiences from backend
-      const audiencesResponse = await fetch('http://localhost:8080/resources/audiences', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (categoriesResponse.ok) {
-        const categoriesData = await categoriesResponse.json();
-        const fetchedCategories = categoriesData.data || categoriesData || [];
-        
-        // Add default categories if none exist, plus OTHER option
-        const defaultCategories = ['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC', 'CUSTOMS', 'EXCISE', 'TAX_COMPLIANCE'];
-        const allCategories = [...new Set([...defaultCategories, ...fetchedCategories, 'OTHER'])];
-        setCategories(allCategories);
-      } else {
-        // Fallback to default categories
-        setCategories(['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC', 'CUSTOMS', 'EXCISE', 'TAX_COMPLIANCE', 'OTHER']);
-      }
-      
-      if (audiencesResponse.ok) {
-        const audiencesData = await audiencesResponse.json();
-        const fetchedAudiences = audiencesData.data || audiencesData || [];
-        
-        // Add default audiences if none exist, plus OTHER option
-        const defaultAudiences = ['ALL', 'TAXPAYER', 'STAFF', 'SME', 'INDIVIDUAL', 'CORPORATE', 'GOVERNMENT'];
-        const allAudiences = [...new Set([...defaultAudiences, ...fetchedAudiences, 'OTHER'])];
-        setAudiences(allAudiences);
-      } else {
-        // Fallback to default audiences
-        setAudiences(['ALL', 'TAXPAYER', 'STAFF', 'SME', 'INDIVIDUAL', 'CORPORATE', 'GOVERNMENT', 'OTHER']);
-      }
-    } catch (error) {
-      console.error('Failed to load dynamic options:', error);
-      // Fallback to default values
-      setCategories(['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC', 'CUSTOMS', 'EXCISE', 'TAX_COMPLIANCE', 'OTHER']);
-      setAudiences(['ALL', 'TAXPAYER', 'STAFF', 'SME', 'INDIVIDUAL', 'CORPORATE', 'GOVERNMENT', 'OTHER']);
-    } finally {
-      setLoadingOptions(false);
-    }
-  };
+      const [categoriesRes, typesRes, audiencesRes] = await Promise.all([
+        apiClient.get('/resources/categories'),
+        apiClient.get('/resources/types'),
+        apiClient.get('/resources/audiences'),
+      ]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+      const fetchedCategories = categoriesRes.data.data || [];
+      const fetchedTypes = typesRes.data.data || [];
+      const fetchedAudiences = audiencesRes.data.data || [];
 
-  const handleSelectChange = (e: SelectChangeEvent) => {
-    const { name, value } = e.target;
-    
-    // Show custom input if "OTHER" is selected
-    if (name === 'category' && value === 'OTHER') {
-      setShowCustomCategory(true);
-    } else if (name === 'category') {
-      setShowCustomCategory(false);
-    }
-    
-    if (name === 'audience' && value === 'OTHER') {
-      setShowCustomAudience(true);
-    } else if (name === 'audience') {
-      setShowCustomAudience(false);
-    }
-    
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+      // Set with defaults if empty
+      const finalCategories = fetchedCategories.length > 0 ? fetchedCategories : ['INCOME_TAX', 'VAT', 'CORPORATE_TAX', 'CUSTOMS', 'EXCISE', 'GENERAL'];
+      const finalTypes = fetchedTypes.length > 0 ? fetchedTypes : ['PDF', 'VIDEO', 'IMAGE', 'DOCUMENT', 'AUDIO'];
+      const finalAudiences = fetchedAudiences.length > 0 ? fetchedAudiences : ['TAXPAYER', 'TAX_AGENT', 'MOR_STAFF', 'ALL'];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, file: e.target.files![0] }));
-    }
-  };
+      setCategories(finalCategories);
+      setResourceTypes(finalTypes);
+      setAudiences(finalAudiences);
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFormData(prev => ({ ...prev, file: e.dataTransfer.files[0] }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUploading(true);
-    setError('');
-    setSuccess(false);
-    setUploadProgress(0);
-
-    try {
-      if (!formData.title.trim()) {
-        throw new Error('Title is required');
-      }
-      if (!formData.file) {
-        throw new Error('Please select a file to upload');
-      }
-
-      // Use custom category/audience if "OTHER" was selected
-      const finalCategory = formData.category === 'OTHER' && formData.customCategory 
-        ? formData.customCategory.toUpperCase().replace(/\s+/g, '_')
-        : formData.category;
-        
-      const finalAudience = formData.audience === 'OTHER' && formData.customAudience
-        ? formData.customAudience.toUpperCase().replace(/\s+/g, '_')
-        : formData.audience;
-
-      const resourceData = {
-        title: formData.title,
-        description: formData.description,
-        resourceType: formData.resourceType,
-        category: finalCategory,
-        audience: finalAudience,
-      };
-
-      await resourcesAPI.uploadResource(formData.file, resourceData, (progress) => {
-        setUploadProgress(progress);
-      });
-      
-      setSuccess(true);
-      setFormData({
+      // Set default values for upload form
+      setUploadFormData({
         title: '',
         description: '',
-        resourceType: 'PDF',
-        category: 'VAT',
-        audience: 'ALL',
+        resourceType: finalTypes[0],
+        category: finalCategories[0],
+        audience: finalAudiences[0],
         file: null,
-        customCategory: '',
-        customAudience: '',
       });
-      setUploadProgress(0);
-      setShowCustomCategory(false);
-      setShowCustomAudience(false);
-      
-      // Reload dynamic options to include newly added categories/audiences
-      await loadDynamicOptions();
+    } catch (error) {
+      console.error('Error loading dynamic options:', error);
+      // Set defaults on error
+      const defaultCategories = ['INCOME_TAX', 'VAT', 'CORPORATE_TAX', 'CUSTOMS', 'EXCISE', 'GENERAL'];
+      const defaultTypes = ['PDF', 'VIDEO', 'IMAGE', 'DOCUMENT', 'AUDIO'];
+      const defaultAudiences = ['TAXPAYER', 'TAX_AGENT', 'MOR_STAFF', 'ALL'];
 
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Upload failed. Please try again.');
+      setCategories(defaultCategories);
+      setResourceTypes(defaultTypes);
+      setAudiences(defaultAudiences);
+
+      setUploadFormData({
+        title: '',
+        description: '',
+        resourceType: defaultTypes[0],
+        category: defaultCategories[0],
+        audience: defaultAudiences[0],
+        file: null,
+      });
+    }
+  };
+
+  const loadResources = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/resources');
+      const resourcesData = response.data.data || [];
+      console.log('Loaded resources:', resourcesData);
+      setResources(resourcesData);
+    } catch (error) {
+      console.error('Error loading resources:', error);
+      showAlert('error', 'Failed to load resources');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterResources = () => {
+    let filtered = [...resources];
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (r) =>
+          r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (filterCategory) {
+      filtered = filtered.filter((r) => r.category === filterCategory);
+    }
+
+    if (filterType) {
+      filtered = filtered.filter((r) => r.resourceType === filterType);
+    }
+
+    setFilteredResources(filtered);
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFormData.file || !uploadFormData.title) {
+      showAlert('error', 'Please fill in title and select a file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const formDataToSend = new FormData();
+      formDataToSend.append('file', uploadFormData.file);
+      formDataToSend.append('title', uploadFormData.title);
+      formDataToSend.append('description', uploadFormData.description);
+      formDataToSend.append('resourceType', uploadFormData.resourceType);
+      formDataToSend.append('category', uploadFormData.category);
+      formDataToSend.append('audience', uploadFormData.audience);
+
+      await apiClient.post('/resources/upload', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      showAlert('success', 'Resource uploaded successfully');
+      setOpenUploadDialog(false);
+      resetUploadForm();
+      loadResources();
+    } catch (error: any) {
+      console.error('Error uploading resource:', error);
+      showAlert('error', error.response?.data?.message || 'Failed to upload resource');
     } finally {
       setUploading(false);
     }
   };
 
-  const getResourceTypeIcon = () => {
-    switch (formData.resourceType) {
-      case 'PDF': return <DocumentIcon sx={{ fontSize: 48, color: '#EF4444' }} />;
-      case 'VIDEO': return <VideoIcon sx={{ fontSize: 48, color: '#667eea' }} />;
-      case 'ARTICLE': return <ArticleIcon sx={{ fontSize: 48, color: '#10B981' }} />;
-      default: return <DocumentIcon sx={{ fontSize: 48 }} />;
+  const handleEdit = async () => {
+    if (!selectedResource || !editFormData.title) {
+      showAlert('error', 'Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const formDataToSend = new FormData();
+      if (editFormData.file) {
+        formDataToSend.append('file', editFormData.file);
+      }
+      formDataToSend.append('title', editFormData.title);
+      formDataToSend.append('description', editFormData.description);
+      formDataToSend.append('resourceType', editFormData.resourceType);
+      formDataToSend.append('category', editFormData.category);
+      formDataToSend.append('audience', editFormData.audience);
+
+      await apiClient.put(`/resources/${selectedResource.id}`, formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      showAlert('success', 'Resource updated successfully');
+      setOpenEditDialog(false);
+      resetEditForm();
+      loadResources();
+    } catch (error: any) {
+      console.error('Error updating resource:', error);
+      showAlert('error', error.response?.data?.message || 'Failed to update resource');
     }
   };
 
-  const getResourceTypeColor = () => {
-    switch (formData.resourceType) {
-      case 'PDF': return '#EF4444';
-      case 'VIDEO': return '#667eea';
-      case 'ARTICLE': return '#10B981';
-      default: return '#667eea';
+  const handleDelete = async () => {
+    if (!selectedResource) return;
+
+    try {
+      await apiClient.delete(`/resources/${selectedResource.id}`);
+      showAlert('success', 'Resource deleted successfully');
+      setOpenDeleteDialog(false);
+      setSelectedResource(null);
+      loadResources();
+    } catch (error: any) {
+      console.error('Error deleting resource:', error);
+      showAlert('error', error.response?.data?.message || 'Failed to delete resource');
     }
+  };
+
+  const openEditDialogHandler = (resource: Resource) => {
+    setSelectedResource(resource);
+    setEditFormData({
+      title: resource.title,
+      description: resource.description,
+      resourceType: resource.resourceType,
+      category: resource.category,
+      audience: resource.audience,
+      file: null,
+    });
+    setOpenEditDialog(true);
+  };
+
+  const openDeleteDialogHandler = (resource: Resource) => {
+    setSelectedResource(resource);
+    setOpenDeleteDialog(true);
+  };
+
+  const resetUploadForm = () => {
+    setUploadFormData({
+      title: '',
+      description: '',
+      resourceType: resourceTypes[0] || 'PDF',
+      category: categories[0] || 'INCOME_TAX',
+      audience: audiences[0] || 'TAXPAYER',
+      file: null,
+    });
+  };
+
+  const resetEditForm = () => {
+    setEditFormData({
+      title: '',
+      description: '',
+      resourceType: '',
+      category: '',
+      audience: '',
+      file: null,
+    });
+    setSelectedResource(null);
+  };
+
+  const showAlert = (type: 'success' | 'error', message: string) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 5000);
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  };
+
+  const getResourceIcon = (type: string) => {
+    switch (type?.toUpperCase()) {
+      case 'PDF':
+        return <PictureAsPdf color="error" />;
+      case 'VIDEO':
+        return <VideoLibrary color="primary" />;
+      case 'IMAGE':
+        return <ImageIcon color="success" />;
+      case 'AUDIO':
+        return <AudioFile color="secondary" />;
+      default:
+        return <Description />;
+    }
   };
 
   return (
-    <Container maxWidth="lg" sx={{ animation: 'fadeIn 0.6s ease-out' }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
-      <Box sx={{ mb: 5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 4,
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-              mr: 3,
-              animation: 'pulse 2s ease-in-out infinite',
-            }}
-          >
-            <UploadIcon sx={{ fontSize: 40, color: '#667eea' }} />
-          </Box>
-          <Box>
-            <Typography 
-              variant="h3" 
-              sx={{ 
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 1,
-              }}
-            >
-              Upload New Resource
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Add educational materials to the resource library
-            </Typography>
-          </Box>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold">
+            Resource Management
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            View, edit, and manage learning resources
+          </Typography>
         </Box>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          size="large"
+          onClick={() => setOpenUploadDialog(true)}
+        >
+          Upload Resource
+        </Button>
       </Box>
 
-      {/* Success Alert */}
-      <Zoom in={success}>
-        <Alert 
-          severity="success" 
-          sx={{ 
-            mb: 3,
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
-          }}
-          icon={<CheckIcon />}
-          action={
-            <IconButton size="small" onClick={() => setSuccess(false)}>
-              <CloseIcon />
-            </IconButton>
-          }
-        >
-          Resource uploaded successfully! It will appear in the library shortly.
+      {/* Alert */}
+      {alert && (
+        <Alert severity={alert.type} sx={{ mb: 3 }} onClose={() => setAlert(null)}>
+          {alert.message}
         </Alert>
-      </Zoom>
-
-      {/* Error Alert */}
-      {error && (
-        <Fade in={!!error}>
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3,
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-            }}
-            onClose={() => setError('')}
-          >
-            {error}
-          </Alert>
-        </Fade>
       )}
 
-      <Grid container spacing={3}>
-        {/* Left Column - Form */}
-        <Grid item xs={12} md={8}>
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: 4,
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(102, 126, 234, 0.1)',
-              borderRadius: '16px',
-              animation: 'scaleIn 0.4s ease-out',
-            }}
-          >
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Resource Title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                    disabled={uploading}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
-                        },
-                        '&.Mui-focused': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    multiline
-                    rows={4}
-                    disabled={uploading}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '12px',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
-                        },
-                        '&.Mui-focused': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Resource Type</InputLabel>
-                    <Select
-                      name="resourceType"
-                      value={formData.resourceType}
-                      label="Resource Type"
-                      onChange={handleSelectChange}
-                      disabled={uploading}
-                      sx={{
-                        borderRadius: '12px',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
-                        },
-                      }}
-                    >
-                      {RESOURCE_TYPES.map(type => (
-                        <MenuItem key={type} value={type}>{type}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                      name="category"
-                      value={formData.category}
-                      label="Category"
-                      onChange={handleSelectChange}
-                      disabled={uploading}
-                      sx={{
-                        borderRadius: '12px',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
-                        },
-                      }}
-                    >
-                      {categories.map(cat => (
-                        <MenuItem key={cat} value={cat}>
-                          {cat.replace(/_/g, ' ')}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Custom Category Input */}
-                {showCustomCategory && (
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Enter Custom Category"
-                      name="customCategory"
-                      value={formData.customCategory}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Property Tax, Sales Tax"
-                      disabled={uploading}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '12px',
-                          background: 'rgba(102, 126, 234, 0.05)',
-                        },
-                      }}
-                      helperText="This will be added to the category list"
-                    />
-                  </Grid>
-                )}
-
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Target Audience</InputLabel>
-                    <Select
-                      name="audience"
-                      value={formData.audience}
-                      label="Target Audience"
-                      onChange={handleSelectChange}
-                      disabled={uploading}
-                      sx={{
-                        borderRadius: '12px',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
-                        },
-                      }}
-                    >
-                      {audiences.map(aud => (
-                        <MenuItem key={aud} value={aud}>
-                          {aud.replace(/_/g, ' ')}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Custom Audience Input */}
-                {showCustomAudience && (
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Enter Custom Audience"
-                      name="customAudience"
-                      value={formData.customAudience}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Tax Consultants, Accountants"
-                      disabled={uploading}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '12px',
-                          background: 'rgba(102, 126, 234, 0.05)',
-                        },
-                      }}
-                      helperText="This will be added to the audience list"
-                    />
-                  </Grid>
-                )}
-
-                {/* Drag and Drop File Upload */}
-                <Grid item xs={12}>
-                  <Box
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                    sx={{
-                      border: `2px dashed ${dragActive ? getResourceTypeColor() : 'rgba(102, 126, 234, 0.3)'}`,
-                      borderRadius: '16px',
-                      p: 4,
-                      textAlign: 'center',
-                      background: dragActive 
-                        ? `linear-gradient(135deg, ${getResourceTypeColor()}10 0%, ${getResourceTypeColor()}05 100%)`
-                        : 'rgba(102, 126, 234, 0.02)',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      '&:hover': {
-                        borderColor: getResourceTypeColor(),
-                        background: `linear-gradient(135deg, ${getResourceTypeColor()}10 0%, ${getResourceTypeColor()}05 100%)`,
-                        transform: 'scale(1.01)',
-                      },
-                    }}
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                  >
-                    {formData.file ? (
-                      <Box sx={{ animation: 'scaleIn 0.3s ease-out' }}>
-                        <FileIcon sx={{ fontSize: 60, color: getResourceTypeColor(), mb: 2 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                          {formData.file.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatFileSize(formData.file.size)}
-                        </Typography>
-                        <Button
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFormData(prev => ({ ...prev, file: null }));
-                          }}
-                          sx={{ mt: 2 }}
-                        >
-                          Remove File
-                        </Button>
-                      </Box>
-                    ) : (
-                      <Box>
-                        {getResourceTypeIcon()}
-                        <Typography variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
-                          {dragActive ? 'Drop file here' : 'Drag & drop file here'}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          or click to browse
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Supported: {formData.resourceType === 'PDF' ? 'PDF files' : 
-                                     formData.resourceType === 'VIDEO' ? 'MP4, MOV, AVI' : 
-                                     'TXT, DOC, DOCX'}
-                        </Typography>
-                      </Box>
-                    )}
-                    <input
-                      id="file-upload"
-                      type="file"
-                      hidden
-                      onChange={handleFileChange}
-                      accept={formData.resourceType === 'PDF' ? '.pdf' : 
-                              formData.resourceType === 'VIDEO' ? 'video/*' : 
-                              '*/*'}
-                    />
-                  </Box>
-                </Grid>
-
-                {/* Upload Progress */}
-                {uploading && (
-                  <Grid item xs={12}>
-                    <Fade in={uploading}>
-                      <Box sx={{ animation: 'slideUp 0.3s ease-out' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            Uploading...
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#667eea' }}>
-                            {uploadProgress}%
-                          </Typography>
-                        </Box>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={uploadProgress}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            background: 'rgba(102, 126, 234, 0.1)',
-                            '& .MuiLinearProgress-bar': {
-                              background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                              borderRadius: 4,
-                            },
-                          }}
-                        />
-                      </Box>
-                    </Fade>
-                  </Grid>
-                )}
-
-                <Grid item xs={12}>
-                  <Button
-                    fullWidth
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    disabled={uploading || !formData.file}
-                    startIcon={<UploadIcon />}
-                    sx={{
-                      py: 2,
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      fontWeight: 600,
-                      fontSize: '1.1rem',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
-                      },
-                      '&:disabled': {
-                        background: 'rgba(0, 0, 0, 0.12)',
-                      },
-                    }}
-                  >
-                    {uploading ? 'Uploading...' : 'Upload Resource'}
-                  </Button>
-                </Grid>
-              </Grid>
-            </form>
-          </Paper>
-        </Grid>
-
-        {/* Right Column - Guidelines */}
-        <Grid item xs={12} md={4}>
-          <Card 
-            elevation={0}
-            sx={{ 
-              mb: 3,
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.05) 100%)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(239, 68, 68, 0.1)',
-              borderTop: `3px solid ${getResourceTypeColor()}`,
-              borderRadius: '16px',
-              animation: 'scaleIn 0.4s ease-out 0.1s both',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-8px)',
-                boxShadow: `0 12px 40px ${getResourceTypeColor()}30`,
-              },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                {getResourceTypeIcon()}
-                <Typography variant="h6" sx={{ ml: 2, fontWeight: 700 }}>
-                  {formData.resourceType} Guidelines
-                </Typography>
-              </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Max File Size
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {formData.resourceType === 'VIDEO' ? '100MB' : 
-                   formData.resourceType === 'PDF' ? '50MB' : '10MB'}
-                </Typography>
-              </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Allowed Extensions
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {formData.resourceType === 'PDF' ? '.pdf' : 
-                   formData.resourceType === 'VIDEO' ? '.mp4, .mov, .avi' : 
-                   '.txt, .doc, .docx'}
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                  Quality Requirements
-                </Typography>
-                <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'text.secondary' }}>
-                  <li><Typography variant="body2">Clear, readable content</Typography></li>
-                  <li><Typography variant="body2">Proper formatting</Typography></li>
-                  <li><Typography variant="body2">No copyrighted material</Typography></li>
-                  <li><Typography variant="body2">Relevant to tax education</Typography></li>
-                </Box>
-              </Box>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Total Resources
+              </Typography>
+              <Typography variant="h4">{resources.length}</Typography>
             </CardContent>
           </Card>
-
-          <Card 
-            elevation={0}
-            sx={{ 
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(16, 185, 129, 0.1)',
-              borderTop: '3px solid #10B981',
-              borderRadius: '16px',
-              animation: 'scaleIn 0.4s ease-out 0.2s both',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-8px)',
-                boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
-              },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, mb: 2 }}>
-                Upload Tips
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                PDFs
               </Typography>
-              <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'text.secondary' }}>
-                <li><Typography variant="body2" sx={{ mb: 1 }}>Use descriptive titles</Typography></li>
-                <li><Typography variant="body2" sx={{ mb: 1 }}>Provide detailed descriptions</Typography></li>
-                <li><Typography variant="body2" sx={{ mb: 1 }}>Choose appropriate categories</Typography></li>
-                <li><Typography variant="body2" sx={{ mb: 1 }}>Verify file quality before upload</Typography></li>
-                <li><Typography variant="body2">Ensure content is up-to-date</Typography></li>
-              </Box>
+              <Typography variant="h4">
+                {resources.filter((r) => r.resourceType === 'PDF').length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Videos
+              </Typography>
+              <Typography variant="h4">
+                {resources.filter((r) => r.resourceType === 'VIDEO').length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Total Views
+              </Typography>
+              <Typography variant="h4">
+                {resources.reduce((sum, r) => sum + (r.viewCount || 0), 0)}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
+      {/* Filters */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              placeholder="Search resources..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={filterCategory}
+                label="Category"
+                onChange={(e) => setFilterCategory(e.target.value)}
+              >
+                <MenuItem value="">All Categories</MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat.replace(/_/g, ' ')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Type</InputLabel>
+              <Select
+                value={filterType}
+                label="Type"
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <MenuItem value="">All Types</MenuItem>
+                {resourceTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={loadResources}
+            >
+              Refresh
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Resources Table */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Type</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Audience</TableCell>
+              <TableCell>File Size</TableCell>
+              <TableCell>Views</TableCell>
+              <TableCell>Downloads</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
+            ) : filteredResources.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  <Typography color="textSecondary">No resources found</Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredResources.map((resource) => (
+                <TableRow key={resource.id} hover>
+                  <TableCell>{getResourceIcon(resource.resourceType)}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      {resource.title}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      {resource.fileName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={resource.category.replace(/_/g, ' ')} size="small" />
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={resource.audience.replace(/_/g, ' ')} size="small" color="primary" />
+                  </TableCell>
+                  <TableCell>{formatFileSize(resource.fileSize)}</TableCell>
+                  <TableCell>{resource.viewCount || 0}</TableCell>
+                  <TableCell>{resource.downloadCount || 0}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="View">
+                        <IconButton
+                          size="small"
+                          color="info"
+                          onClick={() => window.open(`/api/resources/${resource.id}/stream`, '_blank')}
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => openEditDialogHandler(resource)}
+                        >
+                          <Edit />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => openDeleteDialogHandler(resource)}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Upload Dialog */}
+      <Dialog open={openUploadDialog} onClose={() => setOpenUploadDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Upload New Resource</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <TextField
+              label="Title"
+              fullWidth
+              required
+              value={uploadFormData.title}
+              onChange={(e) => setUploadFormData({ ...uploadFormData, title: e.target.value })}
+            />
+            <TextField
+              label="Description"
+              fullWidth
+              multiline
+              rows={3}
+              value={uploadFormData.description}
+              onChange={(e) => setUploadFormData({ ...uploadFormData, description: e.target.value })}
+            />
+            <FormControl fullWidth required>
+              <InputLabel>Resource Type</InputLabel>
+              <Select
+                value={uploadFormData.resourceType}
+                label="Resource Type"
+                onChange={(e) => setUploadFormData({ ...uploadFormData, resourceType: e.target.value })}
+              >
+                {resourceTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={uploadFormData.category}
+                label="Category"
+                onChange={(e) => setUploadFormData({ ...uploadFormData, category: e.target.value })}
+              >
+                {categories.map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat.replace(/_/g, ' ')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>Target Audience</InputLabel>
+              <Select
+                value={uploadFormData.audience}
+                label="Target Audience"
+                onChange={(e) => setUploadFormData({ ...uploadFormData, audience: e.target.value })}
+              >
+                {audiences.map((aud) => (
+                  <MenuItem key={aud} value={aud}>
+                    {aud.replace(/_/g, ' ')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button variant="outlined" component="label" startIcon={<CloudUpload />}>
+              {uploadFormData.file ? uploadFormData.file.name : 'Choose File'}
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setUploadFormData({ ...uploadFormData, file: e.target.files?.[0] || null })}
+              />
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenUploadDialog(false)}>Cancel</Button>
+          <Button 
+            onClick={handleUpload} 
+            variant="contained"
+            disabled={!uploadFormData.file || !uploadFormData.title || uploading}
+            startIcon={uploading ? <CircularProgress size={20} /> : <CloudUpload />}
+          >
+            {uploading ? 'Uploading...' : 'Upload'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Resource</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <TextField
+              label="Title"
+              fullWidth
+              required
+              value={editFormData.title}
+              onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+            />
+            <TextField
+              label="Description"
+              fullWidth
+              multiline
+              rows={3}
+              value={editFormData.description}
+              onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+            />
+            <FormControl fullWidth required>
+              <InputLabel>Resource Type</InputLabel>
+              <Select
+                value={editFormData.resourceType}
+                label="Resource Type"
+                onChange={(e) => setEditFormData({ ...editFormData, resourceType: e.target.value })}
+              >
+                {resourceTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={editFormData.category}
+                label="Category"
+                onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+              >
+                {categories.map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat.replace(/_/g, ' ')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth required>
+              <InputLabel>Target Audience</InputLabel>
+              <Select
+                value={editFormData.audience}
+                label="Target Audience"
+                onChange={(e) => setEditFormData({ ...editFormData, audience: e.target.value })}
+              >
+                {audiences.map((aud) => (
+                  <MenuItem key={aud} value={aud}>
+                    {aud.replace(/_/g, ' ')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button variant="outlined" component="label" startIcon={<CloudUpload />}>
+              {editFormData.file ? editFormData.file.name : 'Replace File (Optional)'}
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setEditFormData({ ...editFormData, file: e.target.files?.[0] || null })}
+              />
+            </Button>
+            <Typography variant="caption" color="textSecondary">
+              Leave file empty to keep the existing file
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEditDialog(false)}>Cancel</Button>
+          <Button onClick={handleEdit} variant="contained">
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete "{selectedResource?.title}"? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

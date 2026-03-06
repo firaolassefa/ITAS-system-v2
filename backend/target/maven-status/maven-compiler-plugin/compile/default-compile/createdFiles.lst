@@ -6,6 +6,7 @@ com\itas\model\QuestionType.class
 com\itas\config\SecurityConfig.class
 com\itas\service\ResourceService.class
 com\itas\service\CourseService.class
+com\itas\config\OpenApiConfig.class
 com\itas\controller\HelpController.class
 com\itas\model\Enrollment.class
 com\itas\repository\NotificationRepository.class

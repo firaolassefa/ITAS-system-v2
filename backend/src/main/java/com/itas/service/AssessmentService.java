@@ -220,6 +220,21 @@ public class AssessmentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        
+        // Check if user has completed all modules
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        for (com.itas.model.Module module : modules) {
+            ModuleProgress progress = moduleProgressRepository
+                    .findByUserIdAndModuleId(userId, module.getId())
+                    .orElse(null);
+            
+            if (progress == null || !Boolean.TRUE.equals(progress.getCompleted())) {
+                throw new RuntimeException("You must complete all modules before taking the final exam. Module '" + module.getTitle() + "' is not completed.");
+            }
+        }
+        
         // Get all quiz questions from the course
         List<Question> questions = getFinalExamQuestions(courseId);
         
@@ -247,13 +262,14 @@ public class AssessmentService {
         
         // Calculate percentage
         double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0;
-        boolean passed = percentage >= 80; // 80% required for final exam
+        boolean passed = percentage >= 70; // 70% required for final exam
         
         Map<String, Object> result = new HashMap<>();
         result.put("totalPoints", totalPoints);
         result.put("earnedPoints", earnedPoints);
         result.put("percentage", Math.round(percentage * 100.0) / 100.0);
         result.put("passed", passed);
+        result.put("courseName", course.getTitle());
         
         if (passed) {
             // Generate certificate
@@ -261,12 +277,54 @@ public class AssessmentService {
                 com.itas.model.Certificate certificate = generateCertificate(userId, courseId);
                 result.put("certificateId", certificate.getId());
                 result.put("certificateNumber", certificate.getCertificateNumber());
-                result.put("feedback", "Congratulations! You passed the final exam and earned your certificate!");
+                result.put("certificateUrl", "/api/certificates/" + certificate.getId() + "/download");
+                result.put("feedback", "🎉 Congratulations! You passed the final exam with " + Math.round(percentage) + "% and earned your certificate!");
             } catch (Exception e) {
-                result.put("feedback", "Congratulations! You passed the final exam!");
+                // Certificate might already exist
+                result.put("feedback", "Congratulations! You passed the final exam with " + Math.round(percentage) + "%!");
             }
         } else {
-            result.put("feedback", "You need at least 80% to pass the final exam. Please review the course materials and try again.");
+            result.put("feedback", "You scored " + Math.round(percentage) + "%. You need at least 70% to pass the final exam and earn your certificate. Please review the course materials and try again.");
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Check if user can take final exam (all modules completed)
+     */
+    public Map<String, Object> checkFinalExamEligibility(Long userId, Long courseId) {
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        
+        int totalModules = modules.size();
+        int completedModules = 0;
+        List<String> incompleteModules = new java.util.ArrayList<>();
+        
+        for (com.itas.model.Module module : modules) {
+            ModuleProgress progress = moduleProgressRepository
+                    .findByUserIdAndModuleId(userId, module.getId())
+                    .orElse(null);
+            
+            if (progress != null && Boolean.TRUE.equals(progress.getCompleted())) {
+                completedModules++;
+            } else {
+                incompleteModules.add(module.getTitle());
+            }
+        }
+        
+        boolean eligible = completedModules == totalModules;
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("eligible", eligible);
+        result.put("totalModules", totalModules);
+        result.put("completedModules", completedModules);
+        result.put("incompleteModules", incompleteModules);
+        result.put("progress", totalModules > 0 ? (completedModules * 100.0 / totalModules) : 0);
+        
+        if (eligible) {
+            result.put("message", "You have completed all modules! You are now eligible to take the final exam.");
+        } else {
+            result.put("message", "Complete all " + totalModules + " modules to unlock the final exam. You have completed " + completedModules + " module(s).");
         }
         
         return result;

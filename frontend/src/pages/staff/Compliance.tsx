@@ -8,6 +8,7 @@ import {
   Security, CheckCircle, Warning, Error as ErrorIcon,
   Schedule, Assignment, TrendingUp, Download,
 } from '@mui/icons-material';
+import { apiClient } from '../../utils/axiosConfig';
 
 interface ComplianceItem {
   id: number;
@@ -31,64 +32,57 @@ const Compliance: React.FC = () => {
   const loadComplianceData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('itas_token');
       const userId = JSON.parse(localStorage.getItem('itas_user') || '{}').id || 2;
       
       // Fetch user enrollments to calculate compliance
-      const enrollmentsResponse = await fetch(`http://localhost:8080/courses/enrollments/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const enrollmentsResponse = await apiClient.get(`/courses/enrollments/${userId}`);
       
       // Fetch certificates
-      const certificatesResponse = await fetch(`http://localhost:8080/certificates/user/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      let certificatesData: any = { data: [] };
+      try {
+        const certificatesResponse = await apiClient.get(`/certificates/user/${userId}`);
+        certificatesData = certificatesResponse.data;
+      } catch (error) {
+        console.log('No certificates found');
+      }
+      
+      const enrollmentsData = enrollmentsResponse.data;
+      const enrollments = enrollmentsData.data || enrollmentsData || [];
+      const certificates = certificatesData.data || certificatesData || [];
+      
+      // Generate compliance items based on enrollments
+      const items: ComplianceItem[] = enrollments.map((enrollment: any, index: number) => {
+        const progress = enrollment.progress || 0;
+        let status: 'compliant' | 'warning' | 'overdue' | 'pending' = 'pending';
+        let description = 'Not started';
+        
+        if (progress >= 100) {
+          status = 'compliant';
+          description = 'Course completed successfully';
+        } else if (progress >= 50) {
+          status = 'warning';
+          description = `${progress}% complete - Please finish soon`;
+        } else if (progress > 0) {
+          status = 'warning';
+          description = `${progress}% complete - Continue learning`;
+        } else {
+          status = 'overdue';
+          description = 'Not started - Begin immediately';
+        }
+        
+        return {
+          id: enrollment.id,
+          title: enrollment.course?.title || 'Course Training',
+          category: enrollment.course?.category || 'General',
+          status: status,
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          completedDate: progress >= 100 ? enrollment.updatedAt : undefined,
+          description: description,
+          mandatory: index < 3, // First 3 are mandatory
+        };
       });
       
-      if (enrollmentsResponse.ok) {
-        const enrollmentsData = await enrollmentsResponse.json();
-        const enrollments = enrollmentsData.data || enrollmentsData || [];
-        
-        const certificatesData = certificatesResponse.ok ? await certificatesResponse.json() : { data: [] };
-        const certificates = certificatesData.data || certificatesData || [];
-        
-        // Generate compliance items based on enrollments
-        const items: ComplianceItem[] = enrollments.map((enrollment: any, index: number) => {
-          const progress = enrollment.progress || 0;
-          let status: 'compliant' | 'warning' | 'overdue' | 'pending' = 'pending';
-          let description = 'Not started';
-          
-          if (progress >= 100) {
-            status = 'compliant';
-            description = 'Course completed successfully';
-          } else if (progress >= 50) {
-            status = 'warning';
-            description = `${progress}% complete - Please finish soon`;
-          } else if (progress > 0) {
-            status = 'warning';
-            description = `${progress}% complete - Continue learning`;
-          } else {
-            status = 'overdue';
-            description = 'Not started - Begin immediately';
-          }
-          
-          return {
-            id: enrollment.id,
-            title: enrollment.course?.title || 'Course Training',
-            category: enrollment.course?.category || 'General',
-            status: status,
-            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            completedDate: progress >= 100 ? enrollment.updatedAt : undefined,
-            description: description,
-            mandatory: index < 3, // First 3 are mandatory
-          };
-        });
-        
-        setComplianceItems(items);
-      }
+      setComplianceItems(items);
     } catch (error) {
       console.error('Failed to load compliance data:', error);
     } finally {

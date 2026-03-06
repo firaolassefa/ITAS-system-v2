@@ -1,57 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  IconButton,
-  alpha,
-  useTheme,
-  LinearProgress,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  CircularProgress,
-  Container,
+  Container, Grid, Typography, Box, Card, CardContent,
+  Avatar, Paper, Chip, alpha, List, ListItem, ListItemText, ListItemAvatar,
 } from '@mui/material';
 import {
-  School,
-  VideoCall,
-  Assessment,
-  People,
-  MoreVert,
-  Event,
-  PlayCircle,
-  CheckCircle,
-  Schedule,
+  School, VideoCall, Assessment, People,
+  Event, PlayCircle, CheckCircle, TrendingUp,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { dashboardAPI } from '../../api/dashboard';
+import { apiClient } from '../../utils/axiosConfig';
 
 const TrainingAdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState<any>({});
+  const [data, setData] = useState<any>({});
+  const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
   useEffect(() => {
-    setMounted(true);
     loadDashboard();
   }, []);
 
   const loadDashboard = async () => {
     try {
-      const response = await dashboardAPI.getTrainingAdminDashboard();
-      setDashboardData(response.data || response);
+      const cacheKey = `dashboard_TRAINING_ADMIN_${user.id}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const cachedData = JSON.parse(cached);
+        if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
+          setData(cachedData.data);
+          setLoading(false);
+        }
+      }
+
+      const response = await apiClient.get('/dashboard/training-admin');
+      const freshData = response.data.data || response.data;
+      
+      setData(freshData);
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data: freshData,
+        timestamp: Date.now(),
+      }));
     } catch (error) {
-      console.error('Failed to load dashboard:', error);
+      console.error('Dashboard load error:', error);
     } finally {
       setLoading(false);
     }
@@ -59,84 +48,38 @@ const TrainingAdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress size={60} />
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" color="text.secondary">Loading...</Typography>
+        </Box>
       </Container>
     );
   }
 
   const stats = [
-    { 
-      title: 'Total Courses', 
-      value: (dashboardData.totalCourses || 0).toString(), 
-      icon: <School />, 
-      color: theme.palette.primary.main,
-    },
-    { 
-      title: 'Active Webinars', 
-      value: (dashboardData.upcomingWebinars || 0).toString(), 
-      icon: <VideoCall />, 
-      color: theme.palette.success.main,
-    },
-    { 
-      title: 'Total Enrollments', 
-      value: (dashboardData.totalEnrollments || 0).toString(), 
-      icon: <People />, 
-      color: theme.palette.info.main,
-    },
-    { 
-      title: 'Attendance Rate', 
-      value: `${dashboardData.attendanceRate || 0}%`, 
-      icon: <Assessment />, 
-      color: theme.palette.warning.main,
-    },
+    { label: 'Total Courses', value: data.totalCourses || 0, icon: <School />, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
+    { label: 'Active Webinars', value: data.upcomingWebinars || 0, icon: <VideoCall />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
+    { label: 'Total Enrollments', value: data.totalEnrollments || 0, icon: <People />, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
+    { label: 'Completion Rate', value: `${data.completionRate || 0}%`, icon: <CheckCircle />, color: '#06B6D4', bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
   ];
 
-  const upcomingWebinars = (dashboardData.webinars || []).map((webinar: any) => ({
-    title: webinar.title || 'Untitled Webinar',
-    date: webinar.scheduleTime ? new Date(webinar.scheduleTime).toLocaleDateString() : 'TBD',
-    time: webinar.scheduleTime ? new Date(webinar.scheduleTime).toLocaleTimeString() : 'TBD',
-    attendees: webinar.maxAttendees || 0,
-    status: webinar.status || 'SCHEDULED',
-  }));
-
-  const coursePerformance = (dashboardData.coursePerformance || []).map((course: any) => ({
-    name: course.title || 'Untitled Course',
-    enrolled: course.enrolled || 0,
-    completed: course.completed || 0,
-    rate: course.rate || 0,
-  }));
-
-  const quickActions = [
-    { label: 'Schedule Webinar', icon: <VideoCall />, path: '/admin/webinar-management', color: 'primary' },
-    { label: 'Create Course', icon: <School />, path: '/admin/course-management', color: 'secondary' },
-    { label: 'View Reports', icon: <Assessment />, path: '/admin/analytics', color: 'success' },
-    { label: 'Manage Enrollments', icon: <People />, path: '/admin/enrollments', color: 'info' },
+  const upcomingWebinars = [
+    { title: 'Tax Filing Basics', date: 'Today, 2:00 PM', attendees: 45, status: 'starting-soon' },
+    { title: 'Advanced Tax Strategies', date: 'Tomorrow, 10:00 AM', attendees: 32, status: 'scheduled' },
+    { title: 'Compliance Workshop', date: 'Dec 20, 3:00 PM', attendees: 28, status: 'scheduled' },
   ];
 
   return (
-    <Box sx={{ animation: 'fadeIn 0.6s ease-out' }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 4,
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)} 0%, ${alpha(theme.palette.secondary.main, 0.2)} 100%)`,
-              mr: 3,
-              animation: 'pulse 2s ease-in-out infinite',
-            }}
-          >
-            <School sx={{ fontSize: 40, color: 'primary.main' }} />
-          </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Box>
             <Typography 
               variant="h3" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 50%, #22D3EE 100%)',
-                backgroundClip: 'text',
+                background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -145,41 +88,77 @@ const TrainingAdminDashboard: React.FC = () => {
               Training Control Center
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Manage courses, webinars, and track learning progress
+              Welcome back, {user?.fullName || 'Training Admin'} • Manage courses and webinars
             </Typography>
           </Box>
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+              fontSize: '2rem',
+              fontWeight: 700,
+              boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3)',
+            }}
+          >
+            {user?.fullName?.charAt(0) || 'T'}
+          </Avatar>
         </Box>
       </Box>
 
-      {/* Stats Grid */}
+      {/* Main Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
+          <Grid item xs={12} sm={6} md={3} key={index}>
             <Card
+              elevation={0}
               sx={{
                 position: 'relative',
                 overflow: 'hidden',
-                animation: `scaleIn 0.4s ease-out ${index * 0.1}s both`,
+                height: '100%',
+                background: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: 3,
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-8px) rotate(1deg)',
+                  boxShadow: `0 20px 40px ${alpha(stat.color, 0.25)}`,
+                  borderColor: stat.color,
+                },
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '5px',
+                  background: stat.bg,
+                },
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                   <Box
                     sx={{
-                      p: 1.5,
+                      width: 56,
+                      height: 56,
                       borderRadius: 3,
-                      background: alpha(stat.color, 0.1),
-                      color: stat.color,
+                      background: stat.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      boxShadow: `0 8px 24px ${alpha(stat.color, 0.3)}`,
                     }}
                   >
                     {stat.icon}
                   </Box>
                 </Box>
-                <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5 }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1, color: stat.color }}>
                   {stat.value}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {stat.title}
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                  {stat.label}
                 </Typography>
               </CardContent>
             </Card>
@@ -187,203 +166,106 @@ const TrainingAdminDashboard: React.FC = () => {
         ))}
       </Grid>
 
-      <Grid container spacing={3}>
-        {/* Upcoming Webinars */}
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 4, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                Upcoming Webinars
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<VideoCall />}
-                onClick={() => navigate('/admin/webinar-management')}
-              >
-                Schedule New
-              </Button>
-            </Box>
-            <List sx={{ p: 0 }}>
-              {upcomingWebinars.map((webinar, index) => (
-                <React.Fragment key={index}>
-                  <ListItem
-                    sx={{
-                      px: 0,
-                      py: 2,
-                      '&:hover': {
-                        background: alpha('#fff', 0.02),
-                        borderRadius: 2,
-                      },
-                    }}
-                  >
-                    <Avatar
-                      sx={{
-                        mr: 2,
-                        background: webinar.status === 'starting-soon' 
-                          ? alpha(theme.palette.error.main, 0.1)
-                          : alpha(theme.palette.primary.main, 0.1),
-                        color: webinar.status === 'starting-soon' ? 'error.main' : 'primary.main',
-                      }}
-                    >
-                      {webinar.status === 'starting-soon' ? <PlayCircle /> : <Schedule />}
-                    </Avatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body1" component="div" sx={{ fontWeight: 600 }}>
-                          {webinar.title}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box component="div" sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-                          <Typography variant="body2" component="span" color="text.secondary">
-                            <Event sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-                            {webinar.date}
-                          </Typography>
-                          <Typography variant="body2" component="span" color="text.secondary">
-                            <People sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
-                            {webinar.attendees} registered
-                          </Typography>
-                        </Box>
-                      }
+      {/* Upcoming Webinars */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 4, 
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)',
+          border: '1px solid #ddd6fe',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            Upcoming Webinars
+          </Typography>
+          <Chip 
+            label={`${upcomingWebinars.length} Scheduled`}
+            sx={{
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+              color: 'white',
+              fontWeight: 700,
+            }}
+          />
+        </Box>
+        <List sx={{ p: 0 }}>
+          {upcomingWebinars.map((webinar, index) => (
+            <ListItem
+              key={index}
+              sx={{
+                mb: 2,
+                p: 3,
+                borderRadius: 2,
+                background: 'white',
+                border: webinar.status === 'starting-soon' ? '2px solid #10B981' : '1px solid #e5e7eb',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateX(8px)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                },
+              }}
+            >
+              <ListItemAvatar>
+                <Avatar
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    background: webinar.status === 'starting-soon' 
+                      ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                      : 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    boxShadow: webinar.status === 'starting-soon'
+                      ? '0 4px 16px rgba(16, 185, 129, 0.3)'
+                      : '0 4px 16px rgba(139, 92, 246, 0.3)',
+                  }}
+                >
+                  {webinar.status === 'starting-soon' ? <PlayCircle /> : <VideoCall />}
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    {webinar.title}
+                  </Typography>
+                }
+                secondary={
+                  <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                    <Chip 
+                      icon={<Event sx={{ fontSize: 16 }} />}
+                      label={webinar.date}
+                      size="small"
+                      sx={{ background: alpha('#8B5CF6', 0.1), color: '#8B5CF6', fontWeight: 600 }}
+                    />
+                    <Chip 
+                      icon={<People sx={{ fontSize: 16 }} />}
+                      label={`${webinar.attendees} registered`}
+                      size="small"
+                      sx={{ background: alpha('#10B981', 0.1), color: '#10B981', fontWeight: 600 }}
                     />
                     {webinar.status === 'starting-soon' && (
-                      <Chip
+                      <Chip 
                         label="Starting Soon"
                         size="small"
-                        color="error"
-                        sx={{ animation: 'pulse 2s ease-in-out infinite' }}
+                        sx={{ 
+                          background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                          color: 'white',
+                          fontWeight: 700,
+                          animation: 'pulse 2s infinite',
+                          '@keyframes pulse': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0.7 },
+                          },
+                        }}
                       />
                     )}
-                  </ListItem>
-                  {index < upcomingWebinars.length - 1 && <Divider sx={{ borderColor: alpha('#fff', 0.05) }} />}
-                </React.Fragment>
-              ))}
-            </List>
-          </Paper>
-
-          {/* Course Performance */}
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-              Course Performance
-            </Typography>
-            {coursePerformance.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Assessment sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="body2" color="text.secondary">
-                  No course performance data available
-                </Typography>
-              </Box>
-            ) : (
-            <Grid container spacing={3}>
-              {coursePerformance.map((course, index) => (
-                <Grid item xs={12} key={index}>
-                  <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Box>
-                        <Typography variant="body1" component="div" sx={{ fontWeight: 600 }}>
-                          {course.name}
-                        </Typography>
-                        <Typography variant="caption" component="div" color="text.secondary">
-                          {course.completed} of {course.enrolled} completed
-                        </Typography>
-                      </Box>
-                      <Typography variant="h6" component="div" sx={{ fontWeight: 700, color: 'success.main' }}>
-                        {course.rate}%
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={course.rate}
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        background: alpha('#fff', 0.05),
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: 4,
-                          background: `linear-gradient(90deg, ${theme.palette.success.main} 0%, ${theme.palette.success.light} 100%)`,
-                        },
-                      }}
-                    />
                   </Box>
-                </Grid>
-              ))}
-            </Grid>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Quick Actions & Stats */}
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 4, mb: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-              Quick Actions
-            </Typography>
-            <Grid container spacing={2}>
-              {quickActions.map((action, index) => (
-                <Grid item xs={12} key={index}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={action.icon}
-                    onClick={() => navigate(action.path)}
-                    sx={{
-                      py: 2,
-                      justifyContent: 'flex-start',
-                      borderWidth: 2,
-                      borderColor: alpha(theme.palette[action.color as keyof typeof theme.palette].main as string, 0.3),
-                      '&:hover': {
-                        borderWidth: 2,
-                        borderColor: `${action.color}.main`,
-                        background: alpha(theme.palette[action.color as keyof typeof theme.palette].main as string, 0.1),
-                        transform: 'translateX(8px)',
-                      },
-                    }}
-                  >
-                    {action.label}
-                  </Button>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
-
-          {/* Today's Schedule */}
-          <Paper sx={{ p: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-              Today's Schedule
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  background: alpha(theme.palette.primary.main, 0.1),
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                }}
-              >
-                <Typography variant="body2" component="div" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  2:00 PM - Tax Filing Basics
-                </Typography>
-                <Typography variant="caption" component="div" color="text.secondary">
-                  45 attendees registered
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  background: alpha('#fff', 0.02),
-                  border: `1px solid ${alpha('#fff', 0.1)}`,
-                }}
-              >
-                <Typography variant="body2" component="div" color="text.secondary">
-                  No more webinars today
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Paper>
+    </Container>
   );
 };
 
