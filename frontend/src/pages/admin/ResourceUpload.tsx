@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { CloudUpload, AttachFile, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -18,6 +19,7 @@ const getAuthHeaders = () => {
 };
 
 const ResourceUpload: React.FC = () => {
+  const { mode } = useThemeMode();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -113,12 +115,12 @@ const ResourceUpload: React.FC = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
+    <Box sx={{ minHeight: '100vh', background: mode === 'light' ? '#ffffff' : '#0f172a', py: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, color: 'text.primary' }}>
         Upload Resource
       </Typography>
 
-      <Card>
+      <Card sx={{ background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}` }}>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
@@ -127,11 +129,11 @@ const ResourceUpload: React.FC = () => {
                 <Box
                   sx={{
                     border: '2px dashed',
-                    borderColor: file ? 'primary.main' : 'grey.300',
+                    borderColor: file ? 'primary.main' : mode === 'light' ? 'grey.300' : '#475569',
                     borderRadius: 2,
                     p: 4,
                     textAlign: 'center',
-                    bgcolor: file ? 'primary.50' : 'grey.50',
+                    bgcolor: file ? 'primary.50' : mode === 'light' ? 'grey.50' : '#334155',
                     cursor: 'pointer',
                     transition: 'all 0.3s',
                     '&:hover': {

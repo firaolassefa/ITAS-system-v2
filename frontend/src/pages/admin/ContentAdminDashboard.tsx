@@ -8,10 +8,12 @@ import {
   Folder, CheckCircle, Schedule, Visibility,
 } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const ContentAdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({});
+  const { mode } = useThemeMode();
   const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
   useEffect(() => {
@@ -57,7 +59,15 @@ const ContentAdminDashboard: React.FC = () => {
   }
 
   const stats = [
-    { label: 'Total Resources', value: data.totalResources || 0, icon: <Folder />, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
+    { 
+      label: 'Total Resources', 
+      value: data.totalResources || 0, 
+      icon: <Folder />, 
+      color: mode === 'light' ? '#F59E0B' : '#fbbf24', 
+      bg: mode === 'light' 
+        ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' 
+        : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' 
+    },
     { label: 'Published Today', value: data.publishedToday || 0, icon: <TrendingUp />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
     { label: 'Pending Approval', value: data.pendingApproval || 0, icon: <Schedule />, color: '#EF4444', bg: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' },
     { label: 'Total Views', value: data.totalViews || 0, icon: <Visibility />, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
@@ -80,7 +90,9 @@ const ContentAdminDashboard: React.FC = () => {
               variant="h3" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                background: mode === 'light'
+                  ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                  : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -96,7 +108,9 @@ const ContentAdminDashboard: React.FC = () => {
             sx={{
               width: 80,
               height: 80,
-              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+              background: mode === 'light'
+                ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
               fontSize: '2rem',
               fontWeight: 700,
               boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)',
@@ -117,8 +131,8 @@ const ContentAdminDashboard: React.FC = () => {
                 position: 'relative',
                 overflow: 'hidden',
                 height: '100%',
-                background: 'white',
-                border: '1px solid #e5e7eb',
+                background: mode === 'light' ? 'white' : '#1e293b',
+                border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                 borderRadius: 3,
                 transition: 'all 0.3s',
                 '&:hover': {
@@ -173,11 +187,13 @@ const ContentAdminDashboard: React.FC = () => {
         sx={{ 
           p: 4, 
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)',
-          border: '1px solid #fde68a',
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)'
+            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          border: `1px solid ${mode === 'light' ? '#fde68a' : '#334155'}`,
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 4, color: 'text.primary' }}>
           Content Distribution
         </Typography>
         <Grid container spacing={3}>
@@ -187,7 +203,7 @@ const ContentAdminDashboard: React.FC = () => {
                 sx={{
                   p: 3,
                   borderRadius: 2,
-                  background: 'white',
+                  background: mode === 'light' ? 'white' : '#1e293b',
                   border: `2px solid ${alpha(item.color, 0.2)}`,
                   transition: 'all 0.3s',
                   '&:hover': {
@@ -198,7 +214,7 @@ const ContentAdminDashboard: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary' }}>
                     {item.type}
                   </Typography>
                   <Chip 

@@ -8,10 +8,12 @@ import {
   Event, PlayCircle, CheckCircle, TrendingUp,
 } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const TrainingAdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({});
+  const { mode } = useThemeMode();
   const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
   useEffect(() => {
@@ -57,9 +59,25 @@ const TrainingAdminDashboard: React.FC = () => {
   }
 
   const stats = [
-    { label: 'Total Courses', value: data.totalCourses || 0, icon: <School />, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
+    { 
+      label: 'Total Courses', 
+      value: data.totalCourses || 0, 
+      icon: <School />, 
+      color: mode === 'light' ? '#8B5CF6' : '#a78bfa', 
+      bg: mode === 'light' 
+        ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' 
+        : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)' 
+    },
     { label: 'Active Webinars', value: data.upcomingWebinars || 0, icon: <VideoCall />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
-    { label: 'Total Enrollments', value: data.totalEnrollments || 0, icon: <People />, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
+    { 
+      label: 'Total Enrollments', 
+      value: data.totalEnrollments || 0, 
+      icon: <People />, 
+      color: mode === 'light' ? '#F59E0B' : '#fbbf24', 
+      bg: mode === 'light' 
+        ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' 
+        : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' 
+    },
     { label: 'Completion Rate', value: `${data.completionRate || 0}%`, icon: <CheckCircle />, color: '#06B6D4', bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
   ];
 
@@ -79,7 +97,9 @@ const TrainingAdminDashboard: React.FC = () => {
               variant="h3" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                background: mode === 'light'
+                  ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)'
+                  : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -95,7 +115,9 @@ const TrainingAdminDashboard: React.FC = () => {
             sx={{
               width: 80,
               height: 80,
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+              background: mode === 'light'
+                ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)'
+                : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
               fontSize: '2rem',
               fontWeight: 700,
               boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3)',
@@ -116,8 +138,8 @@ const TrainingAdminDashboard: React.FC = () => {
                 position: 'relative',
                 overflow: 'hidden',
                 height: '100%',
-                background: 'white',
-                border: '1px solid #e5e7eb',
+                background: mode === 'light' ? 'white' : '#1e293b',
+                border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                 borderRadius: 3,
                 transition: 'all 0.3s',
                 '&:hover': {
@@ -172,12 +194,14 @@ const TrainingAdminDashboard: React.FC = () => {
         sx={{ 
           p: 4, 
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)',
-          border: '1px solid #ddd6fe',
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)'
+            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          border: `1px solid ${mode === 'light' ? '#ddd6fe' : '#334155'}`,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Upcoming Webinars
           </Typography>
           <Chip 
@@ -197,8 +221,10 @@ const TrainingAdminDashboard: React.FC = () => {
                 mb: 2,
                 p: 3,
                 borderRadius: 2,
-                background: 'white',
-                border: webinar.status === 'starting-soon' ? '2px solid #10B981' : '1px solid #e5e7eb',
+                background: mode === 'light' ? 'white' : '#1e293b',
+                border: webinar.status === 'starting-soon' 
+                  ? '2px solid #10B981' 
+                  : `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                 transition: 'all 0.3s',
                 '&:hover': {
                   transform: 'translateX(8px)',
@@ -224,7 +250,7 @@ const TrainingAdminDashboard: React.FC = () => {
               </ListItemAvatar>
               <ListItemText
                 primary={
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
                     {webinar.title}
                   </Typography>
                 }

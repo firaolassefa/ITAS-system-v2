@@ -46,23 +46,31 @@ const ModernHome: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f8f9fa' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: mode === 'light' ? '#f8f9fa' : '#0f172a' }}>
       {/* Header */}
       <AppBar
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor: 'white',
-          borderBottom: '1px solid #e0e0e0',
+          bgcolor: mode === 'light' ? 'white' : '#1e293b',
+          borderBottom: `1px solid ${mode === 'light' ? '#e0e0e0' : '#334155'}`,
         }}
       >
         <Toolbar sx={{ py: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <School sx={{ fontSize: 32, color: '#667eea' }} />
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+            <School sx={{ fontSize: 32, color: mode === 'light' ? '#667eea' : '#3b82f6' }} />
+            <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#1a1a1a' : 'white' }}>
               ITAS
             </Typography>
-            <Chip label="Tax Education" size="small" sx={{ ml: 1 }} />
+            <Chip 
+              label="Tax Education" 
+              size="small" 
+              sx={{ 
+                ml: 1,
+                bgcolor: mode === 'light' ? alpha('#667eea', 0.1) : alpha('#3b82f6', 0.2),
+                color: mode === 'light' ? '#667eea' : '#3b82f6',
+              }} 
+            />
           </Box>
           <Stack direction="row" spacing={2}>
             <IconButton
@@ -75,7 +83,7 @@ const ModernHome: React.FC = () => {
                 '&:hover': {
                   transform: 'rotate(180deg)',
                   borderColor: 'primary.main',
-                  bgcolor: alpha('#667eea', 0.1),
+                  bgcolor: alpha(mode === 'light' ? '#667eea' : '#3b82f6', 0.1),
                 },
               }}
             >
@@ -101,7 +109,9 @@ const ModernHome: React.FC = () => {
                 borderRadius: '8px',
                 textTransform: 'none',
                 fontWeight: 600,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: mode === 'light'
+                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               }}
             >
               Get Started
@@ -113,7 +123,9 @@ const ModernHome: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)'
+            : 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)',
           color: 'white',
           py: 12,
           position: 'relative',
@@ -147,7 +159,7 @@ const ModernHome: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{
                     bgcolor: 'white',
-                    color: '#667eea',
+                    color: mode === 'light' ? '#667eea' : '#1e3a8a',
                     px: 4,
                     py: 1.5,
                     borderRadius: '12px',
@@ -155,7 +167,7 @@ const ModernHome: React.FC = () => {
                     fontWeight: 700,
                     fontSize: '1.1rem',
                     '&:hover': {
-                      bgcolor: '#f8f9fa',
+                      bgcolor: mode === 'light' ? '#f8f9fa' : '#e5e7eb',
                       transform: 'translateY(-2px)',
                     },
                   }}
@@ -238,11 +250,18 @@ const ModernHome: React.FC = () => {
                   textAlign: 'center',
                   py: 3,
                   borderRadius: '16px',
-                  border: '1px solid #e0e0e0',
-                  bgcolor: 'white',
+                  border: `1px solid ${mode === 'light' ? '#e0e0e0' : '#334155'}`,
+                  bgcolor: mode === 'light' ? 'white' : '#1e293b',
                 }}
               >
-                <Typography variant="h3" sx={{ fontWeight: 800, color: '#667eea', mb: 1 }}>
+                <Typography 
+                  variant="h3" 
+                  sx={{ 
+                    fontWeight: 800, 
+                    color: mode === 'light' ? '#667eea' : '#3b82f6', 
+                    mb: 1 
+                  }}
+                >
                   {stat.value}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
@@ -257,7 +276,7 @@ const ModernHome: React.FC = () => {
       {/* Features Section */}
       <Container maxWidth="lg" sx={{ py: 10 }}>
         <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
+          <Typography variant="h3" sx={{ fontWeight: 800, mb: 2, color: 'text.primary' }}>
             Why Choose ITAS?
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
@@ -274,17 +293,20 @@ const ModernHome: React.FC = () => {
                   height: '100%',
                   p: 3,
                   borderRadius: '16px',
-                  border: '1px solid #e0e0e0',
+                  border: `1px solid ${mode === 'light' ? '#e0e0e0' : '#334155'}`,
+                  bgcolor: mode === 'light' ? 'white' : '#1e293b',
                   transition: 'all 0.3s',
                   '&:hover': {
                     transform: 'translateY(-8px)',
-                    boxShadow: '0 12px 40px rgba(102, 126, 234, 0.2)',
-                    borderColor: '#667eea',
+                    boxShadow: mode === 'light'
+                      ? '0 12px 40px rgba(102, 126, 234, 0.2)'
+                      : '0 12px 40px rgba(59, 130, 246, 0.3)',
+                    borderColor: mode === 'light' ? '#667eea' : '#3b82f6',
                   },
                 }}
               >
                 <Box sx={{ mb: 2 }}>{feature.icon}</Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
                   {feature.title}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -297,11 +319,11 @@ const ModernHome: React.FC = () => {
       </Container>
 
       {/* Benefits Section */}
-      <Box sx={{ bgcolor: 'white', py: 10 }}>
+      <Box sx={{ bgcolor: mode === 'light' ? 'white' : '#1e293b', py: 10 }}>
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
-              <Typography variant="h3" sx={{ fontWeight: 800, mb: 3 }}>
+              <Typography variant="h3" sx={{ fontWeight: 800, mb: 3, color: 'text.primary' }}>
                 Learn at Your Own Pace
               </Typography>
               <Stack spacing={2}>
@@ -314,7 +336,7 @@ const ModernHome: React.FC = () => {
                 ].map((benefit, index) => (
                   <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                     <CheckCircle sx={{ color: '#10B981', fontSize: 28 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 500, color: 'text.primary' }}>
                       {benefit}
                     </Typography>
                   </Box>
@@ -326,7 +348,9 @@ const ModernHome: React.FC = () => {
                 sx={{
                   p: 4,
                   borderRadius: '24px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: mode === 'light'
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
                   color: 'white',
                 }}
               >
@@ -344,14 +368,14 @@ const ModernHome: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{
                     bgcolor: 'white',
-                    color: '#667eea',
+                    color: mode === 'light' ? '#667eea' : '#1e3a8a',
                     py: 2,
                     borderRadius: '12px',
                     textTransform: 'none',
                     fontWeight: 700,
                     fontSize: '1.1rem',
                     '&:hover': {
-                      bgcolor: '#f8f9fa',
+                      bgcolor: mode === 'light' ? '#f8f9fa' : '#e5e7eb',
                     },
                   }}
                 >

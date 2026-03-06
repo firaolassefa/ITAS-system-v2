@@ -48,6 +48,7 @@ import {
   Block as BlockIcon,
 } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 interface User {
   id: number;
@@ -66,6 +67,7 @@ const UserRoleManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { mode } = useThemeMode();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const [page, setPage] = useState(0);
@@ -286,7 +288,7 @@ const UserRoleManagement: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: '#ffffff',
+        background: mode === 'light' ? '#ffffff' : '#0f172a',
         py: 4,
       }}
     >
@@ -298,7 +300,9 @@ const UserRoleManagement: React.FC = () => {
               variant="h3"
               sx={{
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: mode === 'light'
+                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -325,8 +329,8 @@ const UserRoleManagement: React.FC = () => {
                 <Paper
                   sx={{
                     p: 3,
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
+                    background: mode === 'light' ? 'white' : '#1e293b',
+                    border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                     borderTop: `4px solid ${stat.color}`,
                     borderRadius: 3,
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -374,8 +378,8 @@ const UserRoleManagement: React.FC = () => {
             sx={{
               p: 3,
               mb: 3,
-              background: 'white',
-              border: '1px solid #e5e7eb',
+              background: mode === 'light' ? 'white' : '#1e293b',
+              border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
               borderRadius: 3,
               boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
             }}
@@ -447,8 +451,8 @@ const UserRoleManagement: React.FC = () => {
         <Fade in timeout={1200}>
           <Paper
             sx={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
+              background: mode === 'light' ? 'white' : '#1e293b',
+              border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
               borderRadius: 3,
               overflow: 'hidden',
               boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -469,7 +473,7 @@ const UserRoleManagement: React.FC = () => {
                 <TableContainer>
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ background: '#f9fafb' }}>
+                      <TableRow sx={{ background: mode === 'light' ? '#f9fafb' : '#334155' }}>
                         <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>User</TableCell>
                         <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Email</TableCell>
                         <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Role</TableCell>
@@ -488,7 +492,7 @@ const UserRoleManagement: React.FC = () => {
                             key={user.id}
                             sx={{
                               '&:hover': {
-                                background: '#f9fafb',
+                                background: mode === 'light' ? '#f9fafb' : '#334155',
                               },
                               animation: `fadeIn 0.5s ease ${index * 0.1}s both`,
                               '@keyframes fadeIn': {
@@ -585,7 +589,7 @@ const UserRoleManagement: React.FC = () => {
                   rowsPerPage={rowsPerPage}
                   onRowsPerPageChange={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
                   sx={{
-                    borderTop: '1px solid #e5e7eb',
+                    borderTop: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                   }}
                 />
               </>

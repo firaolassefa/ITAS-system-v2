@@ -20,8 +20,10 @@ import {
   Event as EventIcon,
 } from '@mui/icons-material';
 import { webinarApi, Webinar } from '../../api/webinars';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const WebinarManagement: React.FC = () => {
+  const { mode } = useThemeMode();
   const [openDialog, setOpenDialog] = useState(false);
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,13 +182,13 @@ const WebinarManagement: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ minHeight: '100vh', background: '#ffffff', py: 4 }}>
+      <Box sx={{ minHeight: '100vh', background: mode === 'light' ? '#ffffff' : '#0f172a', py: 4 }}>
         <Container maxWidth="xl">
           {/* Header */}
           <Fade in timeout={800}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
-                <Typography variant="h3" sx={{ fontWeight: 800, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
                   Webinar Management
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary' }}>
@@ -212,7 +214,7 @@ const WebinarManagement: React.FC = () => {
             ].map((stat, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
                 <Zoom in timeout={600 + index * 100}>
-                  <Paper sx={{ p: 3, background: 'white', border: '1px solid #e5e7eb', borderTop: `4px solid ${stat.color}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  <Paper sx={{ p: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderTop: `4px solid ${stat.color}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-8px)', boxShadow: `0 12px 24px ${stat.color}40` }
                   }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -232,7 +234,7 @@ const WebinarManagement: React.FC = () => {
 
           {/* Webinar List */}
           <Fade in timeout={1200}>
-            <Paper sx={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <Paper sx={{ background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
               {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
                   <CircularProgress />
@@ -251,7 +253,7 @@ const WebinarManagement: React.FC = () => {
                 <TableContainer>
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ background: '#f9fafb' }}>
+                      <TableRow sx={{ background: mode === 'light' ? '#f9fafb' : '#334155' }}>
                         <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Webinar</TableCell>
                         <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Date & Time</TableCell>
                         <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Presenters</TableCell>
@@ -262,7 +264,7 @@ const WebinarManagement: React.FC = () => {
                     </TableHead>
                     <TableBody>
                       {webinars.map((webinar, index) => (
-                        <TableRow key={webinar.id} sx={{ '&:hover': { background: '#f9fafb' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
+                        <TableRow key={webinar.id} sx={{ '&:hover': { background: mode === 'light' ? '#f9fafb' : '#334155' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                               <Avatar sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', width: 48, height: 48 }}>
@@ -315,8 +317,8 @@ const WebinarManagement: React.FC = () => {
 
           {/* Schedule Dialog */}
           <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth
-            PaperProps={{ sx: { background: 'white', borderRadius: 3, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' } }}>
-            <DialogTitle sx={{ color: 'text.primary', fontWeight: 700, fontSize: '1.5rem', borderBottom: '1px solid #e5e7eb' }}>
+            PaperProps={{ sx: { background: mode === 'light' ? 'white' : '#1e293b', borderRadius: 3, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' } }}>
+            <DialogTitle sx={{ color: 'text.primary', fontWeight: 700, fontSize: '1.5rem', borderBottom: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}` }}>
               Schedule New Webinar
               <IconButton onClick={() => setOpenDialog(false)} sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}>
                 <CloseIcon />
@@ -375,7 +377,7 @@ const WebinarManagement: React.FC = () => {
                 </Grid>
               </Grid>
             </DialogContent>
-            <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid #e5e7eb' }}>
+            <DialogActions sx={{ p: 3, pt: 2, borderTop: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}` }}>
               <Button onClick={() => setOpenDialog(false)} sx={{ color: 'text.secondary', '&:hover': { background: '#f9fafb' } }}>Cancel</Button>
               <Button onClick={handleSchedule} variant="contained" sx={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', fontWeight: 600, px: 3,
                 '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }

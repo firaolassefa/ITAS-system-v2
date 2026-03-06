@@ -17,6 +17,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { notificationAPI } from '../../api/notifications';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 interface Campaign {
   id: number;
@@ -29,6 +30,7 @@ interface Campaign {
 }
 
 const NotificationCenter: React.FC = () => {
+  const { mode } = useThemeMode();
   const [notification, setNotification] = useState({
     title: '',
     message: '',
@@ -65,16 +67,21 @@ const NotificationCenter: React.FC = () => {
       const campaignData = response.data || response || [];
       const campaignsArray = Array.isArray(campaignData) ? campaignData : [];
       
-      // Map notifications to campaigns with real data
-      setCampaigns(campaignsArray.slice(0, 5).map((n: any) => ({
-        id: n.id,
-        title: n.title || 'Untitled Notification',
-        audience: n.targetAudience || n.role || 'ALL',
-        sent: n.sentCount || 0,
-        opened: n.openedCount || 0,
-        sentAt: n.createdAt || new Date().toISOString(),
-        channel: n.notificationType || 'IN_APP',
-      })));
+      // Filter out any invalid campaigns and map notifications to campaigns with real data
+      const validCampaigns = campaignsArray
+        .filter((n: any) => n && n.id) // Only include items with valid IDs
+        .slice(0, 5)
+        .map((n: any) => ({
+          id: n.id,
+          title: n.title || 'Untitled Notification',
+          audience: n.targetAudience || n.role || 'ALL',
+          sent: n.sentCount || 0,
+          opened: n.openedCount || 0,
+          sentAt: n.createdAt || new Date().toISOString(),
+          channel: n.notificationType || 'IN_APP',
+        }));
+      
+      setCampaigns(validCampaigns);
 
       // Calculate stats from real data
       const totalSent = campaignsArray.reduce((sum: number, c: any) => sum + (c.sentCount || 0), 0);
@@ -89,6 +96,12 @@ const NotificationCenter: React.FC = () => {
     } catch (err) {
       console.error('Error loading campaigns:', err);
       setCampaigns([]);
+      setStats({
+        totalSent: 0,
+        totalOpened: 0,
+        avgOpenRate: 0,
+        campaigns: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -218,11 +231,20 @@ const NotificationCenter: React.FC = () => {
       setDeletingId(null);
       loadCampaigns();
     } catch (err: any) {
+      console.error('Delete error:', err);
+      const errorMessage = err.response?.status === 404 
+        ? 'Notification not found. It may have already been deleted.'
+        : err.response?.data?.message || 'Failed to delete notification';
+      
       setSnackbar({
         open: true,
-        message: err.response?.data?.message || 'Failed to delete notification',
+        message: errorMessage,
         severity: 'error',
       });
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      // Reload campaigns to refresh the list
+      loadCampaigns();
     }
   };
 
@@ -250,12 +272,12 @@ const NotificationCenter: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', background: '#ffffff', py: 4 }}>
+    <Box sx={{ minHeight: '100vh', background: mode === 'light' ? '#ffffff' : '#0f172a', py: 4 }}>
       <Container maxWidth="xl">
         {/* Header */}
         <Fade in timeout={800}>
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h3" sx={{ fontWeight: 800, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
               Notification Center
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
@@ -274,7 +296,7 @@ const NotificationCenter: React.FC = () => {
           ].map((stat, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Zoom in timeout={600 + index * 100}>
-                <Paper sx={{ p: 3, background: 'white', border: '1px solid #e5e7eb', borderTop: `4px solid ${stat.color}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                <Paper sx={{ p: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderTop: `4px solid ${stat.color}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                   transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-8px)', boxShadow: `0 12px 24px ${stat.color}40` }
                 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -296,7 +318,7 @@ const NotificationCenter: React.FC = () => {
           {/* Compose Notification */}
           <Grid item xs={12} md={8}>
             <Fade in timeout={1000}>
-              <Paper sx={{ p: 4, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              <Paper sx={{ p: 4, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <SendIcon /> Compose Notification
                 </Typography>
@@ -367,7 +389,7 @@ const NotificationCenter: React.FC = () => {
           {/* Campaign History */}
           <Grid item xs={12} md={4}>
             <Fade in timeout={1200}>
-              <Paper sx={{ p: 3, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              <Paper sx={{ p: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ScheduleIcon /> Recent Campaigns
                 </Typography>
@@ -385,8 +407,8 @@ const NotificationCenter: React.FC = () => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {campaigns.map((campaign, index) => (
                       <Zoom in timeout={800 + index * 100} key={campaign.id}>
-                        <Paper sx={{ p: 2, background: '#f9fafb', border: '1px solid #e5e7eb', borderLeft: `3px solid ${getChannelColor(campaign.channel)}`, borderRadius: 2,
-                          transition: 'all 0.3s ease', '&:hover': { transform: 'translateX(8px)', background: 'white' }
+                        <Paper sx={{ p: 2, background: mode === 'light' ? '#f9fafb' : '#334155', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#475569'}`, borderLeft: `3px solid ${getChannelColor(campaign.channel)}`, borderRadius: 2,
+                          transition: 'all 0.3s ease', '&:hover': { transform: 'translateX(8px)', background: mode === 'light' ? 'white' : '#1e293b' }
                         }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                             <Avatar sx={{ width: 32, height: 32, background: `${getChannelColor(campaign.channel)}20`, color: getChannelColor(campaign.channel) }}>

@@ -25,6 +25,12 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private EmailService emailService;
+    
+    @Autowired
+    private SmsService smsService;
+    
     public List<Notification> getAllNotifications() {
         return notificationRepository.findAll();
     }
@@ -143,7 +149,12 @@ public class NotificationService {
                     }
                     
                     notification.setSentCount(targetUsers.size());
-                    return notificationRepository.save(notification);
+                    Notification savedNotification = notificationRepository.save(notification);
+                    
+                    // Actually send emails or SMS based on notification type
+                    sendActualNotifications(notification, targetUsers);
+                    
+                    return savedNotification;
                 } catch (IllegalArgumentException e) {
                     // Invalid role, save as general notification
                     System.err.println("Invalid role: " + notification.getRole());
@@ -258,6 +269,65 @@ public class NotificationService {
         return notificationRepository.findAll().stream()
                 .filter(n -> n.getSentCount() > 1 || "CAMPAIGN".equals(n.getNotificationType()))
                 .toList();
+    }
+    
+    /**
+     * Actually send emails or SMS based on notification type
+     */
+    private void sendActualNotifications(Notification notification, List<User> targetUsers) {
+        try {
+            String notificationType = notification.getNotificationType();
+            
+            if ("EMAIL".equals(notificationType)) {
+                // Send emails
+                for (User user : targetUsers) {
+                    if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                        emailService.sendNotificationEmail(
+                            user.getEmail(),
+                            notification.getTitle(),
+                            notification.getMessage(),
+                            notification.getLink()
+                        );
+                    }
+                }
+                System.out.println("✅ Queued " + targetUsers.size() + " emails for sending");
+            } 
+            else if ("SMS".equals(notificationType)) {
+                // Send SMS
+                for (User user : targetUsers) {
+                    if (user.getPhoneNumber() != null && !user.getPhoneNumber().isEmpty()) {
+                        String smsMessage = notification.getTitle() + ": " + notification.getMessage();
+                        // Limit SMS to 160 characters
+                        if (smsMessage.length() > 160) {
+                            smsMessage = smsMessage.substring(0, 157) + "...";
+                        }
+                        smsService.sendSms(user.getPhoneNumber(), smsMessage);
+                    }
+                }
+                System.out.println("✅ Queued " + targetUsers.size() + " SMS for sending");
+            }
+            else if ("IN_APP".equals(notificationType)) {
+                // In-app notifications are already saved to database
+                System.out.println("✅ In-app notifications saved to database");
+            }
+            else if ("SYSTEM".equals(notificationType)) {
+                // System notifications - both in-app and email
+                for (User user : targetUsers) {
+                    if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                        emailService.sendNotificationEmail(
+                            user.getEmail(),
+                            notification.getTitle(),
+                            notification.getMessage(),
+                            notification.getLink()
+                        );
+                    }
+                }
+                System.out.println("✅ System notifications sent (in-app + email)");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error sending notifications: " + e.getMessage());
+            // Don't throw exception - we don't want notification sending to break the save operation
+        }
     }
     
     public Map<String, Object> getCampaignStatistics() {

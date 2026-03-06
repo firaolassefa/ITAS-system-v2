@@ -8,10 +8,12 @@ import {
   BarChart, Speed, EmojiEvents, CheckCircle,
 } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const ManagerDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({});
+  const { mode } = useThemeMode();
   const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
   useEffect(() => {
@@ -57,10 +59,36 @@ const ManagerDashboard: React.FC = () => {
   }
 
   const stats = [
-    { label: 'Total Users', value: data.totalUsers || 0, icon: <People />, color: '#667eea', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    { label: 'Active Users', value: data.activeUsers || 0, icon: <TrendingUp />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
-    { label: 'Total Courses', value: data.totalCourses || 0, icon: <School />, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
-    { label: 'Completion Rate', value: `${data.completionRate || 0}%`, icon: <CheckCircle />, color: '#06B6D4', bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
+    { 
+      label: 'Total Users', 
+      value: data.totalUsers || 0, 
+      icon: <People />, 
+      color: mode === 'light' ? '#667eea' : '#3b82f6', 
+      bg: mode === 'light' 
+        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+        : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' 
+    },
+    { 
+      label: 'Active Users', 
+      value: data.activeUsers || 0, 
+      icon: <TrendingUp />, 
+      color: '#10B981', 
+      bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' 
+    },
+    { 
+      label: 'Total Courses', 
+      value: data.totalCourses || 0, 
+      icon: <School />, 
+      color: '#F59E0B', 
+      bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' 
+    },
+    { 
+      label: 'Completion Rate', 
+      value: `${data.completionRate || 0}%`, 
+      icon: <CheckCircle />, 
+      color: '#06B6D4', 
+      bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' 
+    },
   ];
 
   const performanceMetrics = [
@@ -80,7 +108,9 @@ const ManagerDashboard: React.FC = () => {
               variant="h3" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: mode === 'light'
+                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -96,10 +126,14 @@ const ManagerDashboard: React.FC = () => {
             sx={{
               width: 80,
               height: 80,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: mode === 'light'
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               fontSize: '2rem',
               fontWeight: 700,
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+              boxShadow: mode === 'light'
+                ? '0 8px 32px rgba(102, 126, 234, 0.3)'
+                : '0 8px 32px rgba(59, 130, 246, 0.3)',
             }}
           >
             {user?.fullName?.charAt(0) || 'M'}
@@ -117,8 +151,8 @@ const ManagerDashboard: React.FC = () => {
                 position: 'relative',
                 overflow: 'hidden',
                 height: '100%',
-                background: 'white',
-                border: '1px solid #e5e7eb',
+                background: mode === 'light' ? 'white' : '#1e293b',
+                border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                 borderRadius: 3,
                 transition: 'all 0.3s',
                 '&:hover': {
@@ -173,11 +207,13 @@ const ManagerDashboard: React.FC = () => {
         sx={{ 
           p: 4, 
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
-          border: '1px solid #e5e7eb',
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)'
+            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 4 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 4, color: 'text.primary' }}>
           Performance Metrics
         </Typography>
         <Grid container spacing={3}>
@@ -187,7 +223,7 @@ const ManagerDashboard: React.FC = () => {
                 sx={{
                   p: 3,
                   borderRadius: 2,
-                  background: 'white',
+                  background: mode === 'light' ? 'white' : '#1e293b',
                   border: `2px solid ${alpha(metric.color, 0.2)}`,
                   transition: 'all 0.3s',
                   '&:hover': {
@@ -213,7 +249,7 @@ const ManagerDashboard: React.FC = () => {
                     >
                       {metric.icon}
                     </Box>
-                    <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary' }}>
                       {metric.label}
                     </Typography>
                   </Box>

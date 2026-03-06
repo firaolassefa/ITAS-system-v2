@@ -22,9 +22,11 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { analyticsApi } from '../../api/analytics';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const Analytics: React.FC = () => {
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  const { mode } = useThemeMode();
   const [startDate, setStartDate] = useState<Date | null>(new Date('2024-01-01'));
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [loading, setLoading] = useState(true);
@@ -94,14 +96,14 @@ const Analytics: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ minHeight: '100vh', background: '#ffffff', py: 4 }}>
+      <Box sx={{ minHeight: '100vh', background: mode === 'light' ? '#ffffff' : '#0f172a', py: 4 }}>
         <Container maxWidth="xl">
           {/* Header */}
           <Fade in timeout={800}>
             <Box sx={{ mb: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 800, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
                     Analytics Dashboard
                   </Typography>
                   <Typography variant="body1" sx={{ color: 'text.secondary' }}>
@@ -118,7 +120,7 @@ const Analytics: React.FC = () => {
               </Box>
 
               {/* Filters */}
-              <Paper sx={{ p: 3, mb: 3, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              <Paper sx={{ p: 3, mb: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                 <Grid container spacing={2} alignItems="center">
                   <Grid item xs={12} md={3}>
                     <FormControl fullWidth size="small">
@@ -173,8 +175,8 @@ const Analytics: React.FC = () => {
                         sx={{
                           position: 'relative',
                           overflow: 'visible',
-                          background: 'white',
-                          border: '1px solid #e5e7eb',
+                          background: mode === 'light' ? 'white' : '#1e293b',
+                          border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                           borderRadius: 3,
                           boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
                           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -293,8 +295,8 @@ const Analytics: React.FC = () => {
                     <Paper sx={{ 
                       p: 3, 
                       mb: 3, 
-                      background: 'white', 
-                      border: '1px solid #e5e7eb', 
+                      background: mode === 'light' ? 'white' : '#1e293b', 
+                      border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, 
                       borderRadius: 3, 
                       boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                       position: 'relative',
@@ -345,7 +347,7 @@ const Analytics: React.FC = () => {
                         <TableContainer>
                           <Table>
                             <TableHead>
-                              <TableRow sx={{ background: '#f9fafb' }}>
+                              <TableRow sx={{ background: mode === 'light' ? '#f9fafb' : '#334155' }}>
                                 <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Course</TableCell>
                                 <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Enrollments</TableCell>
                                 <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Completions</TableCell>
@@ -426,7 +428,7 @@ const Analytics: React.FC = () => {
 
                   {/* User Engagement */}
                   <Fade in timeout={1200}>
-                    <Paper sx={{ p: 3, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                    <Paper sx={{ p: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <UsersIcon /> User Engagement by Tax Category
                       </Typography>
@@ -439,7 +441,7 @@ const Analytics: React.FC = () => {
                         <TableContainer>
                           <Table>
                             <TableHead>
-                              <TableRow sx={{ background: '#f9fafb' }}>
+                              <TableRow sx={{ background: mode === 'light' ? '#f9fafb' : '#334155' }}>
                                 <TableCell sx={{ color: 'text.primary', fontWeight: 700 }}>Category</TableCell>
                                 <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Active Users</TableCell>
                                 <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 700 }}>Avg. Time</TableCell>
@@ -448,7 +450,7 @@ const Analytics: React.FC = () => {
                             </TableHead>
                             <TableBody>
                               {userEngagement.map((item, index) => (
-                                <TableRow key={index} sx={{ '&:hover': { background: '#f9fafb' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
+                                <TableRow key={index} sx={{ '&:hover': { background: mode === 'light' ? '#f9fafb' : '#334155' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
                                   <TableCell>
                                     <Chip label={item.category} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontWeight: 600 }} />
                                   </TableCell>
@@ -476,7 +478,7 @@ const Analytics: React.FC = () => {
                 <Grid item xs={12} lg={4}>
                   {/* Resource Statistics */}
                   <Fade in timeout={1000}>
-                    <Paper sx={{ p: 3, mb: 3, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                    <Paper sx={{ p: 3, mb: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <DownloadIcon /> Resource Statistics
                       </Typography>
@@ -511,7 +513,7 @@ const Analytics: React.FC = () => {
 
                   {/* System Performance */}
                   <Fade in timeout={1200}>
-                    <Paper sx={{ p: 3, mb: 3, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                    <Paper sx={{ p: 3, mb: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <SpeedIcon /> System Performance
                       </Typography>
@@ -535,7 +537,7 @@ const Analytics: React.FC = () => {
 
                   {/* Key Insights */}
                   <Fade in timeout={1400}>
-                    <Paper sx={{ p: 3, background: 'white', border: '1px solid #e5e7eb', borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+                    <Paper sx={{ p: 3, background: mode === 'light' ? 'white' : '#1e293b', border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <TrendIcon /> Key Insights
                       </Typography>

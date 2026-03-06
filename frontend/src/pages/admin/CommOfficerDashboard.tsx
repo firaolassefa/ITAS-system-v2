@@ -8,10 +8,12 @@ import {
   Email, Sms, CheckCircle, Visibility, MoreVert,
 } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 const CommOfficerDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({});
+  const { mode } = useThemeMode();
   const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
   useEffect(() => {
@@ -57,9 +59,25 @@ const CommOfficerDashboard: React.FC = () => {
   }
 
   const stats = [
-    { label: 'Total Campaigns', value: data.totalCampaigns || 0, icon: <Campaign />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
+    { 
+      label: 'Total Campaigns', 
+      value: data.totalCampaigns || 0, 
+      icon: <Campaign />, 
+      color: mode === 'light' ? '#10B981' : '#34d399', 
+      bg: mode === 'light' 
+        ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' 
+        : 'linear-gradient(135deg, #34d399 0%, #10b981 100%)' 
+    },
     { label: 'Messages Sent', value: data.sentToday || 0, icon: <Send />, color: '#06B6D4', bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
-    { label: 'Open Rate', value: `${data.openRate || 0}%`, icon: <Visibility />, color: '#F59E0B', bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
+    { 
+      label: 'Open Rate', 
+      value: `${data.openRate || 0}%`, 
+      icon: <Visibility />, 
+      color: mode === 'light' ? '#F59E0B' : '#fbbf24', 
+      bg: mode === 'light' 
+        ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' 
+        : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' 
+    },
     { label: 'Active Recipients', value: data.activeRecipients || 0, icon: <People />, color: '#8B5CF6', bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
   ];
 
@@ -79,7 +97,9 @@ const CommOfficerDashboard: React.FC = () => {
               variant="h3" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                background: mode === 'light'
+                  ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  : 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -95,7 +115,9 @@ const CommOfficerDashboard: React.FC = () => {
             sx={{
               width: 80,
               height: 80,
-              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              background: mode === 'light'
+                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                : 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
               fontSize: '2rem',
               fontWeight: 700,
               boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)',
@@ -116,8 +138,8 @@ const CommOfficerDashboard: React.FC = () => {
                 position: 'relative',
                 overflow: 'hidden',
                 height: '100%',
-                background: 'white',
-                border: '1px solid #e5e7eb',
+                background: mode === 'light' ? 'white' : '#1e293b',
+                border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                 borderRadius: 3,
                 transition: 'all 0.3s',
                 '&:hover': {
@@ -187,8 +209,8 @@ const CommOfficerDashboard: React.FC = () => {
                 sx={{
                   p: 3,
                   borderRadius: 2,
-                  background: 'white',
-                  border: '1px solid #e5e7eb',
+                  background: mode === 'light' ? 'white' : '#1e293b',
+                  border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                   transition: 'all 0.3s',
                   '&:hover': {
                     transform: 'translateX(8px)',
@@ -214,7 +236,7 @@ const CommOfficerDashboard: React.FC = () => {
                       {campaign.type === 'email' ? <Email /> : <Campaign />}
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
                         {campaign.title}
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 2 }}>
