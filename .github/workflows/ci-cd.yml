@@ -11,21 +11,6 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
       - name: Checkout code
@@ -48,19 +33,16 @@ jobs:
       - name: Build with Maven
         working-directory: ./backend
         run: mvn clean compile
+        continue-on-error: true
 
       - name: Run tests
         working-directory: ./backend
-        run: mvn test || echo "Tests failed but continuing"
-        continue-on-error: true
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpass
+        run: mvn test -Dspring.profiles.active=test
+        continue-on-error: false
 
       - name: Generate test coverage report
         working-directory: ./backend
-        run: mvn jacoco:report || echo "Coverage report generation skipped"
+        run: mvn jacoco:report || true
         continue-on-error: true
 
       - name: Upload test results

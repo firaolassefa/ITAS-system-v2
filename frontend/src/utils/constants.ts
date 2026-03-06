@@ -8,5 +8,5 @@ export const COURSE_CATEGORIES = ['VAT', 'INCOME_TAX', 'CORPORATE_TAX', 'TCC'] a
 
 export const RESOURCE_TYPES = ['PDF', 'VIDEO', 'ARTICLE', 'GUIDE', 'PRESENTATION'] as const;
 
-// ?? CHANGE THIS LINE - Point to your REAL backend
-export const API_BASE_URL = 'http://localhost:8080/api';
+// Backend API URL - Updated to port 9090
+export const API_BASE_URL = 'http://localhost:9090/api';

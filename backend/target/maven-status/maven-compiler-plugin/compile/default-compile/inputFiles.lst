@@ -12,6 +12,7 @@ C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\repository\AssessmentAttemptRepository.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\model\AssessmentAttempt.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\repository\WebinarRepository.java
+C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\service\SmsService.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\config\SecurityConfig.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\repository\AssessmentDefinitionRepository.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\security\CustomUserDetailsService.java
@@ -51,6 +52,7 @@ C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\controller\DashboardController.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\model\Notification.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\model\UserRole.java
+C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\service\EmailService.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\model\Resource.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\controller\AnalyticsController.java
 C:\Users\Wellcome\Videos\iot\New folder\ITAS-system-v2\backend\src\main\java\com\itas\model\AssessmentDefinition.java

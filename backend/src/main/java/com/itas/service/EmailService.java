@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 public class EmailService {
     
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
     
     @Value("${spring.mail.username:noreply@itas.gov.et}")
@@ -32,6 +32,11 @@ public class EmailService {
             System.out.println("📧 EMAIL DISABLED - Would send to: " + to);
             System.out.println("   Subject: " + subject);
             System.out.println("   Body: " + body);
+            return;
+        }
+        
+        if (mailSender == null) {
+            System.out.println("⚠️ JavaMailSender not configured - Email not sent");
             return;
         }
         
@@ -58,6 +63,11 @@ public class EmailService {
         if (!emailEnabled) {
             System.out.println("📧 EMAIL DISABLED - Would send HTML email to: " + to);
             System.out.println("   Subject: " + subject);
+            return;
+        }
+        
+        if (mailSender == null) {
+            System.out.println("⚠️ JavaMailSender not configured - Email not sent");
             return;
         }
         
@@ -177,6 +187,11 @@ public class EmailService {
         try {
             if (!emailEnabled) {
                 System.out.println("⚠️ Email is disabled in configuration");
+                return false;
+            }
+            
+            if (mailSender == null) {
+                System.out.println("⚠️ JavaMailSender not configured");
                 return false;
             }
             

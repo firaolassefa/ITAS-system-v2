@@ -25,10 +25,10 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
     
-    @Autowired
+    @Autowired(required = false)
     private EmailService emailService;
     
-    @Autowired
+    @Autowired(required = false)
     private SmsService smsService;
     
     public List<Notification> getAllNotifications() {
@@ -280,31 +280,39 @@ public class NotificationService {
             
             if ("EMAIL".equals(notificationType)) {
                 // Send emails
-                for (User user : targetUsers) {
-                    if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                        emailService.sendNotificationEmail(
-                            user.getEmail(),
-                            notification.getTitle(),
-                            notification.getMessage(),
-                            notification.getLink()
-                        );
+                if (emailService != null) {
+                    for (User user : targetUsers) {
+                        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                            emailService.sendNotificationEmail(
+                                user.getEmail(),
+                                notification.getTitle(),
+                                notification.getMessage(),
+                                notification.getLink()
+                            );
+                        }
                     }
+                    System.out.println("✅ Queued " + targetUsers.size() + " emails for sending");
+                } else {
+                    System.out.println("⚠️ EmailService not available - emails not sent");
                 }
-                System.out.println("✅ Queued " + targetUsers.size() + " emails for sending");
             } 
             else if ("SMS".equals(notificationType)) {
                 // Send SMS
-                for (User user : targetUsers) {
-                    if (user.getPhoneNumber() != null && !user.getPhoneNumber().isEmpty()) {
-                        String smsMessage = notification.getTitle() + ": " + notification.getMessage();
-                        // Limit SMS to 160 characters
-                        if (smsMessage.length() > 160) {
-                            smsMessage = smsMessage.substring(0, 157) + "...";
+                if (smsService != null) {
+                    for (User user : targetUsers) {
+                        if (user.getPhoneNumber() != null && !user.getPhoneNumber().isEmpty()) {
+                            String smsMessage = notification.getTitle() + ": " + notification.getMessage();
+                            // Limit SMS to 160 characters
+                            if (smsMessage.length() > 160) {
+                                smsMessage = smsMessage.substring(0, 157) + "...";
+                            }
+                            smsService.sendSms(user.getPhoneNumber(), smsMessage);
                         }
-                        smsService.sendSms(user.getPhoneNumber(), smsMessage);
                     }
+                    System.out.println("✅ Queued " + targetUsers.size() + " SMS for sending");
+                } else {
+                    System.out.println("⚠️ SmsService not available - SMS not sent");
                 }
-                System.out.println("✅ Queued " + targetUsers.size() + " SMS for sending");
             }
             else if ("IN_APP".equals(notificationType)) {
                 // In-app notifications are already saved to database
@@ -312,17 +320,21 @@ public class NotificationService {
             }
             else if ("SYSTEM".equals(notificationType)) {
                 // System notifications - both in-app and email
-                for (User user : targetUsers) {
-                    if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                        emailService.sendNotificationEmail(
-                            user.getEmail(),
-                            notification.getTitle(),
-                            notification.getMessage(),
-                            notification.getLink()
-                        );
+                if (emailService != null) {
+                    for (User user : targetUsers) {
+                        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                            emailService.sendNotificationEmail(
+                                user.getEmail(),
+                                notification.getTitle(),
+                                notification.getMessage(),
+                                notification.getLink()
+                            );
+                        }
                     }
+                    System.out.println("✅ System notifications sent (in-app + email)");
+                } else {
+                    System.out.println("✅ System notifications saved (in-app only - email service not available)");
                 }
-                System.out.println("✅ System notifications sent (in-app + email)");
             }
         } catch (Exception e) {
             System.err.println("❌ Error sending notifications: " + e.getMessage());
