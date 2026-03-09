@@ -99,30 +99,39 @@ import java.util.Arrays;
 <span class="fc" id="L99">                .requestMatchers(&quot;/content/upload&quot;, &quot;/content/update/**&quot;, &quot;/api/content/upload&quot;, &quot;/api/content/update/**&quot;).hasAnyRole(&quot;CONTENT_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
 <span class="fc" id="L100">                .requestMatchers(&quot;/content/archive/**&quot;, &quot;/api/content/archive/**&quot;).hasAnyRole(&quot;CONTENT_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
                 
+                // File Upload - Content Admin, Training Admin &amp; System Admin
+<span class="fc" id="L103">                .requestMatchers(&quot;/files/upload&quot;, &quot;/api/files/upload&quot;).hasAnyRole(&quot;CONTENT_ADMIN&quot;, &quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L104">                .requestMatchers(&quot;/modules/*/upload-content&quot;, &quot;/api/modules/*/upload-content&quot;).hasAnyRole(&quot;CONTENT_ADMIN&quot;, &quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L105">                .requestMatchers(&quot;/modules/*/set-url&quot;, &quot;/api/modules/*/set-url&quot;).hasAnyRole(&quot;CONTENT_ADMIN&quot;, &quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+                
+                // Static file serving
+<span class="fc" id="L108">                .requestMatchers(&quot;/uploads/**&quot;, &quot;/api/uploads/**&quot;).permitAll()</span>
+<span class="fc" id="L109">                .requestMatchers(&quot;/certificates/**&quot;, &quot;/api/certificates/**&quot;).permitAll()</span>
+                
                 // Internal Training - MOR Staff &amp; System Admin
-<span class="fc" id="L103">                .requestMatchers(&quot;/staff/internal-training/**&quot;, &quot;/api/staff/internal-training/**&quot;).hasAnyRole(&quot;MOR_STAFF&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
-<span class="fc" id="L104">                .requestMatchers(&quot;/staff/compliance/**&quot;, &quot;/api/staff/compliance/**&quot;).hasAnyRole(&quot;MOR_STAFF&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L112">                .requestMatchers(&quot;/staff/internal-training/**&quot;, &quot;/api/staff/internal-training/**&quot;).hasAnyRole(&quot;MOR_STAFF&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L113">                .requestMatchers(&quot;/staff/compliance/**&quot;, &quot;/api/staff/compliance/**&quot;).hasAnyRole(&quot;MOR_STAFF&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
                 
                 // Webinar Management - Training Admin &amp; System Admin
-<span class="fc" id="L107">                .requestMatchers(&quot;/webinars/schedule&quot;, &quot;/webinars/manage/**&quot;).hasAnyRole(&quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
-<span class="fc" id="L108">                .requestMatchers(&quot;/api/webinars/schedule&quot;, &quot;/api/webinars/manage/**&quot;).hasAnyRole(&quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L116">                .requestMatchers(&quot;/webinars/schedule&quot;, &quot;/webinars/manage/**&quot;).hasAnyRole(&quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L117">                .requestMatchers(&quot;/api/webinars/schedule&quot;, &quot;/api/webinars/manage/**&quot;).hasAnyRole(&quot;TRAINING_ADMIN&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
                 
                 // Notifications - Communication Officer &amp; System Admin
-<span class="fc" id="L111">                .requestMatchers(&quot;/notifications/send&quot;, &quot;/api/notifications/send&quot;).hasAnyRole(&quot;COMM_OFFICER&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L120">                .requestMatchers(&quot;/notifications/send&quot;, &quot;/api/notifications/send&quot;).hasAnyRole(&quot;COMM_OFFICER&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
                 
                 // Analytics - Manager, Auditor &amp; System Admin
-<span class="fc" id="L114">                .requestMatchers(&quot;/analytics/**&quot;, &quot;/api/analytics/**&quot;).hasAnyRole(&quot;MANAGER&quot;, &quot;AUDITOR&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L123">                .requestMatchers(&quot;/analytics/**&quot;, &quot;/api/analytics/**&quot;).hasAnyRole(&quot;MANAGER&quot;, &quot;AUDITOR&quot;, &quot;SYSTEM_ADMIN&quot;)</span>
                 
                 // User Role Management - System Admin only
-<span class="fc" id="L117">                .requestMatchers(&quot;/user-roles/**&quot;, &quot;/api/user-roles/**&quot;).hasRole(&quot;SYSTEM_ADMIN&quot;)</span>
+<span class="fc" id="L126">                .requestMatchers(&quot;/user-roles/**&quot;, &quot;/api/user-roles/**&quot;).hasRole(&quot;SYSTEM_ADMIN&quot;)</span>
                 
                 // All other requests require authentication
-<span class="fc" id="L120">                .anyRequest().authenticated()</span>
+<span class="fc" id="L129">                .anyRequest().authenticated()</span>
             );
 
-<span class="fc" id="L123">        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);</span>
+<span class="fc" id="L132">        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);</span>
         
-<span class="fc" id="L125">        return http.build();</span>
+<span class="fc" id="L134">        return http.build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

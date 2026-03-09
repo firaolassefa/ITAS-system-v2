@@ -71,6 +71,6 @@ ITAS Tax Education Backend,com.itas.security,CustomUserDetailsService,190,3,18,0
 ITAS Tax Education Backend,com.itas.security,JwtTokenProvider,61,3,0,0,23,1,4,1,4,1
 ITAS Tax Education Backend,com.itas.security,JwtAuthenticationFilter,107,3,10,0,24,1,7,1,2,1
 ITAS Tax Education Backend,com.itas.config,WebConfig,116,3,0,0,17,1,2,1,2,1
-ITAS Tax Education Backend,com.itas.config,SecurityConfig,0,693,0,0,0,50,0,11,0,11
+ITAS Tax Education Backend,com.itas.config,SecurityConfig,0,800,0,0,0,55,0,11,0,11
 ITAS Tax Education Backend,com.itas.config,OpenApiConfig,0,74,0,0,0,25,0,2,0,2
 ITAS Tax Education Backend,com.itas.config,RoleConfig,0,671,6,6,0,135,6,8,0,8
