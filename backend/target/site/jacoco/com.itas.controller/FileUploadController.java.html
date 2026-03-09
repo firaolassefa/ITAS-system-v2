@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileUploadController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">FileUploadController.java</span></div><h1>FileUploadController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.Resource;
+import com.itas.model.User;
+import com.itas.service.FileStorageService;
+import com.itas.service.ResourceService;
+import com.itas.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+
+@RestController
+@RequestMapping(&quot;/files&quot;)
+<span class="fc" id="L23">public class FileUploadController {</span>
+    
+    @Autowired
+    private FileStorageService fileStorageService;
+    
+    @Autowired
+    private ResourceService resourceService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @PostMapping(&quot;/upload&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; uploadFile(
+            @RequestParam(&quot;file&quot;) MultipartFile file,
+            @RequestParam(&quot;title&quot;) String title,
+            @RequestParam(&quot;description&quot;) String description,
+            @RequestParam(&quot;category&quot;) String category,
+            @RequestParam(&quot;resourceType&quot;) String resourceType,
+            @RequestParam(&quot;audience&quot;) String audience,
+            Authentication authentication) {
+        
+        try {
+            // Validate file
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            if (file.isEmpty()) {</span>
+<span class="nc" id="L48">                return ResponseEntity.badRequest()</span>
+<span class="nc" id="L49">                    .body(new ApiResponse&lt;&gt;(&quot;Please select a file to upload&quot;, null));</span>
+            }
+            
+            // Store file
+<span class="nc" id="L53">            String filePath = fileStorageService.storeFile(file, category);</span>
+<span class="nc" id="L54">            String fileHash = fileStorageService.calculateFileHash(file);</span>
+            
+            // Get current user
+<span class="nc" id="L57">            String username = authentication.getName();</span>
+<span class="nc" id="L58">            User user = userRepository.findByUsername(username)</span>
+<span class="nc" id="L59">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+            
+            // Create resource record
+<span class="nc" id="L62">            Resource resource = new Resource();</span>
+<span class="nc" id="L63">            resource.setTitle(title);</span>
+<span class="nc" id="L64">            resource.setDescription(description);</span>
+<span class="nc" id="L65">            resource.setCategory(category);</span>
+<span class="nc" id="L66">            resource.setResourceType(resourceType);</span>
+<span class="nc" id="L67">            resource.setAudience(audience);</span>
+<span class="nc" id="L68">            resource.setFilePath(filePath);</span>
+<span class="nc" id="L69">            resource.setFileName(file.getOriginalFilename());</span>
+<span class="nc" id="L70">            resource.setFileSize(file.getSize());</span>
+<span class="nc" id="L71">            resource.setMimeType(file.getContentType());</span>
+<span class="nc" id="L72">            resource.setFileHash(fileHash);</span>
+<span class="nc" id="L73">            resource.setStatus(&quot;PUBLISHED&quot;);</span>
+<span class="nc" id="L74">            resource.setUploadedBy(user);</span>
+<span class="nc" id="L75">            resource.setUploadedAt(LocalDateTime.now());</span>
+<span class="nc" id="L76">            resource.setVersion(1);</span>
+<span class="nc" id="L77">            resource.setIsLatestVersion(true);</span>
+            
+<span class="nc" id="L79">            Resource savedResource = resourceService.createResource(resource);</span>
+            
+<span class="nc" id="L81">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;File uploaded successfully&quot;, savedResource));</span>
+            
+<span class="nc" id="L83">        } catch (Exception e) {</span>
+<span class="nc" id="L84">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L85">                .body(new ApiResponse&lt;&gt;(&quot;Failed to upload file: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/download/{resourceId}&quot;)
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; downloadFile(@PathVariable Long resourceId) {
+        try {
+<span class="nc" id="L93">            Resource resource = resourceService.getResourceById(resourceId);</span>
+            
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (resource.getFilePath() == null) {</span>
+<span class="nc" id="L96">                return ResponseEntity.badRequest()</span>
+<span class="nc" id="L97">                    .body(new ApiResponse&lt;&gt;(&quot;This is a demo resource with no actual file&quot;, null));</span>
+            }
+            
+<span class="nc" id="L100">            byte[] data = fileStorageService.loadFileAsBytes(resource.getFilePath());</span>
+<span class="nc" id="L101">            ByteArrayResource fileResource = new ByteArrayResource(data);</span>
+            
+            // Increment download count
+<span class="nc" id="L104">            resource.setDownloadCount(resource.getDownloadCount() + 1);</span>
+<span class="nc" id="L105">            resourceService.updateResource(resourceId, resource);</span>
+            
+<span class="nc" id="L107">            return ResponseEntity.ok()</span>
+<span class="nc" id="L108">                .contentType(MediaType.parseMediaType(resource.getMimeType()))</span>
+<span class="nc" id="L109">                .header(HttpHeaders.CONTENT_DISPOSITION, </span>
+<span class="nc" id="L110">                    &quot;attachment; filename=\&quot;&quot; + resource.getFileName() + &quot;\&quot;&quot;)</span>
+<span class="nc" id="L111">                .body(fileResource);</span>
+                
+<span class="nc" id="L113">        } catch (Exception e) {</span>
+<span class="nc" id="L114">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L115">                .body(new ApiResponse&lt;&gt;(&quot;Failed to download file: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/view/{resourceId}&quot;)
+    public ResponseEntity&lt;?&gt; viewFile(@PathVariable Long resourceId) {
+        try {
+<span class="nc" id="L122">            Resource resource = resourceService.getResourceById(resourceId);</span>
+            
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (resource.getFilePath() == null) {</span>
+<span class="nc" id="L125">                return ResponseEntity.badRequest()</span>
+<span class="nc" id="L126">                    .body(new ApiResponse&lt;&gt;(&quot;This is a demo resource with no actual file&quot;, null));</span>
+            }
+            
+<span class="nc" id="L129">            byte[] data = fileStorageService.loadFileAsBytes(resource.getFilePath());</span>
+<span class="nc" id="L130">            ByteArrayResource fileResource = new ByteArrayResource(data);</span>
+            
+            // Increment view count
+<span class="nc" id="L133">            resource.setViewCount(resource.getViewCount() + 1);</span>
+<span class="nc" id="L134">            resourceService.updateResource(resourceId, resource);</span>
+            
+<span class="nc" id="L136">            return ResponseEntity.ok()</span>
+<span class="nc" id="L137">                .contentType(MediaType.parseMediaType(resource.getMimeType()))</span>
+<span class="nc" id="L138">                .header(HttpHeaders.CONTENT_DISPOSITION, </span>
+<span class="nc" id="L139">                    &quot;inline; filename=\&quot;&quot; + resource.getFileName() + &quot;\&quot;&quot;)</span>
+<span class="nc" id="L140">                .body(fileResource);</span>
+                
+<span class="nc" id="L142">        } catch (Exception e) {</span>
+<span class="nc" id="L143">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L144">                .body(new ApiResponse&lt;&gt;(&quot;Failed to view file: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @DeleteMapping(&quot;/{resourceId}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; deleteFile(@PathVariable Long resourceId) {
+        try {
+<span class="nc" id="L152">            Resource resource = resourceService.getResourceById(resourceId);</span>
+            
+            // Delete physical file
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (resource.getFilePath() != null) {</span>
+<span class="nc" id="L156">                fileStorageService.deleteFile(resource.getFilePath());</span>
+            }
+            
+            // Delete database record
+<span class="nc" id="L160">            resourceService.deleteResource(resourceId);</span>
+            
+<span class="nc" id="L162">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;File deleted successfully&quot;, null));</span>
+            
+<span class="nc" id="L164">        } catch (Exception e) {</span>
+<span class="nc" id="L165">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L166">                .body(new ApiResponse&lt;&gt;(&quot;Failed to delete file: &quot; + e.getMessage(), null));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

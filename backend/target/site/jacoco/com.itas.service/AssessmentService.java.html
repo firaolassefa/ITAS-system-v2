@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssessmentService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.service</a> &gt; <span class="el_source">AssessmentService.java</span></div><h1>AssessmentService.java</h1><pre class="source lang-java linenums">package com.itas.service;
+
+import com.itas.model.*;
+import com.itas.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+<span class="fc" id="L15">public class AssessmentService {</span>
+    
+    @Autowired
+    private AssessmentRepository assessmentRepository;
+    
+    @Autowired
+    private ModuleRepository moduleRepository;
+    
+    @Autowired
+    private QuestionRepository questionRepository;
+    
+    @Autowired
+    private AnswerRepository answerRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private ModuleProgressRepository moduleProgressRepository;
+    
+    @Autowired
+    private CourseRepository courseRepository;
+    
+    @Autowired
+    private CertificateService certificateService;
+    
+    /**
+     * Start a new assessment attempt
+     * UC-LMS-002: Complete Learning Module
+     */
+    @Transactional
+    public Assessment startAssessment(Long userId, Long moduleId) {
+<span class="fc" id="L47">        User user = userRepository.findById(userId)</span>
+<span class="pc" id="L48">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+        
+<span class="fc" id="L50">        com.itas.model.Module module = moduleRepository.findById(moduleId)</span>
+<span class="pc" id="L51">                .orElseThrow(() -&gt; new RuntimeException(&quot;Module not found&quot;));</span>
+        
+        // Check if module is locked
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (module.getIsLocked()) {</span>
+<span class="fc" id="L55">            throw new RuntimeException(&quot;Module is locked. Complete previous modules first.&quot;);</span>
+        }
+        
+        // Check attempt count
+<span class="fc" id="L59">        Integer attemptCount = assessmentRepository.countAttemptsByUserAndModule(user, module);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (attemptCount &gt;= module.getMaxAttempts()) {</span>
+<span class="fc" id="L61">            throw new RuntimeException(&quot;Maximum attempts (&quot; + module.getMaxAttempts() + &quot;) reached&quot;);</span>
+        }
+        
+        // Create new assessment
+<span class="fc" id="L65">        Assessment assessment = new Assessment();</span>
+<span class="fc" id="L66">        assessment.setUser(user);</span>
+<span class="fc" id="L67">        assessment.setModule(module);</span>
+<span class="fc" id="L68">        assessment.setAttemptNumber(attemptCount + 1);</span>
+<span class="fc" id="L69">        assessment.setStartedAt(LocalDateTime.now());</span>
+        
+<span class="fc" id="L71">        return assessmentRepository.save(assessment);</span>
+    }
+    
+    /**
+     * Submit assessment and calculate score
+     * UC-LMS-002: Complete Learning Module with passing score validation
+     */
+    @Transactional
+    public Map&lt;String, Object&gt; submitAssessment(Long assessmentId, Map&lt;Long, Long&gt; answers) {
+<span class="fc" id="L80">        Assessment assessment = assessmentRepository.findById(assessmentId)</span>
+<span class="pc" id="L81">                .orElseThrow(() -&gt; new RuntimeException(&quot;Assessment not found&quot;));</span>
+        
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (assessment.getCompletedAt() != null) {</span>
+<span class="nc" id="L84">            throw new RuntimeException(&quot;Assessment already submitted&quot;);</span>
+        }
+        
+<span class="fc" id="L87">        com.itas.model.Module module = assessment.getModule();</span>
+<span class="fc" id="L88">        List&lt;Question&gt; questions = questionRepository.findByModuleOrderByOrderAsc(module);</span>
+        
+<span class="fc" id="L90">        int totalPoints = 0;</span>
+<span class="fc" id="L91">        int earnedPoints = 0;</span>
+<span class="fc" id="L92">        Map&lt;Long, Boolean&gt; results = new HashMap&lt;&gt;();</span>
+        
+        // Calculate score
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (Question question : questions) {</span>
+<span class="fc" id="L96">            totalPoints += question.getPoints();</span>
+            
+<span class="fc" id="L98">            Long userAnswerId = answers.get(question.getId());</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (userAnswerId != null) {</span>
+<span class="fc" id="L100">                Answer answer = answerRepository.findById(userAnswerId)</span>
+<span class="fc" id="L101">                        .orElse(null);</span>
+                
+<span class="pc bpc" id="L103" title="1 of 4 branches missed.">                if (answer != null &amp;&amp; answer.getIsCorrect()) {</span>
+<span class="fc" id="L104">                    earnedPoints += question.getPoints();</span>
+<span class="fc" id="L105">                    results.put(question.getId(), true);</span>
+                } else {
+<span class="fc" id="L107">                    results.put(question.getId(), false);</span>
+                }
+<span class="fc" id="L109">            } else {</span>
+<span class="nc" id="L110">                results.put(question.getId(), false);</span>
+            }
+<span class="fc" id="L112">        }</span>
+        
+        // Calculate percentage
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        double percentage = totalPoints &gt; 0 ? (earnedPoints * 100.0 / totalPoints) : 0;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        boolean passed = percentage &gt;= module.getPassingScore();</span>
+        
+        // Update assessment
+<span class="fc" id="L119">        assessment.setScore(earnedPoints);</span>
+<span class="fc" id="L120">        assessment.setTotalPoints(totalPoints);</span>
+<span class="fc" id="L121">        assessment.setPercentage(percentage);</span>
+<span class="fc" id="L122">        assessment.setPassed(passed);</span>
+<span class="fc" id="L123">        assessment.setCompletedAt(LocalDateTime.now());</span>
+        
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (passed) {</span>
+<span class="fc" id="L126">            assessment.setFeedback(&quot;Congratulations! You passed the assessment.&quot;);</span>
+            
+            // Update module progress
+<span class="fc" id="L129">            updateModuleProgress(assessment.getUser(), module);</span>
+            
+            // Unlock next module
+<span class="fc" id="L132">            unlockNextModule(module);</span>
+        } else {
+<span class="fc" id="L134">            int remainingAttempts = module.getMaxAttempts() - assessment.getAttemptNumber();</span>
+<span class="fc" id="L135">            assessment.setFeedback(&quot;You did not pass. You have &quot; + remainingAttempts + &quot; attempt(s) remaining.&quot;);</span>
+        }
+        
+<span class="fc" id="L138">        assessmentRepository.save(assessment);</span>
+        
+        // Prepare response
+<span class="fc" id="L141">        Map&lt;String, Object&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L142">        response.put(&quot;assessment&quot;, assessment);</span>
+<span class="fc" id="L143">        response.put(&quot;results&quot;, results);</span>
+<span class="fc" id="L144">        response.put(&quot;passed&quot;, passed);</span>
+<span class="fc" id="L145">        response.put(&quot;percentage&quot;, percentage);</span>
+<span class="fc" id="L146">        response.put(&quot;score&quot;, earnedPoints + &quot;/&quot; + totalPoints);</span>
+        
+<span class="fc" id="L148">        return response;</span>
+    }
+    
+    /**
+     * Update module progress when assessment is passed
+     */
+    private void updateModuleProgress(User user, com.itas.model.Module module) {
+<span class="fc" id="L155">        ModuleProgress progress = moduleProgressRepository</span>
+<span class="fc" id="L156">                .findByUserIdAndModuleId(user.getId(), module.getId())</span>
+<span class="fc" id="L157">                .orElse(new ModuleProgress());</span>
+        
+<span class="fc" id="L159">        progress.setUser(user);</span>
+<span class="fc" id="L160">        progress.setModule(module);</span>
+<span class="fc" id="L161">        progress.setCompleted(true);</span>
+<span class="fc" id="L162">        progress.setCompletedAt(LocalDateTime.now());</span>
+<span class="fc" id="L163">        progress.setProgress(100.0);</span>
+        
+<span class="fc" id="L165">        moduleProgressRepository.save(progress);</span>
+<span class="fc" id="L166">    }</span>
+    
+    /**
+     * Unlock next module in sequence
+     */
+    private void unlockNextModule(com.itas.model.Module currentModule) {
+<span class="fc" id="L172">        List&lt;com.itas.model.Module&gt; modules = moduleRepository.findByCourseOrderByOrderAsc(currentModule.getCourse());</span>
+        
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        for (int i = 0; i &lt; modules.size() - 1; i++) {</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (modules.get(i).getId().equals(currentModule.getId())) {</span>
+<span class="nc" id="L176">                com.itas.model.Module nextModule = modules.get(i + 1);</span>
+<span class="nc" id="L177">                nextModule.setIsLocked(false);</span>
+<span class="nc" id="L178">                moduleRepository.save(nextModule);</span>
+<span class="nc" id="L179">                break;</span>
+            }
+        }
+<span class="fc" id="L182">    }</span>
+    
+    /**
+     * Get assessment history for a user and module
+     */
+    public List&lt;Assessment&gt; getAssessmentHistory(Long userId, Long moduleId) {
+<span class="nc" id="L188">        return assessmentRepository.findByUserIdAndModuleIdOrderByAttemptNumberDesc(userId, moduleId);</span>
+    }
+    
+    /**
+     * Get questions for a module (without correct answers)
+     */
+    public List&lt;Question&gt; getModuleQuestions(Long moduleId) {
+<span class="nc" id="L195">        return questionRepository.findByModuleIdOrderByOrderAsc(moduleId);</span>
+    }
+    
+    /**
+     * Get final exam questions from all modules in a course
+     */
+    public List&lt;Question&gt; getFinalExamQuestions(Long courseId) {
+        // Get all modules for the course
+<span class="nc" id="L203">        List&lt;com.itas.model.Module&gt; modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);</span>
+        
+        // Get quiz questions (not practice) from all modules
+<span class="nc" id="L206">        List&lt;Question&gt; allQuestions = new java.util.ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        for (com.itas.model.Module module : modules) {</span>
+<span class="nc" id="L208">            List&lt;Question&gt; moduleQuestions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(module.getId());</span>
+<span class="nc" id="L209">            allQuestions.addAll(moduleQuestions);</span>
+<span class="nc" id="L210">        }</span>
+        
+<span class="nc" id="L212">        return allQuestions;</span>
+    }
+    
+    /**
+     * Submit final exam and generate certificate if passed
+     */
+    @Transactional
+    public Map&lt;String, Object&gt; submitFinalExam(Long userId, Long courseId, Map&lt;Long, Long&gt; answers) {
+<span class="nc" id="L220">        User user = userRepository.findById(userId)</span>
+<span class="nc" id="L221">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+        
+<span class="nc" id="L223">        Course course = courseRepository.findById(courseId)</span>
+<span class="nc" id="L224">                .orElseThrow(() -&gt; new RuntimeException(&quot;Course not found&quot;));</span>
+        
+        // Check if user has completed all modules
+<span class="nc" id="L227">        List&lt;com.itas.model.Module&gt; modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        for (com.itas.model.Module module : modules) {</span>
+<span class="nc" id="L229">            ModuleProgress progress = moduleProgressRepository</span>
+<span class="nc" id="L230">                    .findByUserIdAndModuleId(userId, module.getId())</span>
+<span class="nc" id="L231">                    .orElse(null);</span>
+            
+<span class="nc bnc" id="L233" title="All 4 branches missed.">            if (progress == null || !Boolean.TRUE.equals(progress.getCompleted())) {</span>
+<span class="nc" id="L234">                throw new RuntimeException(&quot;You must complete all modules before taking the final exam. Module '&quot; + module.getTitle() + &quot;' is not completed.&quot;);</span>
+            }
+<span class="nc" id="L236">        }</span>
+        
+        // Get all quiz questions from the course
+<span class="nc" id="L239">        List&lt;Question&gt; questions = getFinalExamQuestions(courseId);</span>
+        
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        if (questions.isEmpty()) {</span>
+<span class="nc" id="L242">            throw new RuntimeException(&quot;No exam questions found for this course&quot;);</span>
+        }
+        
+<span class="nc" id="L245">        int totalPoints = 0;</span>
+<span class="nc" id="L246">        int earnedPoints = 0;</span>
+        
+        // Calculate score
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        for (Question question : questions) {</span>
+<span class="nc" id="L250">            totalPoints += question.getPoints();</span>
+            
+<span class="nc" id="L252">            Long userAnswerId = answers.get(question.getId());</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">            if (userAnswerId != null) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                for (Answer answer : question.getAnswers()) {</span>
+<span class="nc bnc" id="L255" title="All 4 branches missed.">                    if (answer.getId().equals(userAnswerId) &amp;&amp; answer.getIsCorrect()) {</span>
+<span class="nc" id="L256">                        earnedPoints += question.getPoints();</span>
+<span class="nc" id="L257">                        break;</span>
+                    }
+<span class="nc" id="L259">                }</span>
+            }
+<span class="nc" id="L261">        }</span>
+        
+        // Calculate percentage
+<span class="nc bnc" id="L264" title="All 2 branches missed.">        double percentage = totalPoints &gt; 0 ? (earnedPoints * 100.0 / totalPoints) : 0;</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        boolean passed = percentage &gt;= 70; // 70% required for final exam</span>
+        
+<span class="nc" id="L267">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L268">        result.put(&quot;totalPoints&quot;, totalPoints);</span>
+<span class="nc" id="L269">        result.put(&quot;earnedPoints&quot;, earnedPoints);</span>
+<span class="nc" id="L270">        result.put(&quot;percentage&quot;, Math.round(percentage * 100.0) / 100.0);</span>
+<span class="nc" id="L271">        result.put(&quot;passed&quot;, passed);</span>
+<span class="nc" id="L272">        result.put(&quot;courseName&quot;, course.getTitle());</span>
+        
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        if (passed) {</span>
+            // Generate certificate
+            try {
+<span class="nc" id="L277">                com.itas.model.Certificate certificate = generateCertificate(userId, courseId);</span>
+<span class="nc" id="L278">                result.put(&quot;certificateId&quot;, certificate.getId());</span>
+<span class="nc" id="L279">                result.put(&quot;certificateNumber&quot;, certificate.getCertificateNumber());</span>
+<span class="nc" id="L280">                result.put(&quot;certificateUrl&quot;, &quot;/api/certificates/&quot; + certificate.getId() + &quot;/download&quot;);</span>
+<span class="nc" id="L281">                result.put(&quot;feedback&quot;, &quot;🎉 Congratulations! You passed the final exam with &quot; + Math.round(percentage) + &quot;% and earned your certificate!&quot;);</span>
+<span class="nc" id="L282">            } catch (Exception e) {</span>
+                // Certificate might already exist
+<span class="nc" id="L284">                result.put(&quot;feedback&quot;, &quot;Congratulations! You passed the final exam with &quot; + Math.round(percentage) + &quot;%!&quot;);</span>
+<span class="nc" id="L285">            }</span>
+        } else {
+<span class="nc" id="L287">            result.put(&quot;feedback&quot;, &quot;You scored &quot; + Math.round(percentage) + &quot;%. You need at least 70% to pass the final exam and earn your certificate. Please review the course materials and try again.&quot;);</span>
+        }
+        
+<span class="nc" id="L290">        return result;</span>
+    }
+    
+    /**
+     * Check if user can take final exam (all modules completed)
+     */
+    public Map&lt;String, Object&gt; checkFinalExamEligibility(Long userId, Long courseId) {
+<span class="nc" id="L297">        List&lt;com.itas.model.Module&gt; modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);</span>
+        
+<span class="nc" id="L299">        int totalModules = modules.size();</span>
+<span class="nc" id="L300">        int completedModules = 0;</span>
+<span class="nc" id="L301">        List&lt;String&gt; incompleteModules = new java.util.ArrayList&lt;&gt;();</span>
+        
+<span class="nc bnc" id="L303" title="All 2 branches missed.">        for (com.itas.model.Module module : modules) {</span>
+<span class="nc" id="L304">            ModuleProgress progress = moduleProgressRepository</span>
+<span class="nc" id="L305">                    .findByUserIdAndModuleId(userId, module.getId())</span>
+<span class="nc" id="L306">                    .orElse(null);</span>
+            
+<span class="nc bnc" id="L308" title="All 4 branches missed.">            if (progress != null &amp;&amp; Boolean.TRUE.equals(progress.getCompleted())) {</span>
+<span class="nc" id="L309">                completedModules++;</span>
+            } else {
+<span class="nc" id="L311">                incompleteModules.add(module.getTitle());</span>
+            }
+<span class="nc" id="L313">        }</span>
+        
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        boolean eligible = completedModules == totalModules;</span>
+        
+<span class="nc" id="L317">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L318">        result.put(&quot;eligible&quot;, eligible);</span>
+<span class="nc" id="L319">        result.put(&quot;totalModules&quot;, totalModules);</span>
+<span class="nc" id="L320">        result.put(&quot;completedModules&quot;, completedModules);</span>
+<span class="nc" id="L321">        result.put(&quot;incompleteModules&quot;, incompleteModules);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        result.put(&quot;progress&quot;, totalModules &gt; 0 ? (completedModules * 100.0 / totalModules) : 0);</span>
+        
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        if (eligible) {</span>
+<span class="nc" id="L325">            result.put(&quot;message&quot;, &quot;You have completed all modules! You are now eligible to take the final exam.&quot;);</span>
+        } else {
+<span class="nc" id="L327">            result.put(&quot;message&quot;, &quot;Complete all &quot; + totalModules + &quot; modules to unlock the final exam. You have completed &quot; + completedModules + &quot; module(s).&quot;);</span>
+        }
+        
+<span class="nc" id="L330">        return result;</span>
+    }
+    
+    /**
+     * Generate certificate for user
+     */
+    private com.itas.model.Certificate generateCertificate(Long userId, Long courseId) {
+<span class="nc" id="L337">        return certificateService.generateCertificate(userId, courseId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -127,7 +127,7 @@ const PublicResources: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             <School sx={{ fontSize: 28, mr: 1 }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              ITAS
+              MOR Ethiopia
             </Typography>
           </Box>
           <Button 

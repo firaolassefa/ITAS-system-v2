@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoleService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.service</a> &gt; <span class="el_source">RoleService.java</span></div><h1>RoleService.java</h1><pre class="source lang-java linenums">package com.itas.service;
+
+import com.itas.model.User;
+import com.itas.model.UserRole;
+import com.itas.repository.UserRepository;
+import com.itas.repository.UserRoleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+<span class="fc" id="L15">public class RoleService {</span>
+    
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    public List&lt;UserRole&gt; getAllRoles() {
+<span class="nc" id="L24">        return userRoleRepository.findAll();</span>
+    }
+    
+    public List&lt;UserRole&gt; getUserRoles(Long userId) {
+<span class="nc" id="L28">        return userRoleRepository.findByUserId(userId);</span>
+    }
+    
+    public UserRole getRoleById(Long id) {
+<span class="nc" id="L32">        return userRoleRepository.findById(id)</span>
+<span class="nc" id="L33">                .orElseThrow(() -&gt; new RuntimeException(&quot;Role not found with id: &quot; + id));</span>
+    }
+    
+    @Transactional
+    public UserRole assignRole(Long userId, String roleName, Long assignedById) {
+<span class="nc" id="L38">        User user = userRepository.findById(userId)</span>
+<span class="nc" id="L39">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+        
+<span class="nc" id="L41">        User assignedBy = userRepository.findById(assignedById)</span>
+<span class="nc" id="L42">                .orElseThrow(() -&gt; new RuntimeException(&quot;Assigner not found&quot;));</span>
+        
+        // Check if role already exists
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (userRoleRepository.existsByUserIdAndRoleName(userId, roleName)) {</span>
+<span class="nc" id="L46">            throw new RuntimeException(&quot;User already has this role&quot;);</span>
+        }
+        
+<span class="nc" id="L49">        UserRole userRole = new UserRole();</span>
+<span class="nc" id="L50">        userRole.setUser(user);</span>
+<span class="nc" id="L51">        userRole.setRoleName(roleName);</span>
+<span class="nc" id="L52">        userRole.setAssignedBy(assignedBy);</span>
+<span class="nc" id="L53">        userRole.setAssignedAt(LocalDateTime.now());</span>
+        
+<span class="nc" id="L55">        return userRoleRepository.save(userRole);</span>
+    }
+    
+    @Transactional
+    public void removeRole(Long roleId) {
+<span class="nc" id="L60">        UserRole userRole = getRoleById(roleId);</span>
+<span class="nc" id="L61">        userRoleRepository.delete(userRole);</span>
+<span class="nc" id="L62">    }</span>
+    
+    @Transactional
+    public void removeUserRole(Long userId, String roleName) {
+<span class="nc" id="L66">        List&lt;UserRole&gt; roles = userRoleRepository.findByUserId(userId);</span>
+<span class="nc" id="L67">        roles.stream()</span>
+<span class="nc" id="L68">                .filter(r -&gt; roleName.equals(r.getRoleName()))</span>
+<span class="nc" id="L69">                .findFirst()</span>
+<span class="nc" id="L70">                .ifPresent(userRoleRepository::delete);</span>
+<span class="nc" id="L71">    }</span>
+    
+    public boolean hasRole(Long userId, String roleName) {
+<span class="nc" id="L74">        return userRoleRepository.existsByUserIdAndRoleName(userId, roleName);</span>
+    }
+    
+    @Transactional
+    public UserRole createRole(UserRole userRole) {
+<span class="nc" id="L79">        userRole.setAssignedAt(LocalDateTime.now());</span>
+<span class="nc" id="L80">        return userRoleRepository.save(userRole);</span>
+    }
+    
+    @Transactional
+    public UserRole updateRole(Long id, UserRole userRole) {
+<span class="nc" id="L85">        UserRole existing = getRoleById(id);</span>
+<span class="nc" id="L86">        existing.setRoleName(userRole.getRoleName());</span>
+<span class="nc" id="L87">        existing.setAssignedBy(userRole.getAssignedBy());</span>
+<span class="nc" id="L88">        return userRoleRepository.save(existing);</span>
+    }
+    
+    @Transactional
+    public void deleteRole(Long id) {
+<span class="nc" id="L93">        userRoleRepository.deleteById(id);</span>
+<span class="nc" id="L94">    }</span>
+    
+    @Transactional
+    public UserRole assignRoleToUser(Long userId, Long roleId) {
+<span class="nc" id="L98">        User user = userRepository.findById(userId)</span>
+<span class="nc" id="L99">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+<span class="nc" id="L100">        UserRole role = getRoleById(roleId);</span>
+<span class="nc" id="L101">        role.setUser(user);</span>
+<span class="nc" id="L102">        return userRoleRepository.save(role);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

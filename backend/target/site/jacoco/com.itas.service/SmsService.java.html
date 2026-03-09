@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SmsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.service</a> &gt; <span class="el_source">SmsService.java</span></div><h1>SmsService.java</h1><pre class="source lang-java linenums">package com.itas.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+<span class="fc" id="L10">public class SmsService {</span>
+    
+    @Value(&quot;${app.sms.enabled:false}&quot;)
+    private boolean smsEnabled;
+    
+    @Value(&quot;${twilio.account.sid:}&quot;)
+    private String twilioAccountSid;
+    
+    @Value(&quot;${twilio.auth.token:}&quot;)
+    private String twilioAuthToken;
+    
+    @Value(&quot;${twilio.phone.number:}&quot;)
+    private String twilioPhoneNumber;
+    
+    /**
+     * Send SMS message
+     * Currently a mock implementation - ready for Twilio integration
+     */
+    @Async
+    public void sendSms(String phoneNumber, String message) {
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (!smsEnabled) {</span>
+<span class="nc" id="L31">            System.out.println(&quot;📱 SMS DISABLED - Would send to: &quot; + phoneNumber);</span>
+<span class="nc" id="L32">            System.out.println(&quot;   Message: &quot; + message);</span>
+<span class="nc" id="L33">            return;</span>
+        }
+        
+        // TODO: Implement actual SMS sending with Twilio
+        // For now, just log it
+        try {
+<span class="nc bnc" id="L39" title="All 4 branches missed.">            if (twilioAccountSid.isEmpty() || twilioAuthToken.isEmpty()) {</span>
+<span class="nc" id="L40">                System.out.println(&quot;⚠️ Twilio credentials not configured&quot;);</span>
+<span class="nc" id="L41">                System.out.println(&quot;📱 MOCK SMS to: &quot; + phoneNumber);</span>
+<span class="nc" id="L42">                System.out.println(&quot;   Message: &quot; + message);</span>
+<span class="nc" id="L43">                return;</span>
+            }
+            
+            // Twilio implementation would go here:
+            /*
+            Twilio.init(twilioAccountSid, twilioAuthToken);
+            Message twilioMessage = Message.creator(
+                new PhoneNumber(phoneNumber),
+                new PhoneNumber(twilioPhoneNumber),
+                message
+            ).create();
+            System.out.println(&quot;✅ SMS sent successfully. SID: &quot; + twilioMessage.getSid());
+            */
+            
+<span class="nc" id="L57">            System.out.println(&quot;📱 SMS sent to: &quot; + phoneNumber);</span>
+<span class="nc" id="L58">        } catch (Exception e) {</span>
+<span class="nc" id="L59">            System.err.println(&quot;❌ Failed to send SMS to &quot; + phoneNumber + &quot;: &quot; + e.getMessage());</span>
+<span class="nc" id="L60">        }</span>
+<span class="nc" id="L61">    }</span>
+    
+    /**
+     * Send bulk SMS messages
+     */
+    @Async
+    public void sendBulkSms(List&lt;String&gt; phoneNumbers, String message) {
+<span class="nc bnc" id="L68" title="All 4 branches missed.">        if (phoneNumbers == null || phoneNumbers.isEmpty()) {</span>
+<span class="nc" id="L69">            System.out.println(&quot;⚠️ No phone numbers provided for bulk SMS&quot;);</span>
+<span class="nc" id="L70">            return;</span>
+        }
+        
+<span class="nc" id="L73">        System.out.println(&quot;📱 Sending bulk SMS to &quot; + phoneNumbers.size() + &quot; recipients...&quot;);</span>
+        
+<span class="nc" id="L75">        int successCount = 0;</span>
+<span class="nc" id="L76">        int failCount = 0;</span>
+        
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for (String phoneNumber : phoneNumbers) {</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {</span>
+<span class="nc" id="L80">                continue;</span>
+            }
+            
+            try {
+<span class="nc" id="L84">                sendSms(phoneNumber, message);</span>
+<span class="nc" id="L85">                successCount++;</span>
+                
+                // Small delay to avoid rate limiting
+<span class="nc" id="L88">                Thread.sleep(200);</span>
+<span class="nc" id="L89">            } catch (Exception e) {</span>
+<span class="nc" id="L90">                failCount++;</span>
+<span class="nc" id="L91">                System.err.println(&quot;❌ Failed to send SMS to &quot; + phoneNumber + &quot;: &quot; + e.getMessage());</span>
+<span class="nc" id="L92">            }</span>
+<span class="nc" id="L93">        }</span>
+        
+<span class="nc" id="L95">        System.out.println(&quot;✅ Bulk SMS complete: &quot; + successCount + &quot; sent, &quot; + failCount + &quot; failed&quot;);</span>
+<span class="nc" id="L96">    }</span>
+    
+    /**
+     * Format phone number to international format
+     */
+    private String formatPhoneNumber(String phoneNumber) {
+        // Remove all non-digit characters
+<span class="nc" id="L103">        String cleaned = phoneNumber.replaceAll(&quot;[^0-9]&quot;, &quot;&quot;);</span>
+        
+        // Add country code if not present (assuming Ethiopia +251)
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (!cleaned.startsWith(&quot;251&quot;)) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (cleaned.startsWith(&quot;0&quot;)) {</span>
+<span class="nc" id="L108">                cleaned = &quot;251&quot; + cleaned.substring(1);</span>
+            } else {
+<span class="nc" id="L110">                cleaned = &quot;251&quot; + cleaned;</span>
+            }
+        }
+        
+<span class="nc" id="L114">        return &quot;+&quot; + cleaned;</span>
+    }
+    
+    /**
+     * Test SMS configuration
+     */
+    public boolean testSmsConfiguration() {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (!smsEnabled) {</span>
+<span class="nc" id="L122">            System.out.println(&quot;⚠️ SMS is disabled in configuration&quot;);</span>
+<span class="nc" id="L123">            return false;</span>
+        }
+        
+<span class="nc bnc" id="L126" title="All 4 branches missed.">        if (twilioAccountSid.isEmpty() || twilioAuthToken.isEmpty()) {</span>
+<span class="nc" id="L127">            System.out.println(&quot;⚠️ Twilio credentials not configured&quot;);</span>
+<span class="nc" id="L128">            return false;</span>
+        }
+        
+<span class="nc" id="L131">        System.out.println(&quot;✅ SMS configuration looks good (Twilio integration pending)&quot;);</span>
+<span class="nc" id="L132">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

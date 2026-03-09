@@ -23,15 +23,15 @@ declare module '@mui/material/styles' {
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#2563EB', // Electric Blue
-      light: '#60A5FA',
-      dark: '#1E40AF',
+      main: '#016396', // MOR Blue
+      light: '#0284c7',
+      dark: '#014a6e',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#8B5CF6', // Soft Purple
-      light: '#A78BFA',
-      dark: '#7C3AED',
+      main: '#f59e0b', // Gold
+      light: '#fbbf24',
+      dark: '#d97706',
       contrastText: '#ffffff',
     },
     success: {
@@ -63,10 +63,10 @@ export const theme = createTheme({
       secondary: '#94A3B8',
     },
     gradient: {
-      primary: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 50%, #22D3EE 100%)',
-      secondary: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
-      success: 'linear-gradient(135deg, #10B981 0%, #22D3EE 100%)',
-      info: 'linear-gradient(135deg, #22D3EE 0%, #2563EB 100%)',
+      primary: 'linear-gradient(135deg, #016396 0%, #0284c7 100%)',
+      secondary: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      success: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+      info: 'linear-gradient(135deg, #016396 0%, #0284c7 100%)',
     },
   },
   typography: {
@@ -184,19 +184,19 @@ export const theme = createTheme({
           },
         },
         contained: {
-          background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 100%)',
+          background: 'linear-gradient(135deg, #016396 0%, #0284c7 100%)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%)',
-            boxShadow: '0 16px 48px rgba(37, 99, 235, 0.5)',
+            background: 'linear-gradient(135deg, #014a6e 0%, #016396 100%)',
+            boxShadow: '0 16px 48px rgba(1, 99, 150, 0.5)',
           },
         },
         outlined: {
           borderWidth: 2,
-          borderColor: 'rgba(37, 99, 235, 0.5)',
+          borderColor: 'rgba(1, 99, 150, 0.5)',
           '&:hover': {
             borderWidth: 2,
-            borderColor: '#2563EB',
-            background: 'rgba(37, 99, 235, 0.1)',
+            borderColor: '#016396',
+            background: 'rgba(1, 99, 150, 0.1)',
           },
         },
       },

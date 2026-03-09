@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileStorageService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.service</a> &gt; <span class="el_source">FileStorageService.java</span></div><h1>FileStorageService.java</h1><pre class="source lang-java linenums">package com.itas.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
+
+@Service
+public class FileStorageService {
+    
+    private final Path fileStorageLocation;
+    
+<span class="fc" id="L22">    public FileStorageService(@Value(&quot;${file.upload-dir:uploads}&quot;) String uploadDir) {</span>
+<span class="fc" id="L23">        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();</span>
+        
+        try {
+<span class="fc" id="L26">            Files.createDirectories(this.fileStorageLocation);</span>
+<span class="nc" id="L27">        } catch (Exception ex) {</span>
+<span class="nc" id="L28">            throw new RuntimeException(&quot;Could not create the directory where the uploaded files will be stored.&quot;, ex);</span>
+<span class="fc" id="L29">        }</span>
+<span class="fc" id="L30">    }</span>
+    
+    public String storeFile(MultipartFile file, String category) {
+        // Normalize file name
+<span class="nc" id="L34">        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());</span>
+        
+        try {
+            // Check if the file's name contains invalid characters
+<span class="nc bnc" id="L38" title="All 2 branches missed.">            if(originalFileName.contains(&quot;..&quot;)) {</span>
+<span class="nc" id="L39">                throw new RuntimeException(&quot;Sorry! Filename contains invalid path sequence &quot; + originalFileName);</span>
+            }
+            
+            // Generate unique filename
+<span class="nc" id="L43">            String fileExtension = &quot;&quot;;</span>
+<span class="nc" id="L44">            int dotIndex = originalFileName.lastIndexOf('.');</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">            if (dotIndex &gt; 0) {</span>
+<span class="nc" id="L46">                fileExtension = originalFileName.substring(dotIndex);</span>
+            }
+            
+<span class="nc" id="L49">            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;</span>
+            
+            // Create category directory if it doesn't exist
+<span class="nc" id="L52">            Path categoryPath = this.fileStorageLocation.resolve(category);</span>
+<span class="nc" id="L53">            Files.createDirectories(categoryPath);</span>
+            
+            // Copy file to the target location
+<span class="nc" id="L56">            Path targetLocation = categoryPath.resolve(uniqueFileName);</span>
+<span class="nc" id="L57">            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);</span>
+            
+<span class="nc" id="L59">            return category + &quot;/&quot; + uniqueFileName;</span>
+<span class="nc" id="L60">        } catch (IOException ex) {</span>
+<span class="nc" id="L61">            throw new RuntimeException(&quot;Could not store file &quot; + originalFileName + &quot;. Please try again!&quot;, ex);</span>
+        }
+    }
+    
+    public byte[] loadFileAsBytes(String filePath) {
+        try {
+<span class="nc" id="L67">            Path file = this.fileStorageLocation.resolve(filePath).normalize();</span>
+<span class="nc" id="L68">            return Files.readAllBytes(file);</span>
+<span class="nc" id="L69">        } catch (IOException ex) {</span>
+<span class="nc" id="L70">            throw new RuntimeException(&quot;File not found &quot; + filePath, ex);</span>
+        }
+    }
+    
+    public void deleteFile(String filePath) {
+        try {
+<span class="nc" id="L76">            Path file = this.fileStorageLocation.resolve(filePath).normalize();</span>
+<span class="nc" id="L77">            Files.deleteIfExists(file);</span>
+<span class="nc" id="L78">        } catch (IOException ex) {</span>
+<span class="nc" id="L79">            throw new RuntimeException(&quot;Could not delete file &quot; + filePath, ex);</span>
+<span class="nc" id="L80">        }</span>
+<span class="nc" id="L81">    }</span>
+    
+    public String calculateFileHash(MultipartFile file) {
+        try {
+<span class="nc" id="L85">            MessageDigest digest = MessageDigest.getInstance(&quot;SHA-256&quot;);</span>
+<span class="nc" id="L86">            byte[] hash = digest.digest(file.getBytes());</span>
+<span class="nc" id="L87">            StringBuilder hexString = new StringBuilder();</span>
+            
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            for (byte b : hash) {</span>
+<span class="nc" id="L90">                String hex = Integer.toHexString(0xff &amp; b);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                if(hex.length() == 1) hexString.append('0');</span>
+<span class="nc" id="L92">                hexString.append(hex);</span>
+            }
+            
+<span class="nc" id="L95">            return hexString.toString();</span>
+<span class="nc" id="L96">        } catch (NoSuchAlgorithmException | IOException ex) {</span>
+<span class="nc" id="L97">            throw new RuntimeException(&quot;Could not calculate file hash&quot;, ex);</span>
+        }
+    }
+    
+    public String getMimeType(String fileName) {
+        try {
+<span class="nc" id="L103">            Path path = Paths.get(fileName);</span>
+<span class="nc" id="L104">            return Files.probeContentType(path);</span>
+<span class="nc" id="L105">        } catch (IOException ex) {</span>
+<span class="nc" id="L106">            return &quot;application/octet-stream&quot;;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

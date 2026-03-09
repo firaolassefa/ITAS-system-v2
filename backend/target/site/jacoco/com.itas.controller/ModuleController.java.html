@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ModuleController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">ModuleController.java</span></div><h1>ModuleController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.Course;
+import com.itas.model.Module;
+import com.itas.repository.CourseRepository;
+import com.itas.repository.ModuleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping(&quot;/modules&quot;)
+<span class="fc" id="L28">public class ModuleController {</span>
+    
+    @Autowired
+    private ModuleRepository moduleRepository;
+    
+    @Autowired
+    private CourseRepository courseRepository;
+    
+    @Value(&quot;${app.file.upload-dir:./uploads}&quot;)
+    private String uploadDir;
+    
+    @GetMapping(&quot;&quot;)
+    public ResponseEntity&lt;?&gt; getAllModules() {
+        try {
+<span class="nc" id="L42">            List&lt;Module&gt; modules = moduleRepository.findAll();</span>
+<span class="nc" id="L43">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Success&quot;, modules));</span>
+<span class="nc" id="L44">        } catch (Exception e) {</span>
+<span class="nc" id="L45">            e.printStackTrace();</span>
+<span class="nc" id="L46">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L47">                .body(new ApiResponse&lt;&gt;(&quot;Failed to load modules: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;?&gt; getModuleById(@PathVariable Long id) {
+        try {
+<span class="nc" id="L54">            Module module = moduleRepository.findById(id)</span>
+<span class="nc" id="L55">                .orElseThrow(() -&gt; new RuntimeException(&quot;Module not found&quot;));</span>
+<span class="nc" id="L56">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Success&quot;, module));</span>
+<span class="nc" id="L57">        } catch (Exception e) {</span>
+<span class="nc" id="L58">            return ResponseEntity.status(404)</span>
+<span class="nc" id="L59">                .body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/course/{courseId}&quot;)
+    public ResponseEntity&lt;?&gt; getModulesByCourse(@PathVariable Long courseId) {
+        try {
+<span class="nc" id="L66">            List&lt;Module&gt; modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);</span>
+<span class="nc" id="L67">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Success&quot;, modules));</span>
+<span class="nc" id="L68">        } catch (Exception e) {</span>
+<span class="nc" id="L69">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L70">                .body(new ApiResponse&lt;&gt;(&quot;Failed to load modules: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; createModule(@RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L78">            Long courseId = ((Number) request.get(&quot;courseId&quot;)).longValue();</span>
+<span class="nc" id="L79">            String title = (String) request.get(&quot;title&quot;);</span>
+<span class="nc" id="L80">            String description = (String) request.get(&quot;description&quot;);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            Integer orderIndex = request.get(&quot;orderIndex&quot;) != null ? </span>
+<span class="nc" id="L82">                ((Number) request.get(&quot;orderIndex&quot;)).intValue() : 0;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            Integer durationMinutes = request.get(&quot;durationMinutes&quot;) != null ? </span>
+<span class="nc" id="L84">                ((Number) request.get(&quot;durationMinutes&quot;)).intValue() : 60;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            String contentUrl = request.get(&quot;contentUrl&quot;) != null ? </span>
+<span class="nc" id="L86">                (String) request.get(&quot;contentUrl&quot;) : null;</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            String videoUrl = request.get(&quot;videoUrl&quot;) != null ? </span>
+<span class="nc" id="L88">                (String) request.get(&quot;videoUrl&quot;) : null;</span>
+            
+<span class="nc" id="L90">            Course course = courseRepository.findById(courseId)</span>
+<span class="nc" id="L91">                .orElseThrow(() -&gt; new RuntimeException(&quot;Course not found&quot;));</span>
+            
+<span class="nc" id="L93">            Module module = new Module();</span>
+<span class="nc" id="L94">            module.setCourse(course);</span>
+<span class="nc" id="L95">            module.setTitle(title);</span>
+<span class="nc" id="L96">            module.setDescription(description);</span>
+<span class="nc" id="L97">            module.setOrder(orderIndex);</span>
+<span class="nc" id="L98">            module.setDurationMinutes(durationMinutes);</span>
+<span class="nc" id="L99">            module.setContentUrl(contentUrl);</span>
+<span class="nc" id="L100">            module.setVideoUrl(videoUrl);</span>
+<span class="nc" id="L101">            module.setCreatedAt(LocalDateTime.now());</span>
+<span class="nc" id="L102">            module.setUpdatedAt(LocalDateTime.now());</span>
+            
+<span class="nc" id="L104">            Module savedModule = moduleRepository.save(module);</span>
+<span class="nc" id="L105">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Module created successfully&quot;, savedModule));</span>
+            
+<span class="nc" id="L107">        } catch (Exception e) {</span>
+<span class="nc" id="L108">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L109">                .body(new ApiResponse&lt;&gt;(&quot;Failed to create module: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; updateModule(@PathVariable Long id, @RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L117">            Module module = moduleRepository.findById(id)</span>
+<span class="nc" id="L118">                .orElseThrow(() -&gt; new RuntimeException(&quot;Module not found&quot;));</span>
+            
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (request.containsKey(&quot;title&quot;)) {</span>
+<span class="nc" id="L121">                module.setTitle((String) request.get(&quot;title&quot;));</span>
+            }
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (request.containsKey(&quot;description&quot;)) {</span>
+<span class="nc" id="L124">                module.setDescription((String) request.get(&quot;description&quot;));</span>
+            }
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (request.containsKey(&quot;orderIndex&quot;)) {</span>
+<span class="nc" id="L127">                module.setOrder(((Number) request.get(&quot;orderIndex&quot;)).intValue());</span>
+            }
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            if (request.containsKey(&quot;durationMinutes&quot;)) {</span>
+<span class="nc" id="L130">                module.setDurationMinutes(((Number) request.get(&quot;durationMinutes&quot;)).intValue());</span>
+            }
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (request.containsKey(&quot;contentUrl&quot;)) {</span>
+<span class="nc" id="L133">                module.setContentUrl((String) request.get(&quot;contentUrl&quot;));</span>
+            }
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (request.containsKey(&quot;videoUrl&quot;)) {</span>
+<span class="nc" id="L136">                module.setVideoUrl((String) request.get(&quot;videoUrl&quot;));</span>
+            }
+            
+<span class="nc" id="L139">            module.setUpdatedAt(LocalDateTime.now());</span>
+<span class="nc" id="L140">            Module updated = moduleRepository.save(module);</span>
+            
+<span class="nc" id="L142">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Module updated successfully&quot;, updated));</span>
+            
+<span class="nc" id="L144">        } catch (Exception e) {</span>
+<span class="nc" id="L145">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L146">                .body(new ApiResponse&lt;&gt;(&quot;Failed to update module: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; deleteModule(@PathVariable Long id) {
+        try {
+<span class="nc" id="L154">            moduleRepository.deleteById(id);</span>
+<span class="nc" id="L155">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Module deleted successfully&quot;, null));</span>
+<span class="nc" id="L156">        } catch (Exception e) {</span>
+<span class="nc" id="L157">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L158">                .body(new ApiResponse&lt;&gt;(&quot;Failed to delete module: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/{id}/upload-content&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; uploadModuleContent(
+            @PathVariable Long id,
+            @RequestParam(&quot;file&quot;) MultipartFile file,
+            @RequestParam(&quot;contentType&quot;) String contentType) {
+        
+        try {
+<span class="nc" id="L170">            Module module = moduleRepository.findById(id)</span>
+<span class="nc" id="L171">                .orElseThrow(() -&gt; new RuntimeException(&quot;Module not found&quot;));</span>
+            
+<span class="nc bnc" id="L173" title="All 2 branches missed.">            if (file.isEmpty()) {</span>
+<span class="nc" id="L174">                return ResponseEntity.badRequest()</span>
+<span class="nc" id="L175">                    .body(new ApiResponse&lt;&gt;(&quot;File is empty&quot;, null));</span>
+            }
+            
+            // Create upload directory if it doesn't exist
+<span class="nc" id="L179">            Path uploadPath = Paths.get(uploadDir, &quot;modules&quot;);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (!Files.exists(uploadPath)) {</span>
+<span class="nc" id="L181">                Files.createDirectories(uploadPath);</span>
+            }
+            
+            // Generate unique filename
+<span class="nc" id="L185">            String originalFilename = file.getOriginalFilename();</span>
+<span class="nc bnc" id="L186" title="All 4 branches missed.">            String extension = originalFilename != null &amp;&amp; originalFilename.contains(&quot;.&quot;) </span>
+<span class="nc" id="L187">                ? originalFilename.substring(originalFilename.lastIndexOf(&quot;.&quot;))</span>
+<span class="nc" id="L188">                : &quot;&quot;;</span>
+<span class="nc" id="L189">            String filename = UUID.randomUUID().toString() + extension;</span>
+            
+            // Save file
+<span class="nc" id="L192">            Path filePath = uploadPath.resolve(filename);</span>
+<span class="nc" id="L193">            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);</span>
+            
+            // Update module with file path
+<span class="nc" id="L196">            String fileUrl = &quot;/uploads/modules/&quot; + filename;</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            if (&quot;video&quot;.equalsIgnoreCase(contentType)) {</span>
+<span class="nc" id="L198">                module.setVideoUrl(fileUrl);</span>
+            } else {
+<span class="nc" id="L200">                module.setContentUrl(fileUrl);</span>
+            }
+            
+<span class="nc" id="L203">            module.setUpdatedAt(LocalDateTime.now());</span>
+<span class="nc" id="L204">            Module updated = moduleRepository.save(module);</span>
+            
+<span class="nc" id="L206">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;File uploaded successfully&quot;, updated));</span>
+            
+<span class="nc" id="L208">        } catch (IOException e) {</span>
+<span class="nc" id="L209">            return ResponseEntity.status(500)</span>
+<span class="nc" id="L210">                .body(new ApiResponse&lt;&gt;(&quot;Failed to upload file: &quot; + e.getMessage(), null));</span>
+<span class="nc" id="L211">        } catch (Exception e) {</span>
+<span class="nc" id="L212">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L213">                .body(new ApiResponse&lt;&gt;(&quot;Error: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/{id}/set-url&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; setModuleUrl(
+            @PathVariable Long id,
+            @RequestParam(&quot;url&quot;) String url,
+            @RequestParam(&quot;urlType&quot;) String urlType) {
+        
+        try {
+<span class="nc" id="L225">            Module module = moduleRepository.findById(id)</span>
+<span class="nc" id="L226">                .orElseThrow(() -&gt; new RuntimeException(&quot;Module not found&quot;));</span>
+            
+<span class="nc bnc" id="L228" title="All 4 branches missed.">            if (url == null || url.trim().isEmpty()) {</span>
+<span class="nc" id="L229">                return ResponseEntity.badRequest()</span>
+<span class="nc" id="L230">                    .body(new ApiResponse&lt;&gt;(&quot;URL is required&quot;, null));</span>
+            }
+            
+            // Update module with URL
+<span class="nc bnc" id="L234" title="All 2 branches missed.">            if (&quot;video&quot;.equalsIgnoreCase(urlType)) {</span>
+<span class="nc" id="L235">                module.setVideoUrl(url);</span>
+            } else {
+<span class="nc" id="L237">                module.setContentUrl(url);</span>
+            }
+            
+<span class="nc" id="L240">            module.setUpdatedAt(LocalDateTime.now());</span>
+<span class="nc" id="L241">            Module updated = moduleRepository.save(module);</span>
+            
+<span class="nc" id="L243">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;URL set successfully&quot;, updated));</span>
+            
+<span class="nc" id="L245">        } catch (Exception e) {</span>
+<span class="nc" id="L246">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L247">                .body(new ApiResponse&lt;&gt;(&quot;Error: &quot; + e.getMessage(), null));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

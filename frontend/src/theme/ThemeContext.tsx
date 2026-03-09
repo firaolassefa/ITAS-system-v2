@@ -35,17 +35,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           mode,
           ...(mode === 'light'
             ? {
-                // Light Mode - Professional Government Colors
+                // Light Mode
                 primary: {
-                  main: '#1e3a8a', // Navy Blue
-                  light: '#3b82f6',
-                  dark: '#1e40af',
+                  main: '#016396',
+                  light: '#0284c7',
+                  dark: '#014a6e',
                   contrastText: '#ffffff',
                 },
                 secondary: {
-                  main: '#d97706', // Gold/Amber
-                  light: '#f59e0b',
-                  dark: '#b45309',
+                  main: '#f59e0b',
+                  light: '#fbbf24',
+                  dark: '#d97706',
                   contrastText: '#ffffff',
                 },
                 background: {
@@ -58,17 +58,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 },
               }
             : {
-                // Dark Mode - Professional Dark Theme
+                // Dark Mode
                 primary: {
-                  main: '#3b82f6', // Bright Blue
-                  light: '#60a5fa',
-                  dark: '#2563eb',
+                  main: '#0284c7',
+                  light: '#38bdf8',
+                  dark: '#016396',
                   contrastText: '#ffffff',
                 },
                 secondary: {
-                  main: '#f59e0b', // Gold
-                  light: '#fbbf24',
-                  dark: '#d97706',
+                  main: '#fbbf24',
+                  light: '#fcd34d',
+                  dark: '#f59e0b',
                   contrastText: '#000000',
                 },
                 background: {

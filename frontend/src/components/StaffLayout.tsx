@@ -133,8 +133,9 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
     <Box
       sx={{
         height: '100%',
-        bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
-        color: 'white',
+        bgcolor: mode === 'light' ? 'white' : '#1e293b',
+        color: mode === 'light' ? '#1e293b' : 'white',
+        borderRight: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
       }}
     >
       <Toolbar sx={{ py: 3 }}>
@@ -150,7 +151,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               justifyContent: 'center',
             }}
           >
-            <Business sx={{ color: '#fbbf24', fontSize: 28 }} />
+            <Business sx={{ color: '#016396', fontSize: 28 }} />
           </Box>
           <Box>
             <Typography 
@@ -158,7 +159,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               noWrap
               sx={{
                 fontWeight: 700,
-                color: 'white',
+                color: mode === 'light' ? '#016396' : 'white',
               }}
             >
               MOR Staff
@@ -166,7 +167,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
             <Typography 
               variant="caption" 
               sx={{ 
-                color: alpha('#fff', 0.7),
+                color: mode === 'light' ? '#64748b' : alpha('#fff', 0.7),
                 fontWeight: 500,
               }}
             >
@@ -186,23 +187,24 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
                 sx={{
                   borderRadius: '12px',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  color: 'white',
+                  color: mode === 'light' ? '#1e293b' : 'white',
                   '&.Mui-selected': {
-                    bgcolor: alpha('#fbbf24', 0.2),
-                    borderLeft: '4px solid #fbbf24',
+                    bgcolor: mode === 'light' ? '#e0f2fe' : alpha('#016396', 0.2),
+                    borderLeft: '4px solid #016396',
+                    color: '#016396',
                     '&:hover': {
-                      bgcolor: alpha('#fbbf24', 0.3),
+                      bgcolor: mode === 'light' ? '#bae6fd' : alpha('#016396', 0.3),
                     },
                   },
                   '&:hover': {
-                    bgcolor: alpha('#fff', 0.05),
+                    bgcolor: mode === 'light' ? '#f9fafb' : alpha('#fff', 0.05),
                   },
                   py: 1.5,
                 }}
               >
                 <ListItemIcon
                   sx={{ 
-                    color: location.pathname === item.path ? '#fbbf24' : alpha('#fff', 0.7),
+                    color: location.pathname === item.path ? '#016396' : (mode === 'light' ? '#64748b' : alpha('#fff', 0.7)),
                     minWidth: 40,
                   }}
                 >
@@ -245,9 +247,10 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+          bgcolor: mode === 'light' ? 'white' : '#1e293b',
+          color: mode === 'light' ? '#1e293b' : 'white',
           borderBottom: '1px solid',
-          borderColor: alpha('#fff', 0.1),
+          borderColor: mode === 'light' ? '#e5e7eb' : alpha('#fff', 0.1),
         }}
       >
         <Toolbar sx={{ py: 1 }}>
@@ -412,9 +415,10 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
           sx: {
             mt: 1.5,
             borderRadius: '12px',
-            bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
-            color: 'white',
+            bgcolor: mode === 'light' ? 'white' : '#1e293b',
+            color: mode === 'light' ? '#1e293b' : 'white',
             minWidth: 220,
+            border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
           },
         }}
       >

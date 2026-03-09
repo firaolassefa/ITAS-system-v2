@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoleConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.config</a> &gt; <span class="el_source">RoleConfig.java</span></div><h1>RoleConfig.java</h1><pre class="source lang-java linenums">package com.itas.config;
+
+import com.itas.model.User;
+import com.itas.model.UserRole;
+import com.itas.model.UserType;
+import com.itas.repository.UserRepository;
+import com.itas.repository.UserRoleRepository;
+import com.itas.repository.CourseRepository;
+import com.itas.repository.ResourceRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
+@Configuration
+<span class="fc" id="L20">public class RoleConfig {</span>
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Bean
+    public CommandLineRunner initializeRoles(
+            UserRepository userRepository,
+            UserRoleRepository userRoleRepository,
+            CourseRepository courseRepository,
+            ResourceRepository resourceRepository) {
+<span class="fc" id="L31">        return args -&gt; {</span>
+            // Create default system admin if not exists
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">            if (userRepository.findByUsername(&quot;systemadmin&quot;).isEmpty()) {</span>
+<span class="fc" id="L34">                User systemAdmin = new User();</span>
+<span class="fc" id="L35">                systemAdmin.setUsername(&quot;systemadmin&quot;);</span>
+<span class="fc" id="L36">                systemAdmin.setPassword(passwordEncoder.encode(&quot;Admin@123&quot;));</span>
+<span class="fc" id="L37">                systemAdmin.setFullName(&quot;System Administrator&quot;);</span>
+<span class="fc" id="L38">                systemAdmin.setEmail(&quot;system.admin@itas.gov.et&quot;);</span>
+<span class="fc" id="L39">                systemAdmin.setUserType(UserType.SYSTEM_ADMIN);</span>
+<span class="fc" id="L40">                systemAdmin.setActive(true);</span>
+<span class="fc" id="L41">                systemAdmin.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L42">                userRepository.save(systemAdmin);</span>
+                
+                // Assign all roles to system admin (only if they don't already exist)
+<span class="fc" id="L45">                Arrays.asList(</span>
+                    &quot;MANAGE_USERS&quot;, &quot;MANAGE_ROLES&quot;, &quot;SYSTEM_CONFIG&quot;,
+                    &quot;VIEW_ANALYTICS&quot;, &quot;EXPORT_REPORTS&quot;, &quot;UPLOAD_RESOURCES&quot;,
+                    &quot;UPDATE_RESOURCES&quot;, &quot;ARCHIVE_RESOURCES&quot;, &quot;SCHEDULE_WEBINARS&quot;,
+                    &quot;MANAGE_WEBINARS&quot;, &quot;SEND_NOTIFICATIONS&quot;
+<span class="fc" id="L50">                ).forEach(role -&gt; {</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">                    if (!userRoleRepository.existsByUserIdAndRoleName(systemAdmin.getId(), role)) {</span>
+<span class="fc" id="L52">                        UserRole userRole = new UserRole();</span>
+<span class="fc" id="L53">                        userRole.setUser(systemAdmin);</span>
+<span class="fc" id="L54">                        userRole.setRoleName(role);</span>
+<span class="fc" id="L55">                        userRole.setAssignedBy(systemAdmin);</span>
+<span class="fc" id="L56">                        userRole.setAssignedAt(LocalDateTime.now());</span>
+<span class="fc" id="L57">                        userRoleRepository.save(userRole);</span>
+                    }
+<span class="fc" id="L59">                });</span>
+            }
+            
+            // Create other admin users based on requirements
+<span class="fc" id="L63">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;contentadmin&quot;, &quot;Content@123&quot;,
+                &quot;Content Administrator&quot;, &quot;content.admin@itas.gov.et&quot;,
+                UserType.CONTENT_ADMIN,
+<span class="fc" id="L68">                Arrays.asList(&quot;UPLOAD_RESOURCES&quot;, &quot;UPDATE_RESOURCES&quot;, &quot;ARCHIVE_RESOURCES&quot;)</span>
+            );
+            
+<span class="fc" id="L71">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;trainingadmin&quot;, &quot;Training@123&quot;,
+                &quot;Training Administrator&quot;, &quot;training.admin@itas.gov.et&quot;,
+                UserType.TRAINING_ADMIN,
+<span class="fc" id="L76">                Arrays.asList(&quot;SCHEDULE_WEBINARS&quot;, &quot;MANAGE_WEBINARS&quot;)</span>
+            );
+            
+<span class="fc" id="L79">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;commoffice&quot;, &quot;Notification@123&quot;,
+                &quot;Communication Officer&quot;, &quot;communication@itas.gov.et&quot;,
+                UserType.COMM_OFFICER,
+<span class="fc" id="L84">                Arrays.asList(&quot;SEND_NOTIFICATIONS&quot;)</span>
+            );
+            
+<span class="fc" id="L87">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;manager&quot;, &quot;Manager@123&quot;,
+                &quot;System Manager&quot;, &quot;manager@itas.gov.et&quot;,
+                UserType.MANAGER,
+<span class="fc" id="L92">                Arrays.asList(&quot;VIEW_ANALYTICS&quot;, &quot;EXPORT_REPORTS&quot;)</span>
+            );
+            
+            // Create MOR Staff user
+<span class="fc" id="L96">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;morstaff&quot;, &quot;Staff@123&quot;,
+                &quot;Ministry Staff Member&quot;, &quot;staff@itas.gov.et&quot;,
+                UserType.MOR_STAFF,
+<span class="fc" id="L101">                Arrays.asList(&quot;VIEW_COURSES&quot;, &quot;ENROLL_COURSES&quot;, &quot;COMPLETE_MODULES&quot;,</span>
+                             &quot;VIEW_RESOURCES&quot;, &quot;DOWNLOAD_RESOURCES&quot;, &quot;ACCESS_INTERNAL_TRAINING&quot;)
+            );
+            
+            // Create Auditor user
+<span class="fc" id="L106">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;auditor&quot;, &quot;Auditor@123&quot;,
+                &quot;System Auditor&quot;, &quot;auditor@itas.gov.et&quot;,
+                UserType.AUDITOR,
+<span class="fc" id="L111">                Arrays.asList(&quot;VIEW_ANALYTICS&quot;, &quot;AUDIT_SYSTEM&quot;, &quot;VIEW_LOGS&quot;, &quot;EXPORT_REPORTS&quot;)</span>
+            );
+            
+            // Create sample taxpayer
+<span class="fc" id="L115">            createUserIfNotExists(</span>
+                userRepository, userRoleRepository,
+                &quot;taxpayer&quot;, &quot;Taxpayer@123&quot;,
+                &quot;John Taxpayer&quot;, &quot;john.taxpayer@example.com&quot;,
+                UserType.TAXPAYER,
+<span class="fc" id="L120">                Arrays.asList(&quot;VIEW_COURSES&quot;, &quot;ENROLL_COURSES&quot;, &quot;COMPLETE_MODULES&quot;,</span>
+                             &quot;VIEW_RESOURCES&quot;, &quot;DOWNLOAD_RESOURCES&quot;)
+            );
+            
+            // Initialize sample courses if none exist
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">            if (courseRepository.count() == 0) {</span>
+<span class="fc" id="L126">                initializeSampleCourses(courseRepository);</span>
+            }
+            
+            // Initialize sample resources if none exist
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if (resourceRepository.count() == 0) {</span>
+<span class="fc" id="L131">                initializeSampleResources(resourceRepository);</span>
+            }
+<span class="fc" id="L133">        };</span>
+    }
+    
+    private void createUserIfNotExists(
+            UserRepository userRepository,
+            UserRoleRepository userRoleRepository,
+            String username, String password,
+            String fullName, String email,
+            UserType userType,
+            java.util.List&lt;String&gt; roles) {
+        
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (userRepository.findByUsername(username).isEmpty()) {</span>
+<span class="fc" id="L145">            User user = new User();</span>
+<span class="fc" id="L146">            user.setUsername(username);</span>
+<span class="fc" id="L147">            user.setPassword(passwordEncoder.encode(password));</span>
+<span class="fc" id="L148">            user.setFullName(fullName);</span>
+<span class="fc" id="L149">            user.setEmail(email);</span>
+<span class="fc" id="L150">            user.setUserType(userType);</span>
+<span class="fc" id="L151">            user.setActive(true);</span>
+<span class="fc" id="L152">            user.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L153">            User savedUser = userRepository.save(user);</span>
+            
+            // Assign roles (only if they don't already exist)
+<span class="fc" id="L156">            roles.forEach(role -&gt; {</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">                if (!userRoleRepository.existsByUserIdAndRoleName(savedUser.getId(), role)) {</span>
+<span class="fc" id="L158">                    UserRole userRole = new UserRole();</span>
+<span class="fc" id="L159">                    userRole.setUser(savedUser);</span>
+<span class="fc" id="L160">                    userRole.setRoleName(role);</span>
+<span class="fc" id="L161">                    userRole.setAssignedBy(savedUser); // Self-assigned for initial setup</span>
+<span class="fc" id="L162">                    userRole.setAssignedAt(LocalDateTime.now());</span>
+<span class="fc" id="L163">                    userRoleRepository.save(userRole);</span>
+                }
+<span class="fc" id="L165">            });</span>
+        }
+<span class="fc" id="L167">    }</span>
+    
+    private void initializeSampleCourses(com.itas.repository.CourseRepository courseRepository) {
+<span class="fc" id="L170">        com.itas.model.Course course1 = new com.itas.model.Course();</span>
+<span class="fc" id="L171">        course1.setTitle(&quot;VAT Fundamentals for Beginners&quot;);</span>
+<span class="fc" id="L172">        course1.setDescription(&quot;Learn basic VAT concepts, registration, and filing procedures.&quot;);</span>
+<span class="fc" id="L173">        course1.setCategory(&quot;VAT&quot;);</span>
+<span class="fc" id="L174">        course1.setDifficulty(&quot;BEGINNER&quot;);</span>
+<span class="fc" id="L175">        course1.setDurationHours(4);</span>
+<span class="fc" id="L176">        course1.setModules(Arrays.asList(&quot;Introduction to VAT&quot;, &quot;VAT Registration Process&quot;, &quot;Filing VAT Returns&quot;, &quot;Common VAT Mistakes&quot;));</span>
+<span class="fc" id="L177">        course1.setPublished(true);</span>
+<span class="fc" id="L178">        course1.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L179">        course1.setUpdatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L180">        courseRepository.save(course1);</span>
+        
+<span class="fc" id="L182">        com.itas.model.Course course2 = new com.itas.model.Course();</span>
+<span class="fc" id="L183">        course2.setTitle(&quot;Income Tax Calculation&quot;);</span>
+<span class="fc" id="L184">        course2.setDescription(&quot;Complete guide to calculating and filing income tax returns.&quot;);</span>
+<span class="fc" id="L185">        course2.setCategory(&quot;INCOME_TAX&quot;);</span>
+<span class="fc" id="L186">        course2.setDifficulty(&quot;INTERMEDIATE&quot;);</span>
+<span class="fc" id="L187">        course2.setDurationHours(6);</span>
+<span class="fc" id="L188">        course2.setModules(Arrays.asList(&quot;Understanding Tax Brackets&quot;, &quot;Deductions and Allowances&quot;, &quot;Filing Online Returns&quot;));</span>
+<span class="fc" id="L189">        course2.setPublished(true);</span>
+<span class="fc" id="L190">        course2.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L191">        course2.setUpdatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L192">        courseRepository.save(course2);</span>
+        
+<span class="fc" id="L194">        com.itas.model.Course course3 = new com.itas.model.Course();</span>
+<span class="fc" id="L195">        course3.setTitle(&quot;Corporate Tax Compliance&quot;);</span>
+<span class="fc" id="L196">        course3.setDescription(&quot;Advanced corporate tax obligations and compliance requirements.&quot;);</span>
+<span class="fc" id="L197">        course3.setCategory(&quot;CORPORATE_TAX&quot;);</span>
+<span class="fc" id="L198">        course3.setDifficulty(&quot;ADVANCED&quot;);</span>
+<span class="fc" id="L199">        course3.setDurationHours(8);</span>
+<span class="fc" id="L200">        course3.setModules(Arrays.asList(&quot;Corporate Tax Structures&quot;, &quot;Tax Planning Strategies&quot;, &quot;Compliance Reporting&quot;));</span>
+<span class="fc" id="L201">        course3.setPublished(true);</span>
+<span class="fc" id="L202">        course3.setCreatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L203">        course3.setUpdatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L204">        courseRepository.save(course3);</span>
+<span class="fc" id="L205">    }</span>
+    
+    private void initializeSampleResources(com.itas.repository.ResourceRepository resourceRepository) {
+<span class="fc" id="L208">        com.itas.model.Resource resource1 = new com.itas.model.Resource();</span>
+<span class="fc" id="L209">        resource1.setTitle(&quot;VAT Compliance Handbook 2024&quot;);</span>
+<span class="fc" id="L210">        resource1.setDescription(&quot;Complete guide to VAT compliance for small and medium businesses. (Demo resource - upload actual files to test download functionality)&quot;);</span>
+<span class="fc" id="L211">        resource1.setResourceType(&quot;PDF&quot;);</span>
+<span class="fc" id="L212">        resource1.setFilePath(null); // Demo resource - no actual file</span>
+<span class="fc" id="L213">        resource1.setFileName(&quot;vat-handbook.pdf&quot;);</span>
+<span class="fc" id="L214">        resource1.setCategory(&quot;VAT&quot;);</span>
+<span class="fc" id="L215">        resource1.setAudience(&quot;ALL&quot;);</span>
+<span class="fc" id="L216">        resource1.setStatus(&quot;PUBLISHED&quot;);</span>
+<span class="fc" id="L217">        resource1.setViewCount(1250);</span>
+<span class="fc" id="L218">        resource1.setDownloadCount(890);</span>
+<span class="fc" id="L219">        resource1.setUploadedAt(LocalDateTime.now());</span>
+<span class="fc" id="L220">        resourceRepository.save(resource1);</span>
+        
+<span class="fc" id="L222">        com.itas.model.Resource resource2 = new com.itas.model.Resource();</span>
+<span class="fc" id="L223">        resource2.setTitle(&quot;How to File Tax Returns Online&quot;);</span>
+<span class="fc" id="L224">        resource2.setDescription(&quot;Step-by-step video tutorial for online tax filing. (Demo resource - upload actual files to test video playback)&quot;);</span>
+<span class="fc" id="L225">        resource2.setResourceType(&quot;VIDEO&quot;);</span>
+<span class="fc" id="L226">        resource2.setFilePath(null); // Demo resource - no actual file</span>
+<span class="fc" id="L227">        resource2.setFileName(&quot;tax-filing.mp4&quot;);</span>
+<span class="fc" id="L228">        resource2.setCategory(&quot;INCOME_TAX&quot;);</span>
+<span class="fc" id="L229">        resource2.setAudience(&quot;TAXPAYER&quot;);</span>
+<span class="fc" id="L230">        resource2.setStatus(&quot;PUBLISHED&quot;);</span>
+<span class="fc" id="L231">        resource2.setViewCount(3200);</span>
+<span class="fc" id="L232">        resource2.setDownloadCount(1500);</span>
+<span class="fc" id="L233">        resource2.setUploadedAt(LocalDateTime.now());</span>
+<span class="fc" id="L234">        resourceRepository.save(resource2);</span>
+        
+<span class="fc" id="L236">        com.itas.model.Resource resource3 = new com.itas.model.Resource();</span>
+<span class="fc" id="L237">        resource3.setTitle(&quot;Tax Deductions Guide&quot;);</span>
+<span class="fc" id="L238">        resource3.setDescription(&quot;Comprehensive list of eligible tax deductions and credits. (Demo resource - upload actual files to test download functionality)&quot;);</span>
+<span class="fc" id="L239">        resource3.setResourceType(&quot;PDF&quot;);</span>
+<span class="fc" id="L240">        resource3.setFilePath(null); // Demo resource - no actual file</span>
+<span class="fc" id="L241">        resource3.setFileName(&quot;deductions-guide.pdf&quot;);</span>
+<span class="fc" id="L242">        resource3.setCategory(&quot;INCOME_TAX&quot;);</span>
+<span class="fc" id="L243">        resource3.setAudience(&quot;ALL&quot;);</span>
+<span class="fc" id="L244">        resource3.setStatus(&quot;PUBLISHED&quot;);</span>
+<span class="fc" id="L245">        resource3.setViewCount(890);</span>
+<span class="fc" id="L246">        resource3.setDownloadCount(670);</span>
+<span class="fc" id="L247">        resource3.setUploadedAt(LocalDateTime.now());</span>
+<span class="fc" id="L248">        resourceRepository.save(resource3);</span>
+<span class="fc" id="L249">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

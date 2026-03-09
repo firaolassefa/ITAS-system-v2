@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArchiveController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">ArchiveController.java</span></div><h1>ArchiveController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.ArchivedResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+import java.util.*;
+
+@RestController
+@RequestMapping(&quot;/archive&quot;)
+public class ArchiveController {
+    
+<span class="fc" id="L15">    private List&lt;ArchivedResource&gt; mockArchivedResources = new ArrayList&lt;&gt;();</span>
+    
+<span class="fc" id="L17">    public ArchiveController() {</span>
+        // Initialize mock archived resources
+<span class="fc" id="L19">        ArchivedResource resource1 = new ArchivedResource();</span>
+<span class="fc" id="L20">        resource1.setId(1L);</span>
+<span class="fc" id="L21">        resource1.setOriginalResourceId(100L);</span>
+<span class="fc" id="L22">        resource1.setTitle(&quot;Old VAT Guide 2022&quot;);</span>
+<span class="fc" id="L23">        resource1.setDescription(&quot;Outdated VAT guide&quot;);</span>
+<span class="fc" id="L24">        resource1.setArchivedAt(LocalDateTime.now().minusDays(30));</span>
+<span class="fc" id="L25">        resource1.setDeletionScheduledFor(LocalDateTime.now().plusDays(30));</span>
+<span class="fc" id="L26">        resource1.setStatus(&quot;ARCHIVED&quot;);</span>
+        
+<span class="fc" id="L28">        mockArchivedResources.add(resource1);</span>
+<span class="fc" id="L29">    }</span>
+    
+    @GetMapping(&quot;/resources&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; getArchivedResources() {
+<span class="nc" id="L34">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Archived resources retrieved&quot;, mockArchivedResources));</span>
+    }
+    
+    @PostMapping(&quot;/resources/{resourceId}&quot;)
+    public ResponseEntity&lt;?&gt; archiveResource(
+            @PathVariable Long resourceId,
+            @RequestBody Map&lt;String, String&gt; request) {
+        
+<span class="nc" id="L42">        ArchivedResource archivedResource = new ArchivedResource();</span>
+<span class="nc" id="L43">        archivedResource.setId(System.currentTimeMillis());</span>
+<span class="nc" id="L44">        archivedResource.setOriginalResourceId(resourceId);</span>
+<span class="nc" id="L45">        archivedResource.setTitle(&quot;Archived Resource #&quot; + resourceId);</span>
+<span class="nc" id="L46">        archivedResource.setDescription(&quot;Resource archived by admin&quot;);</span>
+<span class="nc" id="L47">        archivedResource.setArchivedAt(LocalDateTime.now());</span>
+        
+<span class="nc" id="L49">        String scheduleDeletion = request.get(&quot;scheduleDeletion&quot;);</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (scheduleDeletion != null) {</span>
+<span class="nc" id="L51">            archivedResource.setDeletionScheduledFor(LocalDateTime.parse(scheduleDeletion));</span>
+        } else {
+<span class="nc" id="L53">            archivedResource.setDeletionScheduledFor(LocalDateTime.now().plusDays(30));</span>
+        }
+        
+<span class="nc" id="L56">        archivedResource.setStatus(&quot;ARCHIVED&quot;);</span>
+<span class="nc" id="L57">        mockArchivedResources.add(archivedResource);</span>
+        
+<span class="nc" id="L59">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Resource archived successfully&quot;, archivedResource));</span>
+    }
+    
+    @PostMapping(&quot;/restore/{archiveId}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; restoreResource(@PathVariable Long archiveId) {
+<span class="nc" id="L65">        Optional&lt;ArchivedResource&gt; resource = mockArchivedResources.stream()</span>
+<span class="nc" id="L66">            .filter(r -&gt; r.getId().equals(archiveId))</span>
+<span class="nc" id="L67">            .findFirst();</span>
+        
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (resource.isPresent()) {</span>
+<span class="nc" id="L70">            mockArchivedResources.remove(resource.get());</span>
+<span class="nc" id="L71">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Resource restored successfully&quot;, null));</span>
+        }
+        
+<span class="nc" id="L74">        return ResponseEntity.status(404).body(new ApiResponse&lt;&gt;(&quot;Archived resource not found&quot;, null));</span>
+    }
+    
+    @DeleteMapping(&quot;/{archiveId}/permanent&quot;)
+    @PreAuthorize(&quot;hasRole('SYSTEM_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; permanentDelete(@PathVariable Long archiveId) {
+<span class="nc" id="L80">        Optional&lt;ArchivedResource&gt; resource = mockArchivedResources.stream()</span>
+<span class="nc" id="L81">            .filter(r -&gt; r.getId().equals(archiveId))</span>
+<span class="nc" id="L82">            .findFirst();</span>
+        
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (resource.isPresent()) {</span>
+<span class="nc" id="L85">            resource.get().setStatus(&quot;DELETED&quot;);</span>
+<span class="nc" id="L86">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Resource permanently deleted&quot;, null));</span>
+        }
+        
+<span class="nc" id="L89">        return ResponseEntity.status(404).body(new ApiResponse&lt;&gt;(&quot;Archived resource not found&quot;, null));</span>
+    }
+    
+    @GetMapping(&quot;/stats&quot;)
+    public ResponseEntity&lt;?&gt; getArchiveStats() {
+<span class="nc" id="L94">        Map&lt;String, Object&gt; stats = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L95">        stats.put(&quot;archivedCount&quot;, mockArchivedResources.size());</span>
+<span class="nc" id="L96">        stats.put(&quot;scheduledForDeletion&quot;, mockArchivedResources.stream()</span>
+<span class="nc" id="L97">            .filter(r -&gt; r.getStatus().equals(&quot;ARCHIVED&quot;)).count());</span>
+<span class="nc" id="L98">        stats.put(&quot;storageSaved&quot;, &quot;1.2 GB&quot;);</span>
+        
+<span class="nc" id="L100">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Archive statistics&quot;, stats));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

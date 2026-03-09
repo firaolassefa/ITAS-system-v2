@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuestionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">QuestionController.java</span></div><h1>QuestionController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.Answer;
+import com.itas.model.Module;
+import com.itas.model.Question;
+import com.itas.model.QuestionType;
+import com.itas.repository.ModuleRepository;
+import com.itas.repository.QuestionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/questions&quot;)
+<span class="fc" id="L22">public class QuestionController {</span>
+    
+    @Autowired
+    private QuestionRepository questionRepository;
+    
+    @Autowired
+    private ModuleRepository moduleRepository;
+    
+    @GetMapping(&quot;/module/{moduleId}&quot;)
+    public ResponseEntity&lt;?&gt; getQuestionsByModule(@PathVariable Long moduleId) {
+        try {
+<span class="nc" id="L33">            List&lt;Question&gt; questions = questionRepository.findByModuleIdOrderByOrderAsc(moduleId);</span>
+<span class="nc" id="L34">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Success&quot;, questions));</span>
+<span class="nc" id="L35">        } catch (Exception e) {</span>
+<span class="nc" id="L36">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L37">                .body(new ApiResponse&lt;&gt;(&quot;Failed to load questions: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; createQuestion(@RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L45">            Long moduleId = ((Number) request.get(&quot;moduleId&quot;)).longValue();</span>
+<span class="nc" id="L46">            String questionText = (String) request.get(&quot;questionText&quot;);</span>
+<span class="nc" id="L47">            String questionType = (String) request.get(&quot;questionType&quot;);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            Integer points = request.get(&quot;points&quot;) != null ? </span>
+<span class="nc" id="L49">                ((Number) request.get(&quot;points&quot;)).intValue() : 1;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            Integer order = request.get(&quot;order&quot;) != null ? </span>
+<span class="nc" id="L51">                ((Number) request.get(&quot;order&quot;)).intValue() : 0;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            Boolean isPractice = request.get(&quot;isPractice&quot;) != null ? </span>
+<span class="nc" id="L53">                (Boolean) request.get(&quot;isPractice&quot;) : false;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">            String explanation = request.get(&quot;explanation&quot;) != null ? </span>
+<span class="nc" id="L55">                (String) request.get(&quot;explanation&quot;) : null;</span>
+            
+<span class="nc" id="L57">            Module module = moduleRepository.findById(moduleId)</span>
+<span class="nc" id="L58">                .orElseThrow(() -&gt; new RuntimeException(&quot;Module not found with id: &quot; + moduleId));</span>
+            
+<span class="nc" id="L60">            Question question = new Question();</span>
+<span class="nc" id="L61">            question.setModule(module);</span>
+<span class="nc" id="L62">            question.setQuestionText(questionText);</span>
+<span class="nc" id="L63">            question.setQuestionType(QuestionType.valueOf(questionType));</span>
+<span class="nc" id="L64">            question.setPoints(points);</span>
+<span class="nc" id="L65">            question.setOrder(order);</span>
+<span class="nc" id="L66">            question.setIsPractice(isPractice);</span>
+<span class="nc" id="L67">            question.setExplanation(explanation);</span>
+<span class="nc" id="L68">            question.setCreatedAt(LocalDateTime.now());</span>
+            
+            // Add answers if provided
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L72">            List&lt;Map&lt;String, Object&gt;&gt; answers = (List&lt;Map&lt;String, Object&gt;&gt;) request.get(&quot;answers&quot;);</span>
+<span class="nc bnc" id="L73" title="All 4 branches missed.">            if (answers != null &amp;&amp; !answers.isEmpty()) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                for (Map&lt;String, Object&gt; answerData : answers) {</span>
+<span class="nc" id="L75">                    Answer answer = new Answer();</span>
+<span class="nc" id="L76">                    answer.setQuestion(question);</span>
+<span class="nc" id="L77">                    answer.setAnswerText((String) answerData.get(&quot;answerText&quot;));</span>
+<span class="nc" id="L78">                    answer.setIsCorrect((Boolean) answerData.get(&quot;isCorrect&quot;));</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                    answer.setOrder(answerData.get(&quot;order&quot;) != null ? </span>
+<span class="nc" id="L80">                        ((Number) answerData.get(&quot;order&quot;)).intValue() : 0);</span>
+                    
+<span class="nc" id="L82">                    question.getAnswers().add(answer);</span>
+<span class="nc" id="L83">                }</span>
+            }
+            
+<span class="nc" id="L86">            Question savedQuestion = questionRepository.save(question);</span>
+            
+<span class="nc" id="L88">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Question created successfully&quot;, savedQuestion));</span>
+            
+<span class="nc" id="L90">        } catch (Exception e) {</span>
+<span class="nc" id="L91">            e.printStackTrace();</span>
+<span class="nc" id="L92">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L93">                .body(new ApiResponse&lt;&gt;(&quot;Failed to create question: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; updateQuestion(@PathVariable Long id, @RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L101">            Question question = questionRepository.findById(id)</span>
+<span class="nc" id="L102">                .orElseThrow(() -&gt; new RuntimeException(&quot;Question not found with id: &quot; + id));</span>
+            
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (request.containsKey(&quot;questionText&quot;)) {</span>
+<span class="nc" id="L105">                question.setQuestionText((String) request.get(&quot;questionText&quot;));</span>
+            }
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (request.containsKey(&quot;questionType&quot;)) {</span>
+<span class="nc" id="L108">                question.setQuestionType(QuestionType.valueOf((String) request.get(&quot;questionType&quot;)));</span>
+            }
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (request.containsKey(&quot;points&quot;)) {</span>
+<span class="nc" id="L111">                question.setPoints(((Number) request.get(&quot;points&quot;)).intValue());</span>
+            }
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (request.containsKey(&quot;order&quot;)) {</span>
+<span class="nc" id="L114">                question.setOrder(((Number) request.get(&quot;order&quot;)).intValue());</span>
+            }
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (request.containsKey(&quot;isPractice&quot;)) {</span>
+<span class="nc" id="L117">                question.setIsPractice((Boolean) request.get(&quot;isPractice&quot;));</span>
+            }
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (request.containsKey(&quot;explanation&quot;)) {</span>
+<span class="nc" id="L120">                question.setExplanation((String) request.get(&quot;explanation&quot;));</span>
+            }
+            
+            // Update answers if provided
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (request.containsKey(&quot;answers&quot;)) {</span>
+                // Clear existing answers
+<span class="nc" id="L126">                question.getAnswers().clear();</span>
+                
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L129">                List&lt;Map&lt;String, Object&gt;&gt; answers = (List&lt;Map&lt;String, Object&gt;&gt;) request.get(&quot;answers&quot;);</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">                if (answers != null &amp;&amp; !answers.isEmpty()) {</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                    for (Map&lt;String, Object&gt; answerData : answers) {</span>
+<span class="nc" id="L132">                        Answer answer = new Answer();</span>
+<span class="nc" id="L133">                        answer.setQuestion(question);</span>
+<span class="nc" id="L134">                        answer.setAnswerText((String) answerData.get(&quot;answerText&quot;));</span>
+<span class="nc" id="L135">                        answer.setIsCorrect((Boolean) answerData.get(&quot;isCorrect&quot;));</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                        answer.setOrder(answerData.get(&quot;order&quot;) != null ? </span>
+<span class="nc" id="L137">                            ((Number) answerData.get(&quot;order&quot;)).intValue() : 0);</span>
+                        
+<span class="nc" id="L139">                        question.getAnswers().add(answer);</span>
+<span class="nc" id="L140">                    }</span>
+                }
+            }
+            
+<span class="nc" id="L144">            Question updated = questionRepository.save(question);</span>
+<span class="nc" id="L145">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Question updated successfully&quot;, updated));</span>
+            
+<span class="nc" id="L147">        } catch (Exception e) {</span>
+<span class="nc" id="L148">            e.printStackTrace();</span>
+<span class="nc" id="L149">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L150">                .body(new ApiResponse&lt;&gt;(&quot;Failed to update question: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; deleteQuestion(@PathVariable Long id) {
+        try {
+<span class="nc" id="L158">            questionRepository.deleteById(id);</span>
+<span class="nc" id="L159">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Question deleted successfully&quot;, null));</span>
+<span class="nc" id="L160">        } catch (Exception e) {</span>
+<span class="nc" id="L161">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L162">                .body(new ApiResponse&lt;&gt;(&quot;Failed to delete question: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/bulk-delete&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; bulkDeleteQuestions(@RequestBody Map&lt;String, Object&gt; request) {
+        try {
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L171">            List&lt;Number&gt; ids = (List&lt;Number&gt;) request.get(&quot;ids&quot;);</span>
+            
+<span class="nc bnc" id="L173" title="All 4 branches missed.">            if (ids == null || ids.isEmpty()) {</span>
+<span class="nc" id="L174">                return ResponseEntity.badRequest()</span>
+<span class="nc" id="L175">                    .body(new ApiResponse&lt;&gt;(&quot;No question IDs provided&quot;, null));</span>
+            }
+            
+<span class="nc" id="L178">            int deletedCount = 0;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            for (Number id : ids) {</span>
+                try {
+<span class="nc" id="L181">                    questionRepository.deleteById(id.longValue());</span>
+<span class="nc" id="L182">                    deletedCount++;</span>
+<span class="nc" id="L183">                } catch (Exception e) {</span>
+                    // Continue deleting other questions even if one fails
+<span class="nc" id="L185">                    System.err.println(&quot;Failed to delete question &quot; + id + &quot;: &quot; + e.getMessage());</span>
+<span class="nc" id="L186">                }</span>
+<span class="nc" id="L187">            }</span>
+            
+<span class="nc" id="L189">            Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L190">            result.put(&quot;deletedCount&quot;, deletedCount);</span>
+<span class="nc" id="L191">            result.put(&quot;totalRequested&quot;, ids.size());</span>
+            
+<span class="nc" id="L193">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(</span>
+                deletedCount + &quot; question(s) deleted successfully&quot;, result));
+            
+<span class="nc" id="L196">        } catch (Exception e) {</span>
+<span class="nc" id="L197">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L198">                .body(new ApiResponse&lt;&gt;(&quot;Failed to delete questions: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/duplicate/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; duplicateQuestion(@PathVariable Long id) {
+        try {
+<span class="nc" id="L206">            Question original = questionRepository.findById(id)</span>
+<span class="nc" id="L207">                .orElseThrow(() -&gt; new RuntimeException(&quot;Question not found with id: &quot; + id));</span>
+            
+<span class="nc" id="L209">            Question duplicate = new Question();</span>
+<span class="nc" id="L210">            duplicate.setModule(original.getModule());</span>
+<span class="nc" id="L211">            duplicate.setQuestionText(original.getQuestionText() + &quot; (Copy)&quot;);</span>
+<span class="nc" id="L212">            duplicate.setQuestionType(original.getQuestionType());</span>
+<span class="nc" id="L213">            duplicate.setPoints(original.getPoints());</span>
+<span class="nc" id="L214">            duplicate.setOrder(original.getOrder() + 1);</span>
+<span class="nc" id="L215">            duplicate.setIsPractice(original.getIsPractice());</span>
+<span class="nc" id="L216">            duplicate.setExplanation(original.getExplanation());</span>
+<span class="nc" id="L217">            duplicate.setCreatedAt(LocalDateTime.now());</span>
+            
+            // Duplicate answers
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            for (Answer originalAnswer : original.getAnswers()) {</span>
+<span class="nc" id="L221">                Answer duplicateAnswer = new Answer();</span>
+<span class="nc" id="L222">                duplicateAnswer.setQuestion(duplicate);</span>
+<span class="nc" id="L223">                duplicateAnswer.setAnswerText(originalAnswer.getAnswerText());</span>
+<span class="nc" id="L224">                duplicateAnswer.setIsCorrect(originalAnswer.getIsCorrect());</span>
+<span class="nc" id="L225">                duplicateAnswer.setOrder(originalAnswer.getOrder());</span>
+<span class="nc" id="L226">                duplicate.getAnswers().add(duplicateAnswer);</span>
+<span class="nc" id="L227">            }</span>
+            
+<span class="nc" id="L229">            Question saved = questionRepository.save(duplicate);</span>
+<span class="nc" id="L230">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Question duplicated successfully&quot;, saved));</span>
+            
+<span class="nc" id="L232">        } catch (Exception e) {</span>
+<span class="nc" id="L233">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L234">                .body(new ApiResponse&lt;&gt;(&quot;Failed to duplicate question: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/module/{moduleId}/statistics&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; getModuleQuestionStatistics(@PathVariable Long moduleId) {
+        try {
+<span class="nc" id="L242">            List&lt;Question&gt; allQuestions = questionRepository.findByModuleIdOrderByOrderAsc(moduleId);</span>
+<span class="nc" id="L243">            List&lt;Question&gt; practiceQuestions = questionRepository.findByModuleIdAndIsPracticeTrueOrderByOrderAsc(moduleId);</span>
+<span class="nc" id="L244">            List&lt;Question&gt; quizQuestions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(moduleId);</span>
+            
+<span class="nc" id="L246">            int totalPoints = allQuestions.stream().mapToInt(Question::getPoints).sum();</span>
+<span class="nc" id="L247">            int practicePoints = practiceQuestions.stream().mapToInt(Question::getPoints).sum();</span>
+<span class="nc" id="L248">            int quizPoints = quizQuestions.stream().mapToInt(Question::getPoints).sum();</span>
+            
+<span class="nc" id="L250">            Map&lt;String, Object&gt; stats = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L251">            stats.put(&quot;totalQuestions&quot;, allQuestions.size());</span>
+<span class="nc" id="L252">            stats.put(&quot;practiceQuestions&quot;, practiceQuestions.size());</span>
+<span class="nc" id="L253">            stats.put(&quot;quizQuestions&quot;, quizQuestions.size());</span>
+<span class="nc" id="L254">            stats.put(&quot;totalPoints&quot;, totalPoints);</span>
+<span class="nc" id="L255">            stats.put(&quot;practicePoints&quot;, practicePoints);</span>
+<span class="nc" id="L256">            stats.put(&quot;quizPoints&quot;, quizPoints);</span>
+            
+            // Question type breakdown
+<span class="nc" id="L259">            Map&lt;String, Long&gt; typeBreakdown = allQuestions.stream()</span>
+<span class="nc" id="L260">                .collect(java.util.stream.Collectors.groupingBy(</span>
+<span class="nc" id="L261">                    q -&gt; q.getQuestionType().toString(),</span>
+<span class="nc" id="L262">                    java.util.stream.Collectors.counting()</span>
+                ));
+<span class="nc" id="L264">            stats.put(&quot;typeBreakdown&quot;, typeBreakdown);</span>
+            
+<span class="nc" id="L266">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Statistics retrieved&quot;, stats));</span>
+            
+<span class="nc" id="L268">        } catch (Exception e) {</span>
+<span class="nc" id="L269">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L270">                .body(new ApiResponse&lt;&gt;(&quot;Failed to get statistics: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/submit-assessment&quot;)
+    public ResponseEntity&lt;?&gt; submitAssessment(@RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L277">            Long moduleId = ((Number) request.get(&quot;moduleId&quot;)).longValue();</span>
+<span class="nc" id="L278">            Long userId = ((Number) request.get(&quot;userId&quot;)).longValue();</span>
+            
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L281">            Map&lt;String, Object&gt; answers = (Map&lt;String, Object&gt;) request.get(&quot;answers&quot;);</span>
+            
+<span class="nc" id="L283">            List&lt;Question&gt; questions = questionRepository.findByModuleIdOrderByOrderAsc(moduleId);</span>
+            
+<span class="nc" id="L285">            int totalPoints = 0;</span>
+<span class="nc" id="L286">            int earnedPoints = 0;</span>
+            
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            for (Question question : questions) {</span>
+<span class="nc" id="L289">                totalPoints += question.getPoints();</span>
+                
+<span class="nc" id="L291">                String userAnswerId = answers.get(question.getId().toString()).toString();</span>
+                
+                // Check if answer is correct
+<span class="nc bnc" id="L294" title="All 2 branches missed.">                for (Answer answer : question.getAnswers()) {</span>
+<span class="nc bnc" id="L295" title="All 4 branches missed.">                    if (answer.getId().toString().equals(userAnswerId) &amp;&amp; answer.getIsCorrect()) {</span>
+<span class="nc" id="L296">                        earnedPoints += question.getPoints();</span>
+<span class="nc" id="L297">                        break;</span>
+                    }
+<span class="nc" id="L299">                }</span>
+<span class="nc" id="L300">            }</span>
+            
+<span class="nc bnc" id="L302" title="All 2 branches missed.">            double percentage = totalPoints &gt; 0 ? (earnedPoints * 100.0 / totalPoints) : 0;</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">            boolean passed = percentage &gt;= 70; // 70% passing grade</span>
+            
+<span class="nc" id="L305">            Map&lt;String, Object&gt; result = Map.of(</span>
+<span class="nc" id="L306">                &quot;totalPoints&quot;, totalPoints,</span>
+<span class="nc" id="L307">                &quot;earnedPoints&quot;, earnedPoints,</span>
+<span class="nc" id="L308">                &quot;percentage&quot;, percentage,</span>
+<span class="nc" id="L309">                &quot;passed&quot;, passed,</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                &quot;feedback&quot;, passed ? &quot;Congratulations! You passed the assessment.&quot; : </span>
+<span class="nc" id="L311">                    &quot;You need at least 70% to pass. Please review the material and try again.&quot;</span>
+            );
+            
+<span class="nc" id="L314">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Assessment submitted successfully&quot;, result));</span>
+            
+<span class="nc" id="L316">        } catch (Exception e) {</span>
+<span class="nc" id="L317">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L318">                .body(new ApiResponse&lt;&gt;(&quot;Failed to submit assessment: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/module/{moduleId}/practice&quot;)
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; getPracticeQuestions(@PathVariable Long moduleId) {
+        try {
+<span class="nc" id="L326">            List&lt;Question&gt; questions = questionRepository.findByModuleIdAndIsPracticeTrueOrderByOrderAsc(moduleId);</span>
+<span class="nc" id="L327">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Practice questions retrieved&quot;, questions));</span>
+<span class="nc" id="L328">        } catch (Exception e) {</span>
+<span class="nc" id="L329">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L330">                .body(new ApiResponse&lt;&gt;(&quot;Failed to load practice questions: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/module/{moduleId}/quiz&quot;)
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; getQuizQuestions(@PathVariable Long moduleId) {
+        try {
+<span class="nc" id="L338">            List&lt;Question&gt; questions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(moduleId);</span>
+<span class="nc" id="L339">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Quiz questions retrieved&quot;, questions));</span>
+<span class="nc" id="L340">        } catch (Exception e) {</span>
+<span class="nc" id="L341">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L342">                .body(new ApiResponse&lt;&gt;(&quot;Failed to load quiz questions: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/practice/check-answer&quot;)
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; checkPracticeAnswer(@RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L350">            Long questionId = ((Number) request.get(&quot;questionId&quot;)).longValue();</span>
+<span class="nc" id="L351">            Long answerId = ((Number) request.get(&quot;answerId&quot;)).longValue();</span>
+            
+<span class="nc" id="L353">            Question question = questionRepository.findById(questionId)</span>
+<span class="nc" id="L354">                .orElseThrow(() -&gt; new RuntimeException(&quot;Question not found&quot;));</span>
+            
+<span class="nc" id="L356">            boolean correct = false;</span>
+<span class="nc" id="L357">            String correctAnswerText = &quot;&quot;;</span>
+            
+<span class="nc bnc" id="L359" title="All 2 branches missed.">            for (Answer answer : question.getAnswers()) {</span>
+<span class="nc bnc" id="L360" title="All 4 branches missed.">                if (answer.getId().equals(answerId) &amp;&amp; answer.getIsCorrect()) {</span>
+<span class="nc" id="L361">                    correct = true;</span>
+                }
+<span class="nc bnc" id="L363" title="All 2 branches missed.">                if (answer.getIsCorrect()) {</span>
+<span class="nc" id="L364">                    correctAnswerText = answer.getAnswerText();</span>
+                }
+<span class="nc" id="L366">            }</span>
+            
+<span class="nc" id="L368">            Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L369">            result.put(&quot;correct&quot;, correct);</span>
+<span class="nc" id="L370">            result.put(&quot;explanation&quot;, question.getExplanation());</span>
+<span class="nc" id="L371">            result.put(&quot;correctAnswer&quot;, correctAnswerText);</span>
+            
+<span class="nc" id="L373">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Answer checked&quot;, result));</span>
+            
+<span class="nc" id="L375">        } catch (Exception e) {</span>
+<span class="nc" id="L376">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L377">                .body(new ApiResponse&lt;&gt;(&quot;Failed to check answer: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    @PostMapping(&quot;/module-quiz/submit&quot;)
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; submitModuleQuiz(@RequestBody Map&lt;String, Object&gt; request) {
+        try {
+<span class="nc" id="L385">            Long moduleId = ((Number) request.get(&quot;moduleId&quot;)).longValue();</span>
+<span class="nc" id="L386">            Long userId = ((Number) request.get(&quot;userId&quot;)).longValue();</span>
+            
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L389">            Map&lt;String, Object&gt; answers = (Map&lt;String, Object&gt;) request.get(&quot;answers&quot;);</span>
+            
+<span class="nc" id="L391">            List&lt;Question&gt; questions = questionRepository.findByModuleIdAndIsPracticeFalseOrderByOrderAsc(moduleId);</span>
+            
+<span class="nc" id="L393">            int totalPoints = 0;</span>
+<span class="nc" id="L394">            int earnedPoints = 0;</span>
+            
+<span class="nc bnc" id="L396" title="All 2 branches missed.">            for (Question question : questions) {</span>
+<span class="nc" id="L397">                totalPoints += question.getPoints();</span>
+                
+<span class="nc bnc" id="L399" title="All 2 branches missed.">                if (answers.containsKey(question.getId().toString())) {</span>
+<span class="nc" id="L400">                    String userAnswerId = answers.get(question.getId().toString()).toString();</span>
+                    
+<span class="nc bnc" id="L402" title="All 2 branches missed.">                    for (Answer answer : question.getAnswers()) {</span>
+<span class="nc bnc" id="L403" title="All 4 branches missed.">                        if (answer.getId().toString().equals(userAnswerId) &amp;&amp; answer.getIsCorrect()) {</span>
+<span class="nc" id="L404">                            earnedPoints += question.getPoints();</span>
+<span class="nc" id="L405">                            break;</span>
+                        }
+<span class="nc" id="L407">                    }</span>
+                }
+<span class="nc" id="L409">            }</span>
+            
+<span class="nc bnc" id="L411" title="All 2 branches missed.">            double percentage = totalPoints &gt; 0 ? (earnedPoints * 100.0 / totalPoints) : 0;</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">            boolean passed = percentage &gt;= 70;</span>
+            
+<span class="nc" id="L414">            Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L415">            result.put(&quot;totalPoints&quot;, totalPoints);</span>
+<span class="nc" id="L416">            result.put(&quot;earnedPoints&quot;, earnedPoints);</span>
+<span class="nc" id="L417">            result.put(&quot;percentage&quot;, Math.round(percentage * 100.0) / 100.0);</span>
+<span class="nc" id="L418">            result.put(&quot;passed&quot;, passed);</span>
+<span class="nc" id="L419">            result.put(&quot;nextModuleUnlocked&quot;, passed);</span>
+<span class="nc bnc" id="L420" title="All 2 branches missed.">            result.put(&quot;feedback&quot;, passed ? </span>
+<span class="nc" id="L421">                &quot;Congratulations! You passed the module quiz. Next module unlocked!&quot; : </span>
+<span class="nc" id="L422">                &quot;You need at least 70% to pass. Please review the material and try again.&quot;);</span>
+            
+<span class="nc" id="L424">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Module quiz submitted&quot;, result));</span>
+            
+<span class="nc" id="L426">        } catch (Exception e) {</span>
+<span class="nc" id="L427">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L428">                .body(new ApiResponse&lt;&gt;(&quot;Failed to submit quiz: &quot; + e.getMessage(), null));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -332,7 +332,7 @@ const CourseManagement: React.FC = () => {
                                   setContentManagerOpen(true);
                                 }}
                               >
-                                Add Content
+                                Manage Content
                               </Button>
                               <IconButton
                                 edge="end"

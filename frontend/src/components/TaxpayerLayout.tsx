@@ -59,7 +59,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+        bgcolor: mode === 'light' ? '#016396' : '#1e293b',
         color: 'white',
       }}
     >
@@ -130,7 +130,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
             >
               <ListItemIcon 
                 sx={{ 
-                  color: location.pathname === item.path ? '#fbbf24' : alpha('#fff', 0.7),
+                  color: location.pathname === item.path ? '#FCDD09' : alpha('#fff', 0.7),
                   minWidth: 40,
                 }}
               >
@@ -165,7 +165,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+          bgcolor: mode === 'light' ? '#016396' : '#1e293b',
           borderBottom: '1px solid',
           borderColor: alpha('#fff', 0.1),
         }}
@@ -247,7 +247,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
             sx: {
               mt: 1.5,
               borderRadius: '12px',
-              bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+              bgcolor: mode === 'light' ? '#016396' : '#1e293b',
               color: 'white',
               minWidth: 200,
             },

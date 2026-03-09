@@ -80,7 +80,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+        bgcolor: mode === 'light' ? '#016396' : '#1e293b',
         color: 'white',
       }}
     >
@@ -126,7 +126,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
           size="small"
           sx={{
             bgcolor: alpha('#f59e0b', 0.2),
-            color: '#fbbf24',
+            color: '#FCDD09',
             fontWeight: 600,
             border: '1px solid',
             borderColor: alpha('#f59e0b', 0.3),
@@ -159,7 +159,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
             >
               <ListItemIcon 
                 sx={{ 
-                  color: location.pathname === item.path ? '#fbbf24' : alpha('#fff', 0.7),
+                  color: location.pathname === item.path ? '#FCDD09' : alpha('#fff', 0.7),
                   minWidth: 40,
                 }}
               >
@@ -194,7 +194,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+          bgcolor: mode === 'light' ? '#016396' : '#1e293b',
           borderBottom: '1px solid',
           borderColor: alpha('#fff', 0.1),
         }}
@@ -276,7 +276,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
             sx: {
               mt: 1.5,
               borderRadius: '12px',
-              bgcolor: mode === 'light' ? '#1e3a8a' : '#1e293b',
+              bgcolor: mode === 'light' ? '#016396' : '#1e293b',
               color: 'white',
               minWidth: 220,
             },

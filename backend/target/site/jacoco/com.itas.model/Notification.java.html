@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Notification.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.model</a> &gt; <span class="el_source">Notification.java</span></div><h1>Notification.java</h1><pre class="source lang-java linenums">package com.itas.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;notifications&quot;)
+<span class="fc" id="L8">public class Notification {</span>
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String title;
+    
+    @Column(length = 5000)
+    private String message;
+    
+    private String link; // Link for notification action
+    
+    @Column(nullable = false)
+    private String notificationType; // EMAIL, SMS, SYSTEM, IN_APP
+    
+    @Column(nullable = false)
+    private String priority; // LOW, MEDIUM, HIGH, URGENT
+    
+    @Column(nullable = false)
+    private String targetAudience;
+    
+    private String role; // Target role for role-based notifications
+    
+    private LocalDateTime scheduledFor;
+    
+    private LocalDateTime sentAt;
+    
+<span class="fc" id="L37">    @Column(nullable = false)</span>
+    private String status = &quot;DRAFT&quot;; // DRAFT, SCHEDULED, SENDING, SENT, FAILED
+    
+<span class="fc" id="L40">    private Integer sentCount = 0;</span>
+    
+<span class="fc" id="L42">    private Integer openedCount = 0;</span>
+    
+<span class="fc" id="L44">    @Column(name = &quot;is_read&quot;)</span>
+<span class="fc" id="L45">    private Boolean read = false;</span>
+    
+    private LocalDateTime readAt;
+    
+    @ManyToOne
+    @JoinColumn(name = &quot;sender_id&quot;)
+    private User sender;
+    
+    private Long userId; // Target user ID for individual notifications
+    
+<span class="fc" id="L55">    private LocalDateTime createdAt = LocalDateTime.now();</span>
+    
+<span class="fc" id="L57">    private LocalDateTime updatedAt = LocalDateTime.now();</span>
+
+    // Getters and Setters
+<span class="nc" id="L60">    public Long getId() { return id; }</span>
+<span class="nc" id="L61">    public void setId(Long id) { this.id = id; }</span>
+    
+<span class="nc" id="L63">    public String getTitle() { return title; }</span>
+<span class="nc" id="L64">    public void setTitle(String title) { this.title = title; }</span>
+    
+<span class="nc" id="L66">    public String getMessage() { return message; }</span>
+<span class="nc" id="L67">    public void setMessage(String message) { this.message = message; }</span>
+    
+<span class="nc" id="L69">    public String getLink() { return link; }</span>
+<span class="nc" id="L70">    public void setLink(String link) { this.link = link; }</span>
+    
+<span class="nc" id="L72">    public String getNotificationType() { return notificationType; }</span>
+<span class="nc" id="L73">    public void setNotificationType(String notificationType) { this.notificationType = notificationType; }</span>
+    
+<span class="nc" id="L75">    public String getPriority() { return priority; }</span>
+<span class="nc" id="L76">    public void setPriority(String priority) { this.priority = priority; }</span>
+    
+<span class="nc" id="L78">    public String getTargetAudience() { return targetAudience; }</span>
+<span class="nc" id="L79">    public void setTargetAudience(String targetAudience) { this.targetAudience = targetAudience; }</span>
+    
+<span class="nc" id="L81">    public String getRole() { return role; }</span>
+<span class="nc" id="L82">    public void setRole(String role) { this.role = role; }</span>
+    
+<span class="nc" id="L84">    public LocalDateTime getScheduledFor() { return scheduledFor; }</span>
+<span class="nc" id="L85">    public void setScheduledFor(LocalDateTime scheduledFor) { this.scheduledFor = scheduledFor; }</span>
+    
+<span class="nc" id="L87">    public LocalDateTime getSentAt() { return sentAt; }</span>
+<span class="nc" id="L88">    public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }</span>
+    
+<span class="nc" id="L90">    public String getStatus() { return status; }</span>
+<span class="nc" id="L91">    public void setStatus(String status) { this.status = status; }</span>
+    
+<span class="nc" id="L93">    public Integer getSentCount() { return sentCount; }</span>
+<span class="nc" id="L94">    public void setSentCount(Integer sentCount) { this.sentCount = sentCount; }</span>
+    
+<span class="nc" id="L96">    public Integer getOpenedCount() { return openedCount; }</span>
+<span class="nc" id="L97">    public void setOpenedCount(Integer openedCount) { this.openedCount = openedCount; }</span>
+    
+<span class="nc" id="L99">    public Boolean getRead() { return read; }</span>
+<span class="nc" id="L100">    public void setRead(Boolean read) { this.read = read; }</span>
+    
+<span class="nc" id="L102">    public LocalDateTime getReadAt() { return readAt; }</span>
+<span class="nc" id="L103">    public void setReadAt(LocalDateTime readAt) { this.readAt = readAt; }</span>
+    
+<span class="nc" id="L105">    public User getSender() { return sender; }</span>
+<span class="nc" id="L106">    public void setSender(User sender) { this.sender = sender; }</span>
+    
+<span class="nc" id="L108">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="nc" id="L109">    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }</span>
+    
+<span class="nc" id="L111">    public LocalDateTime getUpdatedAt() { return updatedAt; }</span>
+<span class="nc" id="L112">    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }</span>
+    
+<span class="nc" id="L114">    public Long getUserId() { return userId; }</span>
+<span class="nc" id="L115">    public void setUserId(Long userId) { this.userId = userId; }</span>
+    
+<span class="nc bnc" id="L117" title="All 4 branches missed.">    public boolean isRead() { return read != null &amp;&amp; read; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

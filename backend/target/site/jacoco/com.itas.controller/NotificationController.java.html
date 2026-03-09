@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">NotificationController.java</span></div><h1>NotificationController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.dto.NotificationRequest;
+import com.itas.model.Notification;
+import com.itas.service.NotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/notifications&quot;)
+<span class="fc" id="L16">public class NotificationController {</span>
+    
+    @Autowired
+    private NotificationService notificationService;
+    
+    // Get all notifications
+    @GetMapping
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; getAllNotifications() {
+        try {
+<span class="nc" id="L26">            List&lt;Notification&gt; notifications = notificationService.getAllNotifications();</span>
+<span class="nc" id="L27">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notifications retrieved successfully&quot;, notifications));</span>
+<span class="nc" id="L28">        } catch (Exception e) {</span>
+<span class="nc" id="L29">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Get notification by ID
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;?&gt; getNotificationById(@PathVariable Long id) {
+        try {
+<span class="nc" id="L37">            Notification notification = notificationService.getNotificationById(id);</span>
+<span class="nc" id="L38">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notification retrieved successfully&quot;, notification));</span>
+<span class="nc" id="L39">        } catch (RuntimeException e) {</span>
+<span class="nc" id="L40">            e.printStackTrace();</span>
+<span class="nc" id="L41">            return ResponseEntity.status(404).body(new ApiResponse&lt;&gt;(&quot;Notification not found with id: &quot; + id, null));</span>
+<span class="nc" id="L42">        } catch (Exception e) {</span>
+<span class="nc" id="L43">            e.printStackTrace();</span>
+<span class="nc" id="L44">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(&quot;Error retrieving notification: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    // Get unread notifications
+    @GetMapping(&quot;/unread&quot;)
+    public ResponseEntity&lt;?&gt; getUnreadNotifications(
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long userId) {
+        try {
+            List&lt;Notification&gt; notifications;
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            if (userId != null) {</span>
+                // Get notifications for specific user
+<span class="nc" id="L57">                notifications = notificationService.getUnreadNotifications(userId);</span>
+<span class="nc bnc" id="L58" title="All 4 branches missed.">            } else if (role != null &amp;&amp; !role.isEmpty()) {</span>
+                // Get notifications by role
+<span class="nc" id="L60">                notifications = notificationService.getUnreadNotificationsByRole(role);</span>
+            } else {
+                // Get all unread notifications
+<span class="nc" id="L63">                notifications = notificationService.getUnreadNotifications();</span>
+            }
+<span class="nc" id="L65">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Unread notifications retrieved successfully&quot;, notifications));</span>
+<span class="nc" id="L66">        } catch (Exception e) {</span>
+<span class="nc" id="L67">            e.printStackTrace();</span>
+<span class="nc" id="L68">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Get unread count
+    @GetMapping(&quot;/count&quot;)
+    public ResponseEntity&lt;?&gt; getUnreadCount(
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long userId) {
+        try {
+            Long count;
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (userId != null) {</span>
+                // Get count for specific user
+<span class="nc" id="L81">                count = notificationService.getUnreadCount(userId);</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">            } else if (role != null &amp;&amp; !role.isEmpty()) {</span>
+                // Get count by role
+<span class="nc" id="L84">                count = notificationService.getUnreadCountByRole(role);</span>
+            } else {
+                // Get all unread count
+<span class="nc" id="L87">                count = notificationService.getUnreadCount();</span>
+            }
+<span class="nc" id="L89">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Unread count retrieved successfully&quot;, count));</span>
+<span class="nc" id="L90">        } catch (Exception e) {</span>
+<span class="nc" id="L91">            e.printStackTrace();</span>
+<span class="nc" id="L92">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Get notifications by role
+    @GetMapping(&quot;/by-role/{role}&quot;)
+    public ResponseEntity&lt;?&gt; getNotificationsByRole(@PathVariable String role) {
+        try {
+<span class="nc" id="L100">            List&lt;Notification&gt; notifications = notificationService.getNotificationsByRole(role);</span>
+<span class="nc" id="L101">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notifications retrieved successfully&quot;, notifications));</span>
+<span class="nc" id="L102">        } catch (Exception e) {</span>
+<span class="nc" id="L103">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Send notification (Communication Officer &amp; System Admin only)
+    @PostMapping(&quot;/send&quot;)
+    @PreAuthorize(&quot;hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; sendNotification(@RequestBody NotificationRequest request) {
+        try {
+<span class="nc" id="L112">            Notification notification = new Notification();</span>
+<span class="nc" id="L113">            notification.setTitle(request.getTitle());</span>
+<span class="nc" id="L114">            notification.setMessage(request.getMessage());</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            notification.setLink(request.getLink() != null ? request.getLink() : &quot;/taxpayer/dashboard&quot;);</span>
+<span class="nc" id="L116">            notification.setNotificationType(request.getNotificationType());</span>
+<span class="nc" id="L117">            notification.setPriority(request.getPriority());</span>
+<span class="nc" id="L118">            notification.setTargetAudience(request.getTargetAudience());</span>
+<span class="nc" id="L119">            notification.setRole(request.getRole());</span>
+<span class="nc" id="L120">            notification.setScheduledFor(request.getScheduledFor());</span>
+            
+            // Use a default sender ID (system admin) - in real app, get from security context
+<span class="nc" id="L123">            Notification sent = notificationService.sendNotification(notification, 1L);</span>
+<span class="nc" id="L124">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notification sent successfully&quot;, sent));</span>
+<span class="nc" id="L125">        } catch (Exception e) {</span>
+<span class="nc" id="L126">            e.printStackTrace();</span>
+<span class="nc" id="L127">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(&quot;Failed to send notification: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    // Mark notification as read
+    @PostMapping(&quot;/mark-as-read/{id}&quot;)
+    @PreAuthorize(&quot;isAuthenticated()&quot;)
+    public ResponseEntity&lt;?&gt; markAsRead(@PathVariable Long id) {
+        try {
+<span class="nc" id="L136">            notificationService.markAsRead(id);</span>
+<span class="nc" id="L137">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notification marked as read&quot;, null));</span>
+<span class="nc" id="L138">        } catch (Exception e) {</span>
+<span class="nc" id="L139">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Mark all notifications as read
+    @PostMapping(&quot;/mark-all-read&quot;)
+    public ResponseEntity&lt;?&gt; markAllAsRead(@RequestParam(required = false) String role) {
+        try {
+<span class="nc bnc" id="L147" title="All 4 branches missed.">            if (role != null &amp;&amp; !role.isEmpty()) {</span>
+<span class="nc" id="L148">                notificationService.markAllAsReadByRole(role);</span>
+            } else {
+<span class="nc" id="L150">                notificationService.markAllAsRead();</span>
+            }
+<span class="nc" id="L152">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;All notifications marked as read&quot;, null));</span>
+<span class="nc" id="L153">        } catch (Exception e) {</span>
+<span class="nc" id="L154">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Get notification campaigns (Communication Officer &amp; System Admin only)
+    @GetMapping(&quot;/campaigns&quot;)
+    @PreAuthorize(&quot;hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; getNotificationCampaigns() {
+        try {
+<span class="nc" id="L163">            List&lt;Notification&gt; campaigns = notificationService.getCampaigns();</span>
+<span class="nc" id="L164">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Campaigns retrieved successfully&quot;, campaigns));</span>
+<span class="nc" id="L165">        } catch (Exception e) {</span>
+<span class="nc" id="L166">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Get campaign statistics (Communication Officer &amp; System Admin only)
+    @GetMapping(&quot;/campaigns/stats&quot;)
+    @PreAuthorize(&quot;hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN', 'MANAGER')&quot;)
+    public ResponseEntity&lt;?&gt; getCampaignStats() {
+        try {
+            // Return campaign statistics
+<span class="nc" id="L176">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Campaign stats retrieved successfully&quot;, </span>
+<span class="nc" id="L177">                notificationService.getCampaignStatistics()));</span>
+<span class="nc" id="L178">        } catch (Exception e) {</span>
+<span class="nc" id="L179">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    // Update notification (Communication Officer &amp; System Admin only)
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; updateNotification(@PathVariable Long id, @RequestBody NotificationRequest request) {
+        try {
+<span class="nc" id="L188">            Notification notification = notificationService.getNotificationById(id);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            if (notification == null) {</span>
+<span class="nc" id="L190">                return ResponseEntity.status(404).body(new ApiResponse&lt;&gt;(&quot;Notification not found&quot;, null));</span>
+            }
+            
+<span class="nc" id="L193">            notification.setTitle(request.getTitle());</span>
+<span class="nc" id="L194">            notification.setMessage(request.getMessage());</span>
+<span class="nc" id="L195">            notification.setNotificationType(request.getNotificationType());</span>
+<span class="nc" id="L196">            notification.setPriority(request.getPriority());</span>
+<span class="nc" id="L197">            notification.setTargetAudience(request.getTargetAudience());</span>
+<span class="nc" id="L198">            notification.setScheduledFor(request.getScheduledFor());</span>
+            
+<span class="nc" id="L200">            Notification updated = notificationService.updateNotification(notification);</span>
+<span class="nc" id="L201">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notification updated successfully&quot;, updated));</span>
+<span class="nc" id="L202">        } catch (RuntimeException e) {</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            if (e.getMessage().contains(&quot;not found&quot;)) {</span>
+<span class="nc" id="L204">                return ResponseEntity.status(404).body(new ApiResponse&lt;&gt;(&quot;Notification not found with id: &quot; + id, null));</span>
+            }
+<span class="nc" id="L206">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+<span class="nc" id="L207">        } catch (Exception e) {</span>
+<span class="nc" id="L208">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(&quot;Error updating notification: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    // Delete notification (Communication Officer &amp; System Admin only)
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('COMM_OFFICER', 'SYSTEM_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; deleteNotification(@PathVariable Long id) {
+        try {
+<span class="nc" id="L217">            notificationService.deleteNotification(id);</span>
+<span class="nc" id="L218">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Notification deleted successfully&quot;, null));</span>
+<span class="nc" id="L219">        } catch (RuntimeException e) {</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            if (e.getMessage().contains(&quot;not found&quot;)) {</span>
+<span class="nc" id="L221">                return ResponseEntity.status(404).body(new ApiResponse&lt;&gt;(&quot;Notification not found with id: &quot; + id, null));</span>
+            }
+<span class="nc" id="L223">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+<span class="nc" id="L224">        } catch (Exception e) {</span>
+<span class="nc" id="L225">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(&quot;Error deleting notification: &quot; + e.getMessage(), null));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

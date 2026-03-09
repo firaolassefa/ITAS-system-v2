@@ -20,6 +20,7 @@ com\itas\controller\TestController.class
 com\itas\model\Certificate.class
 com\itas\model\Course.class
 com\itas\model\Answer.class
+com\itas\service\EmailService.class
 com\itas\dto\LoginRequest.class
 com\itas\controller\AnalyticsController.class
 com\itas\service\CertificateService.class
@@ -31,6 +32,7 @@ com\itas\dto\LoginResponse.class
 com\itas\ItasApplication.class
 com\itas\model\UserType.class
 com\itas\dto\WebinarRequest.class
+com\itas\service\SmsService.class
 com\itas\model\AssessmentDefinition.class
 com\itas\repository\HelpContentRepository.class
 com\itas\model\Resource.class

@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnalyticsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">AnalyticsController.java</span></div><h1>AnalyticsController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.repository.UserRepository;
+import com.itas.repository.CourseRepository;
+import com.itas.repository.EnrollmentRepository;
+import com.itas.repository.ModuleProgressRepository;
+import com.itas.repository.ResourceRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping(&quot;/analytics&quot;)
+<span class="fc" id="L22">public class AnalyticsController {</span>
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private CourseRepository courseRepository;
+    
+    @Autowired(required = false)
+    private EnrollmentRepository enrollmentRepository;
+    
+    @Autowired(required = false)
+    private ModuleProgressRepository moduleProgressRepository;
+    
+    @Autowired(required = false)
+    private ResourceRepository resourceRepository;
+    
+    @Autowired
+    private ApplicationContext applicationContext;
+    
+    @GetMapping(&quot;/dashboard&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'MANAGER', 'AUDITOR')&quot;)
+    public ResponseEntity&lt;?&gt; getDashboardAnalytics(
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
+        
+<span class="nc" id="L48">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+        try {
+            // Get real data from database
+<span class="nc" id="L52">            long totalUsers = userRepository.count();</span>
+<span class="nc" id="L53">            long activeUsers = userRepository.countByActive(true);</span>
+<span class="nc" id="L54">            long totalCourses = courseRepository.count();</span>
+            
+            // Calculate enrollments and completions if repositories exist
+<span class="nc" id="L57">            long courseEnrollments = 0;</span>
+<span class="nc" id="L58">            long courseCompletions = 0;</span>
+<span class="nc" id="L59">            int completionRate = 0;</span>
+            
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (enrollmentRepository != null) {</span>
+<span class="nc" id="L62">                courseEnrollments = enrollmentRepository.count();</span>
+                // Count completed enrollments (progress &gt;= 100)
+<span class="nc" id="L64">                courseCompletions = enrollmentRepository.countByProgressGreaterThanEqual(100.0);</span>
+                
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                if (courseEnrollments &gt; 0) {</span>
+<span class="nc" id="L67">                    completionRate = (int) ((courseCompletions * 100) / courseEnrollments);</span>
+                }
+            }
+            
+<span class="nc" id="L71">            data.put(&quot;totalUsers&quot;, totalUsers);</span>
+<span class="nc" id="L72">            data.put(&quot;activeUsers&quot;, activeUsers);</span>
+<span class="nc" id="L73">            data.put(&quot;totalCourses&quot;, totalCourses);</span>
+<span class="nc" id="L74">            data.put(&quot;courseEnrollments&quot;, courseEnrollments);</span>
+<span class="nc" id="L75">            data.put(&quot;courseCompletions&quot;, courseCompletions);</span>
+<span class="nc" id="L76">            data.put(&quot;completionRate&quot;, completionRate);</span>
+<span class="nc" id="L77">            data.put(&quot;avgProgress&quot;, completionRate); // Use same value for now</span>
+            
+            // Calculate new users (users created in last 30 days)
+            // This would require a custom query with date filtering
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            data.put(&quot;newUsers&quot;, totalUsers &gt; 0 ? (int)(totalUsers * 0.12) : 0); // Estimate 12%</span>
+            
+<span class="nc" id="L83">        } catch (Exception e) {</span>
+            // Fallback to mock data if there's an error
+<span class="nc" id="L85">            System.err.println(&quot;Error calculating analytics: &quot; + e.getMessage());</span>
+<span class="nc" id="L86">            data.put(&quot;totalUsers&quot;, 0);</span>
+<span class="nc" id="L87">            data.put(&quot;activeUsers&quot;, 0);</span>
+<span class="nc" id="L88">            data.put(&quot;totalCourses&quot;, 0);</span>
+<span class="nc" id="L89">            data.put(&quot;courseEnrollments&quot;, 0);</span>
+<span class="nc" id="L90">            data.put(&quot;courseCompletions&quot;, 0);</span>
+<span class="nc" id="L91">            data.put(&quot;completionRate&quot;, 0);</span>
+<span class="nc" id="L92">            data.put(&quot;avgProgress&quot;, 0);</span>
+<span class="nc" id="L93">            data.put(&quot;newUsers&quot;, 0);</span>
+<span class="nc" id="L94">        }</span>
+        
+<span class="nc" id="L96">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Analytics retrieved&quot;, data));</span>
+    }
+    
+    @GetMapping(&quot;/export&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'MANAGER', 'AUDITOR')&quot;)
+    public ResponseEntity&lt;?&gt; exportAnalytics(@RequestParam String format) {
+        // In real implementation, generate PDF or Excel
+<span class="nc" id="L103">        Map&lt;String, String&gt; response = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L104">        response.put(&quot;downloadUrl&quot;, &quot;/exports/analytics-report.&quot; + format);</span>
+<span class="nc" id="L105">        response.put(&quot;message&quot;, &quot;Report generated successfully&quot;);</span>
+<span class="nc" id="L106">        response.put(&quot;format&quot;, format);</span>
+        
+<span class="nc" id="L108">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Export successful&quot;, response));</span>
+    }
+    
+    @GetMapping(&quot;/user-engagement&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'MANAGER', 'AUDITOR')&quot;)
+    public ResponseEntity&lt;?&gt; getUserEngagement() {
+        try {
+<span class="nc" id="L115">            List&lt;Map&lt;String, Object&gt;&gt; engagement = new java.util.ArrayList&lt;&gt;();</span>
+            
+<span class="nc bnc" id="L117" title="All 4 branches missed.">            if (enrollmentRepository != null &amp;&amp; courseRepository != null) {</span>
+                // Get all courses grouped by category
+<span class="nc" id="L119">                List&lt;com.itas.model.Course&gt; allCourses = courseRepository.findAll();</span>
+<span class="nc" id="L120">                Map&lt;String, List&lt;com.itas.model.Course&gt;&gt; coursesByCategory = allCourses.stream()</span>
+<span class="nc" id="L121">                    .collect(java.util.stream.Collectors.groupingBy(</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                        course -&gt; course.getCategory() != null ? course.getCategory() : &quot;General&quot;</span>
+                    ));
+                
+                // Calculate engagement for each category
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                for (Map.Entry&lt;String, List&lt;com.itas.model.Course&gt;&gt; entry : coursesByCategory.entrySet()) {</span>
+<span class="nc" id="L127">                    String category = entry.getKey();</span>
+<span class="nc" id="L128">                    List&lt;Long&gt; courseIds = entry.getValue().stream()</span>
+<span class="nc" id="L129">                        .map(com.itas.model.Course::getId)</span>
+<span class="nc" id="L130">                        .collect(java.util.stream.Collectors.toList());</span>
+                    
+                    // Get enrollments for this category
+<span class="nc" id="L133">                    List&lt;com.itas.model.Enrollment&gt; categoryEnrollments = enrollmentRepository.findAll().stream()</span>
+<span class="nc" id="L134">                        .filter(e -&gt; courseIds.contains(e.getCourseId()))</span>
+<span class="nc" id="L135">                        .collect(java.util.stream.Collectors.toList());</span>
+                    
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                    if (!categoryEnrollments.isEmpty()) {</span>
+                        // Count unique active users
+<span class="nc" id="L139">                        long activeUsers = categoryEnrollments.stream()</span>
+<span class="nc" id="L140">                            .map(com.itas.model.Enrollment::getUserId)</span>
+<span class="nc" id="L141">                            .distinct()</span>
+<span class="nc" id="L142">                            .count();</span>
+                        
+                        // Calculate average completion rate
+<span class="nc" id="L145">                        double avgCompletion = categoryEnrollments.stream()</span>
+<span class="nc" id="L146">                            .mapToDouble(com.itas.model.Enrollment::getProgress)</span>
+<span class="nc" id="L147">                            .average()</span>
+<span class="nc" id="L148">                            .orElse(0.0);</span>
+                        
+                        // Estimate average time (based on progress)
+<span class="nc" id="L151">                        int avgTimeMinutes = (int) (avgCompletion * 0.6); // Rough estimate</span>
+                        
+<span class="nc" id="L153">                        Map&lt;String, Object&gt; categoryData = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L154">                        categoryData.put(&quot;category&quot;, category);</span>
+<span class="nc" id="L155">                        categoryData.put(&quot;activeUsers&quot;, activeUsers);</span>
+<span class="nc" id="L156">                        categoryData.put(&quot;avgTime&quot;, avgTimeMinutes + &quot; min&quot;);</span>
+<span class="nc" id="L157">                        categoryData.put(&quot;completionRate&quot;, Math.round(avgCompletion));</span>
+                        
+<span class="nc" id="L159">                        engagement.add(categoryData);</span>
+                    }
+<span class="nc" id="L161">                }</span>
+            }
+            
+<span class="nc" id="L164">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;User engagement retrieved&quot;, engagement));</span>
+<span class="nc" id="L165">        } catch (Exception e) {</span>
+<span class="nc" id="L166">            System.err.println(&quot;Error calculating user engagement: &quot; + e.getMessage());</span>
+<span class="nc" id="L167">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;User engagement retrieved&quot;, new java.util.ArrayList&lt;&gt;()));</span>
+        }
+    }
+    
+    @GetMapping(&quot;/resource-stats&quot;)
+        @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'MANAGER', 'AUDITOR')&quot;)
+        public ResponseEntity&lt;?&gt; getResourceStats() {
+            try {
+<span class="nc" id="L175">                List&lt;Map&lt;String, Object&gt;&gt; stats = new java.util.ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                if (resourceRepository != null) {</span>
+<span class="nc" id="L178">                    List&lt;com.itas.model.Resource&gt; allResources = resourceRepository.findAll();</span>
+
+                    // Group by resource type
+<span class="nc" id="L181">                    Map&lt;String, List&lt;com.itas.model.Resource&gt;&gt; resourcesByType = allResources.stream()</span>
+<span class="nc" id="L182">                        .collect(java.util.stream.Collectors.groupingBy(</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                            r -&gt; r.getResourceType() != null ? r.getResourceType() : &quot;OTHER&quot;</span>
+                        ));
+
+                    // Define colors for each type
+<span class="nc" id="L187">                    Map&lt;String, String&gt; typeColors = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L188">                    typeColors.put(&quot;PDF&quot;, &quot;#EF4444&quot;);</span>
+<span class="nc" id="L189">                    typeColors.put(&quot;VIDEO&quot;, &quot;#8B5CF6&quot;);</span>
+<span class="nc" id="L190">                    typeColors.put(&quot;AUDIO&quot;, &quot;#10B981&quot;);</span>
+<span class="nc" id="L191">                    typeColors.put(&quot;DOCUMENT&quot;, &quot;#F59E0B&quot;);</span>
+<span class="nc" id="L192">                    typeColors.put(&quot;OTHER&quot;, &quot;#6B7280&quot;);</span>
+
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                    for (Map.Entry&lt;String, List&lt;com.itas.model.Resource&gt;&gt; entry : resourcesByType.entrySet()) {</span>
+<span class="nc" id="L195">                        String type = entry.getKey();</span>
+<span class="nc" id="L196">                        List&lt;com.itas.model.Resource&gt; resources = entry.getValue();</span>
+
+<span class="nc" id="L198">                        int totalDownloads = resources.stream()</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                            .mapToInt(r -&gt; r.getDownloadCount() != null ? r.getDownloadCount() : 0)</span>
+<span class="nc" id="L200">                            .sum();</span>
+
+                        // Calculate average rating (placeholder - would need ratings table)
+<span class="nc" id="L203">                        double avgRating = 4.5; // Default rating</span>
+
+<span class="nc" id="L205">                        Map&lt;String, Object&gt; typeData = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L206">                        typeData.put(&quot;type&quot;, type);</span>
+<span class="nc" id="L207">                        typeData.put(&quot;count&quot;, resources.size());</span>
+<span class="nc" id="L208">                        typeData.put(&quot;downloads&quot;, totalDownloads);</span>
+<span class="nc" id="L209">                        typeData.put(&quot;avgRating&quot;, avgRating);</span>
+<span class="nc" id="L210">                        typeData.put(&quot;color&quot;, typeColors.getOrDefault(type, &quot;#6B7280&quot;));</span>
+
+<span class="nc" id="L212">                        stats.add(typeData);</span>
+<span class="nc" id="L213">                    }</span>
+                }
+
+<span class="nc" id="L216">                return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Resource stats retrieved&quot;, stats));</span>
+<span class="nc" id="L217">            } catch (Exception e) {</span>
+<span class="nc" id="L218">                System.err.println(&quot;Error calculating resource stats: &quot; + e.getMessage());</span>
+<span class="nc" id="L219">                return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Resource stats retrieved&quot;, new java.util.ArrayList&lt;&gt;()));</span>
+            }
+        }
+
+    
+    @GetMapping(&quot;/key-insights&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'MANAGER', 'AUDITOR')&quot;)
+    public ResponseEntity&lt;?&gt; getKeyInsights() {
+        try {
+<span class="nc" id="L228">            List&lt;Map&lt;String, Object&gt;&gt; insights = new java.util.ArrayList&lt;&gt;();</span>
+            
+<span class="nc bnc" id="L230" title="All 4 branches missed.">            if (enrollmentRepository != null &amp;&amp; courseRepository != null) {</span>
+                // Calculate overall completion rate
+<span class="nc" id="L232">                List&lt;com.itas.model.Enrollment&gt; allEnrollments = enrollmentRepository.findAll();</span>
+<span class="nc" id="L233">                long totalEnrollments = allEnrollments.size();</span>
+                
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                if (totalEnrollments &gt; 0) {</span>
+<span class="nc" id="L236">                    long completedCount = allEnrollments.stream()</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                        .filter(e -&gt; e.getProgress() &gt;= 100.0)</span>
+<span class="nc" id="L238">                        .count();</span>
+<span class="nc" id="L239">                    double completionRate = (completedCount * 100.0) / totalEnrollments;</span>
+                    
+                    // Insight 1: High completion rate
+<span class="nc bnc" id="L242" title="All 2 branches missed.">                    if (completionRate &gt;= 70) {</span>
+<span class="nc" id="L243">                        Map&lt;String, Object&gt; insight = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L244">                        insight.put(&quot;text&quot;, String.format(&quot;Overall completion rate is %.0f%%&quot;, completionRate));</span>
+<span class="nc" id="L245">                        insight.put(&quot;color&quot;, &quot;#10B981&quot;);</span>
+<span class="nc" id="L246">                        insight.put(&quot;label&quot;, &quot;High Performance&quot;);</span>
+<span class="nc" id="L247">                        insights.add(insight);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                    } else if (completionRate &lt; 50) {</span>
+<span class="nc" id="L249">                        Map&lt;String, Object&gt; insight = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L250">                        insight.put(&quot;text&quot;, String.format(&quot;Completion rate is %.0f%% - needs improvement&quot;, completionRate));</span>
+<span class="nc" id="L251">                        insight.put(&quot;color&quot;, &quot;#F59E0B&quot;);</span>
+<span class="nc" id="L252">                        insight.put(&quot;label&quot;, &quot;Attention Needed&quot;);</span>
+<span class="nc" id="L253">                        insights.add(insight);</span>
+                    }
+                    
+                    // Insight 2: User growth
+<span class="nc" id="L257">                    long totalUsers = userRepository.count();</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">                    if (totalUsers &gt; 0) {</span>
+<span class="nc" id="L259">                        Map&lt;String, Object&gt; insight = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L260">                        insight.put(&quot;text&quot;, String.format(&quot;%d total users in the system&quot;, totalUsers));</span>
+<span class="nc" id="L261">                        insight.put(&quot;color&quot;, &quot;#667eea&quot;);</span>
+<span class="nc" id="L262">                        insight.put(&quot;label&quot;, &quot;User Base&quot;);</span>
+<span class="nc" id="L263">                        insights.add(insight);</span>
+                    }
+                    
+                    // Insight 3: Course with lowest completion
+<span class="nc" id="L267">                    List&lt;com.itas.model.Course&gt; allCourses = courseRepository.findAll();</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">                    if (!allCourses.isEmpty()) {</span>
+<span class="nc" id="L269">                        com.itas.model.Course lowestCourse = null;</span>
+<span class="nc" id="L270">                        double lowestRate = 100.0;</span>
+                        
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                        for (com.itas.model.Course course : allCourses) {</span>
+<span class="nc" id="L273">                            List&lt;com.itas.model.Enrollment&gt; courseEnrollments = allEnrollments.stream()</span>
+<span class="nc" id="L274">                                .filter(e -&gt; e.getCourseId().equals(course.getId()))</span>
+<span class="nc" id="L275">                                .collect(java.util.stream.Collectors.toList());</span>
+                            
+<span class="nc bnc" id="L277" title="All 2 branches missed.">                            if (!courseEnrollments.isEmpty()) {</span>
+<span class="nc" id="L278">                                long courseCompletions = courseEnrollments.stream()</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">                                    .filter(e -&gt; e.getProgress() &gt;= 100.0)</span>
+<span class="nc" id="L280">                                    .count();</span>
+<span class="nc" id="L281">                                double courseRate = (courseCompletions * 100.0) / courseEnrollments.size();</span>
+                                
+<span class="nc bnc" id="L283" title="All 2 branches missed.">                                if (courseRate &lt; lowestRate) {</span>
+<span class="nc" id="L284">                                    lowestRate = courseRate;</span>
+<span class="nc" id="L285">                                    lowestCourse = course;</span>
+                                }
+                            }
+<span class="nc" id="L288">                        }</span>
+                        
+<span class="nc bnc" id="L290" title="All 4 branches missed.">                        if (lowestCourse != null &amp;&amp; lowestRate &lt; 60) {</span>
+<span class="nc" id="L291">                            Map&lt;String, Object&gt; insight = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L292">                            insight.put(&quot;text&quot;, String.format(&quot;%s has %.0f%% completion rate&quot;, </span>
+<span class="nc" id="L293">                                lowestCourse.getTitle(), lowestRate));</span>
+<span class="nc" id="L294">                            insight.put(&quot;color&quot;, &quot;#F59E0B&quot;);</span>
+<span class="nc" id="L295">                            insight.put(&quot;label&quot;, &quot;Needs Attention&quot;);</span>
+<span class="nc" id="L296">                            insights.add(insight);</span>
+                        }
+                    }
+                    
+                    // Insight 4: Recommendation
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                    if (completionRate &lt; 70) {</span>
+<span class="nc" id="L302">                        Map&lt;String, Object&gt; insight = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L303">                        insight.put(&quot;text&quot;, &quot;Consider adding more interactive content to improve engagement&quot;);</span>
+<span class="nc" id="L304">                        insight.put(&quot;color&quot;, &quot;#8B5CF6&quot;);</span>
+<span class="nc" id="L305">                        insight.put(&quot;label&quot;, &quot;Recommendation&quot;);</span>
+<span class="nc" id="L306">                        insights.add(insight);</span>
+                    }
+                }
+            }
+            
+<span class="nc" id="L311">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Key insights retrieved&quot;, insights));</span>
+<span class="nc" id="L312">        } catch (Exception e) {</span>
+<span class="nc" id="L313">            System.err.println(&quot;Error generating insights: &quot; + e.getMessage());</span>
+<span class="nc" id="L314">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Key insights retrieved&quot;, new java.util.ArrayList&lt;&gt;()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

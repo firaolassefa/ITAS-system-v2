@@ -99,6 +99,15 @@ public class SecurityConfig {
                 .requestMatchers("/content/upload", "/content/update/**", "/api/content/upload", "/api/content/update/**").hasAnyRole("CONTENT_ADMIN", "SYSTEM_ADMIN")
                 .requestMatchers("/content/archive/**", "/api/content/archive/**").hasAnyRole("CONTENT_ADMIN", "SYSTEM_ADMIN")
                 
+                // File Upload - Content Admin, Training Admin & System Admin
+                .requestMatchers("/files/upload", "/api/files/upload").hasAnyRole("CONTENT_ADMIN", "TRAINING_ADMIN", "SYSTEM_ADMIN")
+                .requestMatchers("/modules/*/upload-content", "/api/modules/*/upload-content").hasAnyRole("CONTENT_ADMIN", "TRAINING_ADMIN", "SYSTEM_ADMIN")
+                .requestMatchers("/modules/*/set-url", "/api/modules/*/set-url").hasAnyRole("CONTENT_ADMIN", "TRAINING_ADMIN", "SYSTEM_ADMIN")
+                
+                // Static file serving
+                .requestMatchers("/uploads/**", "/api/uploads/**").permitAll()
+                .requestMatchers("/certificates/**", "/api/certificates/**").permitAll()
+                
                 // Internal Training - MOR Staff & System Admin
                 .requestMatchers("/staff/internal-training/**", "/api/staff/internal-training/**").hasAnyRole("MOR_STAFF", "SYSTEM_ADMIN")
                 .requestMatchers("/staff/compliance/**", "/api/staff/compliance/**").hasAnyRole("MOR_STAFF", "SYSTEM_ADMIN")

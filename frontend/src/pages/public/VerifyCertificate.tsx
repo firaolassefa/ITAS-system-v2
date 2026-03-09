@@ -256,7 +256,7 @@ const VerifyCertificate: React.FC = () => {
         {/* Footer */}
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           <Typography variant="body2" sx={{ color: 'white' }}>
-            © 2026 ITAS - Ethiopian Ministry of Revenue
+            © 2026 Ministry of Revenue Ethiopia - Tax Education Platform
           </Typography>
         </Box>
       </Container>

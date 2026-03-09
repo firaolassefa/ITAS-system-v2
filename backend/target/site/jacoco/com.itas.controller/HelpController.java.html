@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HelpController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">HelpController.java</span></div><h1>HelpController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.HelpContent;
+import com.itas.repository.HelpContentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * Help Controller
+ * Handles UC-TP-001: Access Context-Sensitive Help
+ */
+@RestController
+@RequestMapping(&quot;/help&quot;)
+<span class="fc" id="L18">public class HelpController {</span>
+    
+    @Autowired
+    private HelpContentRepository helpContentRepository;
+    
+    /**
+     * Get help content by field/context
+     * GET /api/help/field/{fieldName}
+     */
+    @GetMapping(&quot;/field/{fieldName}&quot;)
+    public ResponseEntity&lt;?&gt; getHelpByField(@PathVariable String fieldName) {
+        try {
+<span class="fc" id="L30">            HelpContent help = helpContentRepository.findByFieldName(fieldName)</span>
+<span class="fc" id="L31">                    .orElse(getDefaultHelp());</span>
+            
+<span class="fc" id="L33">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Help content retrieved&quot;, help));</span>
+<span class="nc" id="L34">        } catch (Exception e) {</span>
+<span class="nc" id="L35">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L36">                    .body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    /**
+     * Get help content by category
+     * GET /api/help/category/{category}
+     */
+    @GetMapping(&quot;/category/{category}&quot;)
+    public ResponseEntity&lt;?&gt; getHelpByCategory(@PathVariable String category) {
+        try {
+<span class="fc" id="L47">            List&lt;HelpContent&gt; helpList = helpContentRepository.findByCategory(category);</span>
+<span class="fc" id="L48">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Help content retrieved&quot;, helpList));</span>
+<span class="nc" id="L49">        } catch (Exception e) {</span>
+<span class="nc" id="L50">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L51">                    .body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    /**
+     * Search help content
+     * GET /api/help/search?q={query}
+     */
+    @GetMapping(&quot;/search&quot;)
+    public ResponseEntity&lt;?&gt; searchHelp(@RequestParam String q) {
+        try {
+<span class="fc" id="L62">            List&lt;HelpContent&gt; results = helpContentRepository.searchByKeyword(q);</span>
+<span class="fc" id="L63">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Search results&quot;, results));</span>
+<span class="nc" id="L64">        } catch (Exception e) {</span>
+<span class="nc" id="L65">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L66">                    .body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    /**
+     * Get all help topics
+     * GET /api/help/topics
+     */
+    @GetMapping(&quot;/topics&quot;)
+    public ResponseEntity&lt;?&gt; getAllTopics() {
+        try {
+<span class="nc" id="L77">            List&lt;HelpContent&gt; topics = helpContentRepository.findAll();</span>
+<span class="nc" id="L78">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;All help topics&quot;, topics));</span>
+<span class="nc" id="L79">        } catch (Exception e) {</span>
+<span class="nc" id="L80">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L81">                    .body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    /**
+     * Create or update help content (Admin only)
+     * POST /api/help
+     */
+    @PostMapping
+    public ResponseEntity&lt;?&gt; createOrUpdateHelp(@RequestBody HelpContent helpContent) {
+        try {
+<span class="nc" id="L92">            HelpContent saved = helpContentRepository.save(helpContent);</span>
+<span class="nc" id="L93">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Help content saved&quot;, saved));</span>
+<span class="nc" id="L94">        } catch (Exception e) {</span>
+<span class="nc" id="L95">            return ResponseEntity.badRequest()</span>
+<span class="nc" id="L96">                    .body(new ApiResponse&lt;&gt;(e.getMessage(), null));</span>
+        }
+    }
+    
+    /**
+     * Default help content when specific help is not found
+     */
+    private HelpContent getDefaultHelp() {
+<span class="fc" id="L104">        HelpContent defaultHelp = new HelpContent();</span>
+<span class="fc" id="L105">        defaultHelp.setTitle(&quot;General Help&quot;);</span>
+<span class="fc" id="L106">        defaultHelp.setShortDescription(&quot;For assistance, please contact support or refer to the user manual.&quot;);</span>
+<span class="fc" id="L107">        defaultHelp.setDetailedContent(&quot;No specific help available for this field. Please refer to the general documentation or contact support.&quot;);</span>
+<span class="fc" id="L108">        return defaultHelp;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

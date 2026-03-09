@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">SyncController.java</span></div><h1>SyncController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.SyncRecord;
+import com.itas.service.SyncService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/sync&quot;)
+<span class="fc" id="L14">public class SyncController {</span>
+    
+    @Autowired
+    private SyncService syncService;
+    
+    @GetMapping(&quot;/pending&quot;)
+    public ResponseEntity&lt;?&gt; getPendingSyncs() {
+<span class="nc" id="L21">        List&lt;SyncRecord&gt; pendingSyncs = syncService.getPendingSyncs();</span>
+<span class="nc" id="L22">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Pending syncs retrieved&quot;, pendingSyncs));</span>
+    }
+    
+    @PostMapping(&quot;/{recordId}/execute&quot;)
+    public ResponseEntity&lt;?&gt; syncTrainingRecord(@PathVariable Long recordId) {
+        try {
+<span class="nc" id="L28">            syncService.syncTrainingRecord(recordId);</span>
+<span class="nc" id="L29">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Sync completed successfully&quot;, null));</span>
+<span class="nc" id="L30">        } catch (Exception e) {</span>
+<span class="nc" id="L31">            return ResponseEntity.status(500).body(</span>
+<span class="nc" id="L32">                new ApiResponse&lt;&gt;(&quot;Sync failed: &quot; + e.getMessage(), null)</span>
+            );
+        }
+    }
+    
+    @PostMapping(&quot;/retry-failed&quot;)
+    public ResponseEntity&lt;?&gt; retryFailedSyncs() {
+<span class="nc" id="L39">        List&lt;SyncRecord&gt; retriedSyncs = syncService.retryFailedSyncs();</span>
+<span class="nc" id="L40">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(</span>
+<span class="nc" id="L41">            &quot;Retried &quot; + retriedSyncs.size() + &quot; failed syncs&quot;, </span>
+<span class="nc" id="L42">            Map.of(&quot;retriedCount&quot;, retriedSyncs.size())</span>
+        ));
+    }
+    
+    @PostMapping(&quot;/force/{userId}&quot;)
+    public ResponseEntity&lt;?&gt; forceSync(@PathVariable Long userId) {
+        try {
+<span class="nc" id="L49">            syncService.forceSync(userId);</span>
+<span class="nc" id="L50">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Force sync initiated&quot;, null));</span>
+<span class="nc" id="L51">        } catch (Exception e) {</span>
+<span class="nc" id="L52">            return ResponseEntity.status(500).body(</span>
+<span class="nc" id="L53">                new ApiResponse&lt;&gt;(&quot;Force sync failed: &quot; + e.getMessage(), null)</span>
+            );
+        }
+    }
+    
+    @GetMapping(&quot;/stats&quot;)
+    public ResponseEntity&lt;?&gt; getSyncStats() {
+<span class="nc" id="L60">        Object stats = syncService.getSyncStats();</span>
+<span class="nc" id="L61">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Sync statistics&quot;, stats));</span>
+    }
+    
+    @GetMapping(&quot;/health&quot;)
+    public ResponseEntity&lt;?&gt; checkSyncHealth() {
+<span class="nc" id="L66">        Object health = syncService.checkSyncHealth();</span>
+<span class="nc" id="L67">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Sync health check&quot;, health));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

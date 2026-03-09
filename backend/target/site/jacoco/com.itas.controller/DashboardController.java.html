@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DashboardController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ITAS Tax Education Backend</a> &gt; <a href="index.source.html" class="el_package">com.itas.controller</a> &gt; <span class="el_source">DashboardController.java</span></div><h1>DashboardController.java</h1><pre class="source lang-java linenums">package com.itas.controller;
+
+import com.itas.dto.ApiResponse;
+import com.itas.model.UserType;
+import com.itas.model.Enrollment;
+import com.itas.repository.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping(&quot;/dashboard&quot;)
+@Tag(name = &quot;Dashboard&quot;, description = &quot;Dashboard statistics and analytics for different user roles&quot;)
+@SecurityRequirement(name = &quot;bearer-jwt&quot;)
+<span class="fc" id="L27">public class DashboardController {</span>
+    
+    @GetMapping(&quot;/test&quot;)
+    public String test() {
+<span class="nc" id="L31">        return &quot;Dashboard controller is working!&quot;;</span>
+    }
+    
+    @GetMapping(&quot;/test2/{id}&quot;)
+    public String test2(@PathVariable Long id) {
+<span class="nc" id="L36">        return &quot;Test with path variable: &quot; + id;</span>
+    }
+    
+    @GetMapping(&quot;/taxpayer-simple/{userId}&quot;)
+    public ResponseEntity&lt;?&gt; getTaxpayerDashboardSimple(@PathVariable Long userId) {
+<span class="nc" id="L41">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L42">        data.put(&quot;message&quot;, &quot;Simple taxpayer dashboard&quot;);</span>
+<span class="nc" id="L43">        data.put(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L44">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Success&quot;, data));</span>
+    }
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private CourseRepository courseRepository;
+    
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+    
+    @Autowired
+    private CertificateRepository certificateRepository;
+    
+    @Autowired
+    private ResourceRepository resourceRepository;
+    
+    @Autowired
+    private WebinarRepository webinarRepository;
+    
+    @Autowired
+    private NotificationRepository notificationRepository;
+    
+    @Autowired
+    private AssessmentRepository assessmentRepository;
+    
+    @Autowired
+    private ModuleRepository moduleRepository;
+    
+    @Autowired
+    private ModuleProgressRepository moduleProgressRepository;
+    
+    /**
+     * Get dashboard stats for TAXPAYER
+     */
+    @GetMapping(&quot;/user/{userId}&quot;)
+    @Operation(
+        summary = &quot;Get taxpayer dashboard&quot;,
+        description = &quot;Retrieve dashboard statistics for a taxpayer user including enrollments, progress, and certificates&quot;
+    )
+    public ResponseEntity&lt;?&gt; getTaxpayerDashboard(
+            @Parameter(description = &quot;User ID&quot;, required = true) @PathVariable Long userId) {
+        try {
+<span class="nc" id="L88">            System.out.println(&quot;=== DASHBOARD REQUEST ===&quot;);</span>
+<span class="nc" id="L89">            System.out.println(&quot;User ID: &quot; + userId);</span>
+            
+<span class="nc" id="L91">            Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L92">            data.put(&quot;message&quot;, &quot;Dashboard loaded&quot;);</span>
+<span class="nc" id="L93">            data.put(&quot;userId&quot;, userId);</span>
+            
+<span class="nc" id="L95">            return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Dashboard data retrieved&quot;, data));</span>
+<span class="nc" id="L96">        } catch (Exception e) {</span>
+<span class="nc" id="L97">            System.err.println(&quot;Dashboard error: &quot; + e.getMessage());</span>
+<span class="nc" id="L98">            e.printStackTrace();</span>
+<span class="nc" id="L99">            return ResponseEntity.status(500).body(new ApiResponse&lt;&gt;(&quot;Error loading dashboard: &quot; + e.getMessage(), null));</span>
+        }
+    }
+    
+    /**
+     * Get dashboard stats for MOR_STAFF
+     */
+    @GetMapping(&quot;/staff/{userId}&quot;)
+    public ResponseEntity&lt;?&gt; getStaffDashboard(@PathVariable Long userId) {
+<span class="nc" id="L108">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L110">        long totalCourses = courseRepository.count();</span>
+<span class="nc" id="L111">        long enrolledCourses = enrollmentRepository.countByUserId(userId);</span>
+<span class="nc" id="L112">        long completedCourses = enrollmentRepository.countByUserIdAndProgressGreaterThanEqual(userId, 100);</span>
+<span class="nc" id="L113">        long certificates = certificateRepository.countByUserId(userId);</span>
+        
+<span class="nc" id="L115">        data.put(&quot;totalCourses&quot;, totalCourses);</span>
+<span class="nc" id="L116">        data.put(&quot;enrolledCourses&quot;, enrolledCourses);</span>
+<span class="nc" id="L117">        data.put(&quot;completedCourses&quot;, completedCourses);</span>
+<span class="nc" id="L118">        data.put(&quot;certificates&quot;, certificates);</span>
+<span class="nc" id="L119">        data.put(&quot;complianceScore&quot;, 85); // Calculate based on mandatory training completion</span>
+        
+<span class="nc" id="L121">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Staff dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats for CONTENT_ADMIN
+     */
+    @GetMapping(&quot;/content-admin&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; getContentAdminDashboard() {
+<span class="nc" id="L130">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L132">        long totalResources = resourceRepository.count();</span>
+<span class="nc" id="L133">        long publishedToday = resourceRepository.countByCreatedAtToday();</span>
+<span class="nc" id="L134">        long pendingApproval = resourceRepository.countByStatus(&quot;PENDING&quot;);</span>
+        
+<span class="nc" id="L136">        data.put(&quot;totalResources&quot;, totalResources);</span>
+<span class="nc" id="L137">        data.put(&quot;publishedToday&quot;, publishedToday);</span>
+<span class="nc" id="L138">        data.put(&quot;pendingApproval&quot;, pendingApproval);</span>
+<span class="nc" id="L139">        data.put(&quot;storageUsed&quot;, &quot;4.2 GB&quot;); // Calculate from file sizes</span>
+        
+        // Get recent uploads
+<span class="nc" id="L142">        data.put(&quot;recentUploads&quot;, resourceRepository.findTop10ByOrderByCreatedAtDesc());</span>
+        
+        // Get resource type breakdown
+<span class="nc" id="L145">        Map&lt;String, Long&gt; resourceTypes = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L146">        resourceTypes.put(&quot;videos&quot;, resourceRepository.countByResourceType(&quot;VIDEO&quot;));</span>
+<span class="nc" id="L147">        resourceTypes.put(&quot;pdfs&quot;, resourceRepository.countByResourceType(&quot;PDF&quot;));</span>
+<span class="nc" id="L148">        resourceTypes.put(&quot;images&quot;, resourceRepository.countByResourceType(&quot;IMAGE&quot;));</span>
+<span class="nc" id="L149">        data.put(&quot;resourceTypes&quot;, resourceTypes);</span>
+        
+<span class="nc" id="L151">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Content admin dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats for TRAINING_ADMIN
+     */
+    @GetMapping(&quot;/training-admin&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'TRAINING_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; getTrainingAdminDashboard() {
+<span class="nc" id="L160">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L162">        long totalCourses = courseRepository.count();</span>
+<span class="nc" id="L163">        long totalWebinars = webinarRepository.count();</span>
+<span class="nc" id="L164">        long upcomingWebinars = webinarRepository.countUpcoming();</span>
+<span class="nc" id="L165">        long totalEnrollments = enrollmentRepository.count();</span>
+        
+<span class="nc" id="L167">        data.put(&quot;totalCourses&quot;, totalCourses);</span>
+<span class="nc" id="L168">        data.put(&quot;totalWebinars&quot;, totalWebinars);</span>
+<span class="nc" id="L169">        data.put(&quot;upcomingWebinars&quot;, upcomingWebinars);</span>
+<span class="nc" id="L170">        data.put(&quot;totalEnrollments&quot;, totalEnrollments);</span>
+<span class="nc" id="L171">        data.put(&quot;attendanceRate&quot;, 78); // Calculate from webinar attendance</span>
+        
+        // Get upcoming webinars
+<span class="nc" id="L174">        data.put(&quot;webinars&quot;, webinarRepository.findUpcomingWebinars());</span>
+        
+<span class="nc" id="L176">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Training admin dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats for COMM_OFFICER
+     */
+    @GetMapping(&quot;/comm-officer&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'COMM_OFFICER')&quot;)
+    public ResponseEntity&lt;?&gt; getCommOfficerDashboard() {
+<span class="nc" id="L185">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L187">        long totalNotifications = notificationRepository.count();</span>
+<span class="nc" id="L188">        long sentToday = notificationRepository.countByCreatedAtToday();</span>
+        
+<span class="nc" id="L190">        data.put(&quot;totalCampaigns&quot;, totalNotifications);</span>
+<span class="nc" id="L191">        data.put(&quot;sentToday&quot;, sentToday);</span>
+<span class="nc" id="L192">        data.put(&quot;openRate&quot;, 72); // Calculate from notification reads</span>
+<span class="nc" id="L193">        data.put(&quot;activeRecipients&quot;, userRepository.countByActive(true));</span>
+        
+        // Get recent campaigns
+<span class="nc" id="L196">        data.put(&quot;recentCampaigns&quot;, notificationRepository.findTop10ByOrderByCreatedAtDesc());</span>
+        
+<span class="nc" id="L198">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Communication officer dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats for MANAGER
+     */
+    @GetMapping(&quot;/manager&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'MANAGER')&quot;)
+    public ResponseEntity&lt;?&gt; getManagerDashboard() {
+<span class="nc" id="L207">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L209">        long totalUsers = userRepository.count();</span>
+<span class="nc" id="L210">        long activeUsers = userRepository.countByActive(true);</span>
+<span class="nc" id="L211">        long totalCourses = courseRepository.count();</span>
+<span class="nc" id="L212">        long completedEnrollments = enrollmentRepository.countByProgressGreaterThanEqual(100);</span>
+<span class="nc" id="L213">        long totalEnrollments = enrollmentRepository.count();</span>
+        
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        int completionRate = totalEnrollments &gt; 0 ? </span>
+<span class="nc" id="L216">            (int)((completedEnrollments * 100) / totalEnrollments) : 0;</span>
+        
+<span class="nc" id="L218">        data.put(&quot;totalUsers&quot;, totalUsers);</span>
+<span class="nc" id="L219">        data.put(&quot;activeUsers&quot;, activeUsers);</span>
+<span class="nc" id="L220">        data.put(&quot;totalCourses&quot;, totalCourses);</span>
+<span class="nc" id="L221">        data.put(&quot;completionRate&quot;, completionRate);</span>
+        
+        // Get course performance
+<span class="nc" id="L224">        data.put(&quot;coursePerformance&quot;, courseRepository.findAllWithEnrollmentStats());</span>
+        
+<span class="nc" id="L226">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Manager dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats for SYSTEM_ADMIN
+     */
+    @GetMapping(&quot;/system-admin&quot;)
+    @PreAuthorize(&quot;hasRole('SYSTEM_ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; getSystemAdminDashboard() {
+<span class="nc" id="L235">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L237">        long totalUsers = userRepository.count();</span>
+<span class="nc" id="L238">        long activeUsers = userRepository.countByActive(true);</span>
+<span class="nc" id="L239">        long totalCourses = courseRepository.count();</span>
+<span class="nc" id="L240">        long totalResources = resourceRepository.count();</span>
+        
+<span class="nc" id="L242">        data.put(&quot;totalUsers&quot;, totalUsers);</span>
+<span class="nc" id="L243">        data.put(&quot;activeUsers&quot;, activeUsers);</span>
+<span class="nc" id="L244">        data.put(&quot;totalCourses&quot;, totalCourses);</span>
+<span class="nc" id="L245">        data.put(&quot;totalResources&quot;, totalResources);</span>
+<span class="nc" id="L246">        data.put(&quot;systemHealth&quot;, 99.8);</span>
+<span class="nc" id="L247">        data.put(&quot;storageUsage&quot;, &quot;45%&quot;);</span>
+        
+        // Get user type breakdown
+<span class="nc" id="L250">        Map&lt;String, Long&gt; usersByType = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        for (UserType type : UserType.values()) {</span>
+<span class="nc" id="L252">            usersByType.put(type.name(), userRepository.countByUserType(type));</span>
+        }
+<span class="nc" id="L254">        data.put(&quot;usersByType&quot;, usersByType);</span>
+        
+<span class="nc" id="L256">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;System admin dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats for AUDITOR
+     */
+    @GetMapping(&quot;/auditor&quot;)
+    @PreAuthorize(&quot;hasAnyRole('SYSTEM_ADMIN', 'AUDITOR')&quot;)
+    public ResponseEntity&lt;?&gt; getAuditorDashboard() {
+<span class="nc" id="L265">        Map&lt;String, Object&gt; data = new HashMap&lt;&gt;();</span>
+        
+<span class="nc" id="L267">        long totalUsers = userRepository.count();</span>
+<span class="nc" id="L268">        long totalCourses = courseRepository.count();</span>
+<span class="nc" id="L269">        long totalResources = resourceRepository.count();</span>
+<span class="nc" id="L270">        long totalAssessments = assessmentRepository.count();</span>
+        
+<span class="nc" id="L272">        data.put(&quot;totalUsers&quot;, totalUsers);</span>
+<span class="nc" id="L273">        data.put(&quot;totalCourses&quot;, totalCourses);</span>
+<span class="nc" id="L274">        data.put(&quot;totalResources&quot;, totalResources);</span>
+<span class="nc" id="L275">        data.put(&quot;totalAudits&quot;, totalAssessments);</span>
+<span class="nc" id="L276">        data.put(&quot;complianceScore&quot;, 94);</span>
+<span class="nc" id="L277">        data.put(&quot;systemHealth&quot;, 99.8);</span>
+        
+<span class="nc" id="L279">        return ResponseEntity.ok(new ApiResponse&lt;&gt;(&quot;Auditor dashboard data retrieved&quot;, data));</span>
+    }
+    
+    /**
+     * Get dashboard stats based on current user role
+     */
+    @GetMapping(&quot;/me&quot;)
+    public ResponseEntity&lt;?&gt; getMyDashboard() {
+<span class="nc" id="L287">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc" id="L288">        String username = authentication.getName();</span>
+        
+<span class="nc" id="L290">        var user = userRepository.findByUsername(username)</span>
+<span class="nc" id="L291">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+        
+<span class="nc bnc" id="L293" title="All 9 branches missed.">        switch (user.getUserType()) {</span>
+            case TAXPAYER:
+<span class="nc" id="L295">                return getTaxpayerDashboard(user.getId());</span>
+            case MOR_STAFF:
+<span class="nc" id="L297">                return getStaffDashboard(user.getId());</span>
+            case CONTENT_ADMIN:
+<span class="nc" id="L299">                return getContentAdminDashboard();</span>
+            case TRAINING_ADMIN:
+<span class="nc" id="L301">                return getTrainingAdminDashboard();</span>
+            case COMM_OFFICER:
+<span class="nc" id="L303">                return getCommOfficerDashboard();</span>
+            case MANAGER:
+<span class="nc" id="L305">                return getManagerDashboard();</span>
+            case SYSTEM_ADMIN:
+<span class="nc" id="L307">                return getSystemAdminDashboard();</span>
+            case AUDITOR:
+<span class="nc" id="L309">                return getAuditorDashboard();</span>
+            default:
+<span class="nc" id="L311">                return ResponseEntity.badRequest().body(new ApiResponse&lt;&gt;(&quot;Invalid user type&quot;, null));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
