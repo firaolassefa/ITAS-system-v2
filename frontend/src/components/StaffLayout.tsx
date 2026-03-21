@@ -38,6 +38,7 @@ import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import { useThemeMode } from '../theme/ThemeContext';
 import { alpha, useTheme } from '@mui/material';
+import MORLogo from '../assets/MORLogo';
 
 const drawerWidth = 240;
 
@@ -151,7 +152,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               justifyContent: 'center',
             }}
           >
-            <Business sx={{ color: '#016396', fontSize: 28 }} />
+            <MORLogo width={40} height={40} />
           </Box>
           <Box>
             <Typography 

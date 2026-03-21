@@ -9,8 +9,9 @@ import {
   Menu as MenuIcon, Dashboard as DashboardIcon, Upload as UploadIcon,
   Analytics as AnalyticsIcon, People as PeopleIcon, Settings as SettingsIcon,
   School as CourseIcon, ExitToApp as LogoutIcon, Person as ProfileIcon,
-  CloudUpload as CloudUploadIcon, Quiz as QuizIcon, AccountBalance,
+  CloudUpload as CloudUploadIcon, Quiz as QuizIcon,
 } from '@mui/icons-material';
+import MORLogo from '../assets/MORLogo';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import { useThemeMode } from '../theme/ThemeContext';
@@ -109,7 +110,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
             mb: 1,
           }}
         >
-          <AccountBalance sx={{ color: '#f59e0b', fontSize: 32 }} />
+          <MORLogo width={44} height={44} />
         </Box>
         <Typography 
           variant="h6" 

@@ -5,12 +5,13 @@ import {
   Fade, Slide, Grid, alpha,
 } from '@mui/material';
 import { 
-  AccountBalance, Lock as LockIcon, Person as PersonIcon,
+  Lock as LockIcon, Person as PersonIcon,
   Visibility, VisibilityOff, ArrowForward, Security, Speed, Verified,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../api/auth';
 import { useThemeMode } from '../../theme/ThemeContext';
+import MORLogo from '../../assets/MORLogo';
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void;
@@ -103,7 +104,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <Box
                   sx={{
                     display: 'inline-flex',
-                    p: 3,
+                    p: 2,
                     borderRadius: '24px',
                     bgcolor: alpha('#fff', 0.1),
                     border: '2px solid',
@@ -111,7 +112,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     mb: 4,
                   }}
                 >
-                  <AccountBalance sx={{ fontSize: 60, color: '#f59e0b' }} />
+                  <MORLogo width={80} height={80} />
                 </Box>
                 
                 <Typography 

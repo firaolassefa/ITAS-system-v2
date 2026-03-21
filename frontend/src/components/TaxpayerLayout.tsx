@@ -8,8 +8,8 @@ import {
 import {
   Menu as MenuIcon, Dashboard as DashboardIcon, School as CourseIcon,
   Description as ResourceIcon, Person as ProfileIcon, ExitToApp as LogoutIcon,
-  AccountBalance,
 } from '@mui/icons-material';
+import MORLogo from '../assets/MORLogo';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import { useThemeMode } from '../theme/ThemeContext';
@@ -88,7 +88,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
             mb: 1,
           }}
         >
-          <AccountBalance sx={{ color: '#f59e0b', fontSize: 32 }} />
+          <MORLogo width={44} height={44} />
         </Box>
         <Typography 
           variant="h6" 
