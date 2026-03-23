@@ -30,7 +30,7 @@ const UniversalAdminDashboard: React.FC<AdminDashboardProps> = ({ user, role }) 
       if (cached) {
         const cachedData = JSON.parse(cached);
         if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
-          setData(cachedData.data);
+          setData(cachedData.data || {});
           setLoading(false);
         }
       }

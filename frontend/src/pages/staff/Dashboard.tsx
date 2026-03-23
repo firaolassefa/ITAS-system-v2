@@ -44,7 +44,14 @@ const StaffDashboard: React.FC<{ user?: any }> = ({ user }) => {
       if (cached) {
         const cachedData = JSON.parse(cached);
         if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
-          setData(cachedData.data);
+          const d = cachedData.data || {};
+          setData({
+            enrolledCourses: d.enrolledCourses || 0,
+            completedCourses: d.completedCourses || 0,
+            complianceScore: Math.round(d.complianceScore || 0),
+            averageProgress: Math.round(d.averageProgress || 0),
+            activeCourses: Array.isArray(d.activeCourses) ? d.activeCourses : [],
+          });
           setLoading(false);
         }
       }
@@ -52,16 +59,18 @@ const StaffDashboard: React.FC<{ user?: any }> = ({ user }) => {
       const response = await apiClient.get(`/dashboard/staff/${currentUser.id}`);
       const freshData = response.data.data || response.data;
       
-      setData({
+      const normalized = {
         enrolledCourses: freshData.enrolledCourses || 0,
         completedCourses: freshData.completedCourses || 0,
         complianceScore: Math.round(freshData.complianceScore || 0),
         averageProgress: Math.round(freshData.averageProgress || 0),
-        activeCourses: freshData.activeCourses || [],
-      });
+        activeCourses: Array.isArray(freshData.activeCourses) ? freshData.activeCourses : [],
+      };
+
+      setData(normalized);
 
       localStorage.setItem(cacheKey, JSON.stringify({
-        data: freshData,
+        data: normalized,
         timestamp: Date.now(),
       }));
     } catch (error) {

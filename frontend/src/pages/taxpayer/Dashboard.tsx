@@ -48,7 +48,14 @@ const TaxpayerDashboard: React.FC<{ user?: any }> = ({ user }) => {
         
         // Use cache if less than 5 minutes old
         if (now - cacheTime < 5 * 60 * 1000) {
-          setData(cachedData.data);
+          const d = cachedData.data || {};
+          setData({
+            enrolledCourses: d.enrolledCourses || 0,
+            completedCourses: d.completedCourses || 0,
+            certificates: d.certificates || 0,
+            averageProgress: Math.round(d.averageProgress || 0),
+            activeCourses: Array.isArray(d.activeCourses) ? d.activeCourses : [],
+          });
           setLoading(false);
         }
       }
@@ -57,17 +64,19 @@ const TaxpayerDashboard: React.FC<{ user?: any }> = ({ user }) => {
       const response = await apiClient.get(`/dashboard/user/${user.id}`);
       const freshData = response.data.data || response.data;
       
-      setData({
+      const normalized = {
         enrolledCourses: freshData.enrolledCourses || 0,
         completedCourses: freshData.completedCourses || 0,
         certificates: freshData.certificates || 0,
         averageProgress: Math.round(freshData.averageProgress || 0),
-        activeCourses: freshData.activeCourses || [],
-      });
+        activeCourses: Array.isArray(freshData.activeCourses) ? freshData.activeCourses : [],
+      };
+
+      setData(normalized);
 
       // Update cache
       localStorage.setItem(cacheKey, JSON.stringify({
-        data: freshData,
+        data: normalized,
         timestamp: Date.now(),
       }));
     } catch (error) {

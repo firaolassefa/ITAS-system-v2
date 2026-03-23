@@ -1,15 +1,17 @@
 import React from 'react';
 import {
-  Container, Typography, Button, Box, Grid, Card, CardContent,
+  Container, Typography, Button, Box, Grid, Card,
   AppBar, Toolbar, Stack, Chip, alpha, IconButton,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
-  School, Login, PersonAdd, TrendingUp, Security,
+  Login, PersonAdd, Security,
   EmojiEvents, CheckCircle, ArrowForward, MenuBook,
   VideoLibrary, Assessment, Verified, Brightness4, Brightness7,
+  School,
 } from '@mui/icons-material';
 import { useThemeMode } from '../../theme/ThemeContext';
+import MORLogo from '../../assets/MORLogo';
 
 const ModernHome: React.FC = () => {
   const navigate = useNavigate();
@@ -17,17 +19,17 @@ const ModernHome: React.FC = () => {
 
   const features = [
     {
-      icon: <School sx={{ fontSize: 48, color: '#667eea' }} />,
+      icon: <School sx={{ fontSize: 48, color: '#016396' }} />,
       title: 'Comprehensive Courses',
       description: 'Expert-designed tax education courses covering all aspects of Ethiopian tax law',
     },
     {
-      icon: <VideoLibrary sx={{ fontSize: 48, color: '#764ba2' }} />,
+      icon: <VideoLibrary sx={{ fontSize: 48, color: '#0284c7' }} />,
       title: 'Interactive Learning',
       description: 'Video tutorials, PDFs, and interactive quizzes for effective learning',
     },
     {
-      icon: <Assessment sx={{ fontSize: 48, color: '#f093fb' }} />,
+      icon: <Assessment sx={{ fontSize: 48, color: '#016396' }} />,
       title: 'Practice & Assessments',
       description: 'Test your knowledge with practice questions and final exams',
     },
@@ -58,17 +60,17 @@ const ModernHome: React.FC = () => {
       >
         <Toolbar sx={{ py: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <School sx={{ fontSize: 32, color: mode === 'light' ? '#667eea' : '#3b82f6' }} />
-            <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#1a1a1a' : 'white' }}>
-              ITAS
+            <MORLogo width={40} height={40} />
+            <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#016396' : 'white' }}>
+              MOR Ethiopia
             </Typography>
             <Chip 
               label="Tax Education" 
               size="small" 
               sx={{ 
                 ml: 1,
-                bgcolor: mode === 'light' ? alpha('#667eea', 0.1) : alpha('#3b82f6', 0.2),
-                color: mode === 'light' ? '#667eea' : '#3b82f6',
+                bgcolor: mode === 'light' ? alpha('#016396', 0.1) : alpha('#0284c7', 0.2),
+                color: mode === 'light' ? '#016396' : '#0284c7',
               }} 
             />
           </Box>
@@ -83,7 +85,7 @@ const ModernHome: React.FC = () => {
                 '&:hover': {
                   transform: 'rotate(180deg)',
                   borderColor: 'primary.main',
-                  bgcolor: alpha(mode === 'light' ? '#667eea' : '#3b82f6', 0.1),
+                  bgcolor: alpha(mode === 'light' ? '#016396' : '#0284c7', 0.1),
                 },
               }}
             >
@@ -110,8 +112,8 @@ const ModernHome: React.FC = () => {
                 textTransform: 'none',
                 fontWeight: 600,
                 background: mode === 'light'
-                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                  : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
+                  : 'linear-gradient(135deg, #0284c7 0%, #016396 100%)',
               }}
             >
               Get Started
@@ -124,8 +126,8 @@ const ModernHome: React.FC = () => {
       <Box
         sx={{
           background: mode === 'light'
-            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)'
-            : 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)',
+            ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
+            : 'linear-gradient(135deg, #014a6e 0%, #0284c7 100%)',
           color: 'white',
           py: 12,
           position: 'relative',
@@ -159,7 +161,7 @@ const ModernHome: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{
                     bgcolor: 'white',
-                    color: mode === 'light' ? '#667eea' : '#1e3a8a',
+                    color: mode === 'light' ? '#016396' : '#014a6e',
                     px: 4,
                     py: 1.5,
                     borderRadius: '12px',
@@ -225,9 +227,9 @@ const ModernHome: React.FC = () => {
                     gap: 2,
                   }}
                 >
-                  <School sx={{ fontSize: 120, opacity: 0.9 }} />
+                  <MORLogo width={200} height={200} />
                   <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    ITAS
+                    MOR Ethiopia
                   </Typography>
                   <Typography variant="body1" sx={{ opacity: 0.9 }}>
                     Tax Education Platform
@@ -258,7 +260,7 @@ const ModernHome: React.FC = () => {
                   variant="h3" 
                   sx={{ 
                     fontWeight: 800, 
-                    color: mode === 'light' ? '#667eea' : '#3b82f6', 
+                    color: mode === 'light' ? '#016396' : '#0284c7', 
                     mb: 1 
                   }}
                 >
@@ -301,7 +303,7 @@ const ModernHome: React.FC = () => {
                     boxShadow: mode === 'light'
                       ? '0 12px 40px rgba(102, 126, 234, 0.2)'
                       : '0 12px 40px rgba(59, 130, 246, 0.3)',
-                    borderColor: mode === 'light' ? '#667eea' : '#3b82f6',
+                    borderColor: mode === 'light' ? '#016396' : '#0284c7',
                   },
                 }}
               >
@@ -349,8 +351,8 @@ const ModernHome: React.FC = () => {
                   p: 4,
                   borderRadius: '24px',
                   background: mode === 'light'
-                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    : 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+                    ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
+                    : 'linear-gradient(135deg, #014a6e 0%, #0284c7 100%)',
                   color: 'white',
                 }}
               >
@@ -368,7 +370,7 @@ const ModernHome: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{
                     bgcolor: 'white',
-                    color: mode === 'light' ? '#667eea' : '#1e3a8a',
+                    color: mode === 'light' ? '#016396' : '#014a6e',
                     py: 2,
                     borderRadius: '12px',
                     textTransform: 'none',
@@ -393,9 +395,9 @@ const ModernHome: React.FC = () => {
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <School sx={{ fontSize: 32 }} />
+                <MORLogo width={40} height={40} />
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  ITAS
+                  MOR Ethiopia
                 </Typography>
               </Box>
               <Typography variant="body2" sx={{ opacity: 0.7 }}>

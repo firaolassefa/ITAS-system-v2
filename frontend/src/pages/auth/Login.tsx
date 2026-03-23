@@ -73,7 +73,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       sx={{
         minHeight: '100vh',
         background: mode === 'light'
-          ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)'
+          ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
           : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         display: 'flex',
         alignItems: 'center',
@@ -227,7 +227,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     variant="h4" 
                     sx={{ 
                       fontWeight: 700,
-                      color: mode === 'light' ? '#1e3a8a' : '#fff',
+                      color: mode === 'light' ? '#016396' : '#fff',
                       mb: 1,
                     }}
                   >
@@ -326,7 +326,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       color: 'primary.main',
                       fontWeight: 600,
                       '&:hover': {
-                        bgcolor: alpha('#1e3a8a', 0.05),
+                        bgcolor: alpha('#016396', 0.05),
                       },
                     }}
                   >
