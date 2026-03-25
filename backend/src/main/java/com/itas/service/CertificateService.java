@@ -104,4 +104,11 @@ public class CertificateService {
         certificate.setVerified(false);
         certificateRepository.save(certificate);
     }
+
+    @Transactional
+    public void restoreCertificate(Long id) {
+        Certificate certificate = getCertificateById(id);
+        certificate.setVerified(true);
+        certificateRepository.save(certificate);
+    }
 }

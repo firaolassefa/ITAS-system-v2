@@ -48,6 +48,7 @@ const CourseManagement = lazy(() => import('./pages/admin/CourseManagement'));
 const ResourceUpload = lazy(() => import('./pages/admin/ResourceUpload'));
 const QuestionManagement = lazy(() => import('./pages/admin/QuestionManagement'));
 const AssessmentManagement = lazy(() => import('./pages/admin/AssessmentManagement'));
+const CertificateManagement = lazy(() => import('./pages/admin/CertificateManagement'));
 const ModuleContentManager = lazy(() => import('./pages/admin/ModuleContentManager'));
 
 const Profile = lazy(() => import('./pages/Profile'));
@@ -325,6 +326,11 @@ function App() {
             <Route path="assessment-management" element={
               <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN']}>
                 <AssessmentManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="certificate-management" element={
+              <ProtectedRoute allowedRoles={['SYSTEM_ADMIN', 'AUDITOR', 'MANAGER']}>
+                <CertificateManagement />
               </ProtectedRoute>
             } />
             <Route path="module-content" element={

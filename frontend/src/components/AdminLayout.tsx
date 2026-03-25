@@ -9,7 +9,7 @@ import {
   Menu as MenuIcon, Dashboard as DashboardIcon, Upload as UploadIcon,
   Analytics as AnalyticsIcon, People as PeopleIcon, Settings as SettingsIcon,
   School as CourseIcon, ExitToApp as LogoutIcon, Person as ProfileIcon,
-  CloudUpload as CloudUploadIcon, Quiz as QuizIcon,
+  CloudUpload as CloudUploadIcon, Quiz as QuizIcon, CardMembership,
 } from '@mui/icons-material';
 import MORLogo from '../assets/MORLogo';
 import NotificationBell from './NotificationBell';
@@ -69,6 +69,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
     { text: 'Module Content', icon: <CloudUploadIcon />, path: '/admin/module-content', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Resource Management', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Question Management', icon: <QuizIcon />, path: '/admin/question-management', roles: ['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Certificate Management', icon: <CardMembership />, path: '/admin/certificate-management', roles: ['SYSTEM_ADMIN', 'AUDITOR', 'MANAGER'] },
     { text: 'Webinar Management', icon: <UploadIcon />, path: '/admin/webinar-management', roles: ['TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Notification Center', icon: <SettingsIcon />, path: '/admin/notification-center', roles: ['COMM_OFFICER', 'SYSTEM_ADMIN'] },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/admin/analytics', roles: ['MANAGER', 'AUDITOR', 'SYSTEM_ADMIN'] },

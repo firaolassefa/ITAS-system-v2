@@ -32,6 +32,42 @@ public class CertificateController {
                 .body(new ApiResponse<>("Error: " + e.getMessage(), null));
         }
     }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'AUDITOR', 'MANAGER')")
+    public ResponseEntity<?> getAllCertificates() {
+        try {
+            List<Certificate> certificates = certificateService.getAllCertificates();
+            return ResponseEntity.ok(new ApiResponse<>("Success", certificates));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Error: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/{id}/revoke")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'AUDITOR')")
+    public ResponseEntity<?> revokeCertificate(@PathVariable Long id) {
+        try {
+            certificateService.revokeCertificate(id);
+            return ResponseEntity.ok(new ApiResponse<>("Certificate revoked", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Error: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'AUDITOR')")
+    public ResponseEntity<?> restoreCertificate(@PathVariable Long id) {
+        try {
+            certificateService.restoreCertificate(id);
+            return ResponseEntity.ok(new ApiResponse<>("Certificate restored", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>("Error: " + e.getMessage(), null));
+        }
+    }
     
     @PostMapping("/generate")
     @PreAuthorize("isAuthenticated()")
