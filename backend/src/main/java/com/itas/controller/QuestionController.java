@@ -37,37 +37,60 @@ public class QuestionController {
                 .body(new ApiResponse<>("Failed to load questions: " + e.getMessage(), null));
         }
     }
-    
+
+    @GetMapping("/course/{courseId}/final-exam")
+    public ResponseEntity<?> getFinalExamQuestions(@PathVariable Long courseId) {
+        try {
+            List<Question> questions = questionRepository.findByCourseIdAndQuestionCategory(courseId, "FINAL_EXAM");
+            return ResponseEntity.ok(new ApiResponse<>("Final exam questions retrieved", questions));
+        } catch (Exception e) {
+            // If question_category column doesn't exist yet (migration not run),
+            // return empty list instead of 500 so the frontend shows "no questions" state
+            System.err.println("Final exam query failed (migration may be needed): " + e.getMessage());
+            return ResponseEntity.ok(new ApiResponse<>("Final exam questions retrieved", java.util.Collections.emptyList()));
+        }
+    }    
     @PostMapping("")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
     public ResponseEntity<?> createQuestion(@RequestBody Map<String, Object> request) {
         try {
-            Long moduleId = ((Number) request.get("moduleId")).longValue();
             String questionText = (String) request.get("questionText");
             String questionType = (String) request.get("questionType");
-            Integer points = request.get("points") != null ? 
+            Integer points = request.get("points") != null ?
                 ((Number) request.get("points")).intValue() : 1;
-            Integer order = request.get("order") != null ? 
+            Integer order = request.get("order") != null ?
                 ((Number) request.get("order")).intValue() : 0;
-            Boolean isPractice = request.get("isPractice") != null ? 
+            Boolean isPractice = request.get("isPractice") != null ?
                 (Boolean) request.get("isPractice") : false;
-            String explanation = request.get("explanation") != null ? 
+            String explanation = request.get("explanation") != null ?
                 (String) request.get("explanation") : null;
-            
-            Module module = moduleRepository.findById(moduleId)
-                .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
-            
+            String questionCategory = request.get("questionCategory") != null ?
+                (String) request.get("questionCategory") : (Boolean.TRUE.equals(isPractice) ? "PRACTICE" : "QUIZ");
+
             Question question = new Question();
-            question.setModule(module);
             question.setQuestionText(questionText);
             question.setQuestionType(QuestionType.valueOf(questionType));
             question.setPoints(points);
             question.setOrder(order);
-            question.setIsPractice(isPractice);
+            question.setQuestionCategory(questionCategory);
+            question.setIsPractice("PRACTICE".equals(questionCategory));
             question.setExplanation(explanation);
             question.setCreatedAt(LocalDateTime.now());
-            
-            // Add answers if provided
+
+            if ("FINAL_EXAM".equals(questionCategory)) {
+                // Final exam questions are course-level, no module required
+                if (request.get("courseId") != null) {
+                    question.setCourseId(((Number) request.get("courseId")).longValue());
+                }
+            } else {
+                // Practice and Quiz questions require a module
+                Long moduleId = ((Number) request.get("moduleId")).longValue();
+                Module module = moduleRepository.findById(moduleId)
+                    .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
+                question.setModule(module);
+                question.setCourseId(module.getCourse() != null ? module.getCourse().getId() : null);
+            }
+
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> answers = (List<Map<String, Object>>) request.get("answers");
             if (answers != null && !answers.isEmpty()) {
@@ -76,17 +99,15 @@ public class QuestionController {
                     answer.setQuestion(question);
                     answer.setAnswerText((String) answerData.get("answerText"));
                     answer.setIsCorrect((Boolean) answerData.get("isCorrect"));
-                    answer.setOrder(answerData.get("order") != null ? 
+                    answer.setOrder(answerData.get("order") != null ?
                         ((Number) answerData.get("order")).intValue() : 0);
-                    
                     question.getAnswers().add(answer);
                 }
             }
-            
+
             Question savedQuestion = questionRepository.save(question);
-            
             return ResponseEntity.ok(new ApiResponse<>("Question created successfully", savedQuestion));
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest()

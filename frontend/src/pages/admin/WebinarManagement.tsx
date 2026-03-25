@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Paper, Typography, Box, TextField, Button,
   Grid, FormControl, InputLabel, Select, MenuItem,
@@ -188,7 +188,7 @@ const WebinarManagement: React.FC = () => {
           <Fade in timeout={800}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
-                <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' : 'linear-gradient(135deg, #339af0 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
                   Webinar Management
                 </Typography>
                 <Typography variant="body1" sx={{ color: 'text.secondary' }}>
@@ -196,8 +196,8 @@ const WebinarManagement: React.FC = () => {
                 </Typography>
               </Box>
               <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenDialog(true)}
-                sx={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', px: 3, py: 1.5, fontWeight: 600, borderRadius: 2,
-                  '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }
+                sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', color: '#fff', px: 3, py: 1.5, fontWeight: 600, borderRadius: 2,
+                  '&:hover': { background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)' }
                 }}>
                 Schedule New Webinar
               </Button>
@@ -207,10 +207,10 @@ const WebinarManagement: React.FC = () => {
           {/* Stats Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {[
-              { label: 'Total Webinars', value: stats.total, icon: <VideoIcon />, color: '#667eea' },
-              { label: 'Upcoming', value: stats.upcoming, icon: <ScheduleIcon />, color: '#10B981' },
+              { label: 'Total Webinars', value: stats.total, icon: <VideoIcon />, color: '#339af0' },
+              { label: 'Upcoming', value: stats.upcoming, icon: <ScheduleIcon />, color: '#339af0' },
               { label: 'Total Registered', value: stats.totalRegistered, icon: <PeopleIcon />, color: '#F59E0B' },
-              { label: 'Avg Attendance', value: `${stats.avgAttendance}%`, icon: <EventIcon />, color: '#8B5CF6' },
+              { label: 'Avg Attendance', value: `${stats.avgAttendance}%`, icon: <EventIcon />, color: '#339af0' },
             ].map((stat, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
                 <Zoom in timeout={600 + index * 100}>
@@ -267,7 +267,7 @@ const WebinarManagement: React.FC = () => {
                         <TableRow key={webinar.id} sx={{ '&:hover': { background: mode === 'light' ? '#f9fafb' : '#334155' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Avatar sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', width: 48, height: 48 }}>
+                              <Avatar sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', width: 48, height: 48 }}>
                                 <VideoIcon />
                               </Avatar>
                               <Box>
@@ -278,12 +278,12 @@ const WebinarManagement: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Typography sx={{ color: 'text.primary', fontWeight: 500 }}>{new Date(webinar.scheduleTime).toLocaleDateString()}</Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{new Date(webinar.scheduleTime).toLocaleTimeString()} • {webinar.durationMinutes} min</Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{new Date(webinar.scheduleTime).toLocaleTimeString()} â€¢ {webinar.durationMinutes} min</Typography>
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                               {webinar.presenters?.map((p, i) => (
-                                <Chip key={i} label={p} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontWeight: 600 }} />
+                                <Chip key={i} label={p} size="small" sx={{ background: 'rgba(1, 99, 150, 0.15)', color: '#339af0', border: '1px solid rgba(1, 99, 150, 0.3)', fontWeight: 600 }} />
                               ))}
                             </Box>
                           </TableCell>
@@ -291,15 +291,15 @@ const WebinarManagement: React.FC = () => {
                             <Box>
                               <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>{webinar.registeredCount || webinar.registered || 0}/{webinar.maxAttendees}</Typography>
                               <Box sx={{ width: '100%', height: 6, background: '#e5e7eb', borderRadius: 3, mt: 0.5, overflow: 'hidden' }}>
-                                <Box sx={{ width: `${(((webinar.registeredCount || webinar.registered || 0) / webinar.maxAttendees) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)', borderRadius: 3, transition: 'width 0.5s ease' }} />
+                                <Box sx={{ width: `${(((webinar.registeredCount || webinar.registered || 0) / webinar.maxAttendees) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #339af0 0%, #1c7ed6 100%)', borderRadius: 3, transition: 'width 0.5s ease' }} />
                               </Box>
                             </Box>
                           </TableCell>
                           <TableCell>
-                            <Chip label={webinar.status} sx={{ background: webinar.status === 'UPCOMING' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(156, 163, 175, 0.15)', color: webinar.status === 'UPCOMING' ? '#10B981' : '#9CA3AF', border: `1px solid ${webinar.status === 'UPCOMING' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(156, 163, 175, 0.3)'}`, fontWeight: 600 }} />
+                            <Chip label={webinar.status} sx={{ background: webinar.status === 'UPCOMING' ? 'rgba(1, 99, 150, 0.15)' : 'rgba(156, 163, 175, 0.15)', color: webinar.status === 'UPCOMING' ? '#339af0' : '#9CA3AF', border: `1px solid ${webinar.status === 'UPCOMING' ? 'rgba(1, 99, 150, 0.3)' : 'rgba(156, 163, 175, 0.3)'}`, fontWeight: 600 }} />
                           </TableCell>
                           <TableCell align="right">
-                            <IconButton size="small" sx={{ color: '#667eea', '&:hover': { background: 'rgba(102, 126, 234, 0.1)' } }}>
+                            <IconButton size="small" sx={{ color: '#339af0', '&:hover': { background: 'rgba(1, 99, 150, 0.1)' } }}>
                               <EditIcon />
                             </IconButton>
                             <IconButton size="small" sx={{ color: '#EF4444', '&:hover': { background: 'rgba(239, 68, 68, 0.1)' } }}>
@@ -379,15 +379,15 @@ const WebinarManagement: React.FC = () => {
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 2, borderTop: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}` }}>
               <Button onClick={() => setOpenDialog(false)} sx={{ color: 'text.secondary', '&:hover': { background: '#f9fafb' } }}>Cancel</Button>
-              <Button onClick={handleSchedule} variant="contained" sx={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', fontWeight: 600, px: 3,
-                '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }
+              <Button onClick={handleSchedule} variant="contained" sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', color: '#fff', fontWeight: 600, px: 3,
+                '&:hover': { background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)' }
               }}>Schedule Webinar</Button>
             </DialogActions>
           </Dialog>
 
           {/* Snackbar */}
           <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-            <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ background: snackbar.severity === 'success' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', color: '#fff', fontWeight: 600 }}>
+            <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ background: snackbar.severity === 'success' ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', color: '#fff', fontWeight: 600 }}>
               {snackbar.message}
             </Alert>
           </Snackbar>
@@ -398,3 +398,6 @@ const WebinarManagement: React.FC = () => {
 };
 
 export default WebinarManagement;
+
+
+

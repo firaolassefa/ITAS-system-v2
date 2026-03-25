@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Grid,
   Paper,
@@ -140,7 +140,7 @@ const EnhancedSystemAdminDashboard: React.FC = () => {
               variant="h3" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 50%, #22D3EE 100%)',
+                background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 50%, #22D3EE 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -150,7 +150,7 @@ const EnhancedSystemAdminDashboard: React.FC = () => {
               System Control Center
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Full system access and monitoring • Real-time insights
+              Full system access and monitoring â€¢ Real-time insights
             </Typography>
           </Box>
         </Box>
@@ -334,7 +334,7 @@ const EnhancedSystemAdminDashboard: React.FC = () => {
                       }
                       secondary={
                         <Typography variant="body2" color="text.secondary">
-                          {activity.user} • {activity.time}
+                          {activity.user} â€¢ {activity.time}
                         </Typography>
                       }
                     />
@@ -413,3 +413,6 @@ const EnhancedSystemAdminDashboard: React.FC = () => {
 };
 
 export default EnhancedSystemAdminDashboard;
+
+
+

@@ -1,13 +1,13 @@
-// MOR Ethiopia Official Color System
+﻿// MOR Ethiopia Official Color System
 // Based on Ethiopian National Flag Colors
 
 export const ITASColors = {
   // Primary - MOR Blue
   primary: {
-    main: '#016396',      // MOR Blue
-    light: '#0284c7',
-    dark: '#014a6e',
-    gradient: 'linear-gradient(135deg, #016396 0%, #014a6e 100%)',
+    main: '#339af0',      // MOR Blue
+    light: '#339af0',
+    dark: '#1c7ed6',
+    gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
   },
   
   // Secondary - Ethiopian Yellow/Gold (from flag)
@@ -28,7 +28,7 @@ export const ITASColors = {
   
   // National Emblem Colors
   emblem: {
-    blue: '#0F47AF',      // Blue disc from national emblem
+    blue: '#1c7ed6',      // Blue disc from national emblem
     gold: '#FCDD09',      // Golden pentagram
   },
   
@@ -43,28 +43,28 @@ export const ITASColors = {
       gradient: 'linear-gradient(135deg, #FCDD09 0%, #E8C307 100%)',
     },
     trainingAdmin: {
-      main: '#016396', // MOR Blue - Education
-      gradient: 'linear-gradient(135deg, #016396 0%, #014a6e 100%)',
+      main: '#339af0', // MOR Blue - Education
+      gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
     },
     commOfficer: {
-      main: '#016396', // MOR Blue - Communication
-      gradient: 'linear-gradient(135deg, #016396 0%, #014a6e 100%)',
+      main: '#339af0', // MOR Blue - Communication
+      gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
     },
     manager: {
-      main: '#016396', // MOR Blue - Management
-      gradient: 'linear-gradient(135deg, #016396 0%, #014a6e 100%)',
+      main: '#339af0', // MOR Blue - Management
+      gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
     },
     auditor: {
       main: '#DA121A', // Ethiopian Red - Audit
       gradient: 'linear-gradient(135deg, #DA121A 0%, #B01018 100%)',
     },
     taxpayer: {
-      main: '#016396', // MOR Blue - User
-      gradient: 'linear-gradient(135deg, #016396 0%, #014a6e 100%)',
+      main: '#339af0', // MOR Blue - User
+      gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
     },
     staff: {
-      main: '#016396', // MOR Blue - Staff
-      gradient: 'linear-gradient(135deg, #016396 0%, #014a6e 100%)',
+      main: '#339af0', // MOR Blue - Staff
+      gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
     },
   },
   
@@ -73,7 +73,7 @@ export const ITASColors = {
     success: '#10b981',
     warning: '#f59e0b',
     error: '#ef4444',
-    info: '#3b82f6',
+    info: '#339af0',
   },
   
   // Light Mode
@@ -113,24 +113,24 @@ export const ITASColors = {
 export const getSidebarGradient = (role: string, mode: 'light' | 'dark') => {
   const gradients = {
     light: {
-      SYSTEM_ADMIN: 'linear-gradient(180deg, #016396 0%, #DA121A 100%)',
-      CONTENT_ADMIN: 'linear-gradient(180deg, #016396 0%, #FCDD09 100%)',
-      TRAINING_ADMIN: 'linear-gradient(180deg, #016396 0%, #014a6e 100%)',
-      COMM_OFFICER: 'linear-gradient(180deg, #016396 0%, #0284c7 100%)',
-      MANAGER: 'linear-gradient(180deg, #016396 0%, #014a6e 100%)',
-      AUDITOR: 'linear-gradient(180deg, #016396 0%, #DA121A 100%)',
-      TAXPAYER: 'linear-gradient(180deg, #016396 0%, #0284c7 100%)',
-      MOR_STAFF: 'linear-gradient(180deg, #016396 0%, #0284c7 100%)',
+      SYSTEM_ADMIN: 'linear-gradient(180deg, #339af0 0%, #DA121A 100%)',
+      CONTENT_ADMIN: 'linear-gradient(180deg, #339af0 0%, #FCDD09 100%)',
+      TRAINING_ADMIN: 'linear-gradient(180deg, #339af0 0%, #1c7ed6 100%)',
+      COMM_OFFICER: 'linear-gradient(180deg, #339af0 0%, #339af0 100%)',
+      MANAGER: 'linear-gradient(180deg, #339af0 0%, #1c7ed6 100%)',
+      AUDITOR: 'linear-gradient(180deg, #339af0 0%, #DA121A 100%)',
+      TAXPAYER: 'linear-gradient(180deg, #339af0 0%, #339af0 100%)',
+      MOR_STAFF: 'linear-gradient(180deg, #339af0 0%, #339af0 100%)',
     },
     dark: {
       SYSTEM_ADMIN: 'linear-gradient(180deg, #1e293b 0%, #DA121A 100%)',
       CONTENT_ADMIN: 'linear-gradient(180deg, #1e293b 0%, #FCDD09 100%)',
-      TRAINING_ADMIN: 'linear-gradient(180deg, #1e293b 0%, #016396 100%)',
-      COMM_OFFICER: 'linear-gradient(180deg, #1e293b 0%, #0284c7 100%)',
-      MANAGER: 'linear-gradient(180deg, #1e293b 0%, #016396 100%)',
+      TRAINING_ADMIN: 'linear-gradient(180deg, #1e293b 0%, #339af0 100%)',
+      COMM_OFFICER: 'linear-gradient(180deg, #1e293b 0%, #339af0 100%)',
+      MANAGER: 'linear-gradient(180deg, #1e293b 0%, #339af0 100%)',
       AUDITOR: 'linear-gradient(180deg, #1e293b 0%, #DA121A 100%)',
-      TAXPAYER: 'linear-gradient(180deg, #1e293b 0%, #0284c7 100%)',
-      MOR_STAFF: 'linear-gradient(180deg, #1e293b 0%, #0284c7 100%)',
+      TAXPAYER: 'linear-gradient(180deg, #1e293b 0%, #339af0 100%)',
+      MOR_STAFF: 'linear-gradient(180deg, #1e293b 0%, #339af0 100%)',
     },
   };
   
@@ -140,6 +140,8 @@ export const getSidebarGradient = (role: string, mode: 'light' | 'dark') => {
 // Navbar Gradient
 export const getNavbarGradient = (mode: 'light' | 'dark') => {
   return mode === 'light'
-    ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)'
-    : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+    ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
+    : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
 };
+
+

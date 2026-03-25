@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Container, Typography, Button, Box, Grid, Card,
   AppBar, Toolbar, Stack, Chip, alpha, IconButton,
@@ -19,17 +19,17 @@ const ModernHome: React.FC = () => {
 
   const features = [
     {
-      icon: <School sx={{ fontSize: 48, color: '#016396' }} />,
+      icon: <School sx={{ fontSize: 48, color: '#339af0' }} />,
       title: 'Comprehensive Courses',
       description: 'Expert-designed tax education courses covering all aspects of Ethiopian tax law',
     },
     {
-      icon: <VideoLibrary sx={{ fontSize: 48, color: '#0284c7' }} />,
+      icon: <VideoLibrary sx={{ fontSize: 48, color: '#339af0' }} />,
       title: 'Interactive Learning',
       description: 'Video tutorials, PDFs, and interactive quizzes for effective learning',
     },
     {
-      icon: <Assessment sx={{ fontSize: 48, color: '#016396' }} />,
+      icon: <Assessment sx={{ fontSize: 48, color: '#339af0' }} />,
       title: 'Practice & Assessments',
       description: 'Test your knowledge with practice questions and final exams',
     },
@@ -61,7 +61,7 @@ const ModernHome: React.FC = () => {
         <Toolbar sx={{ py: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
             <MORLogo width={40} height={40} />
-            <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#016396' : 'white' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#339af0' : 'white' }}>
               MOR Ethiopia
             </Typography>
             <Chip 
@@ -69,8 +69,8 @@ const ModernHome: React.FC = () => {
               size="small" 
               sx={{ 
                 ml: 1,
-                bgcolor: mode === 'light' ? alpha('#016396', 0.1) : alpha('#0284c7', 0.2),
-                color: mode === 'light' ? '#016396' : '#0284c7',
+                bgcolor: mode === 'light' ? alpha('#339af0', 0.1) : alpha('#339af0', 0.2),
+                color: mode === 'light' ? '#339af0' : '#339af0',
               }} 
             />
           </Box>
@@ -85,7 +85,7 @@ const ModernHome: React.FC = () => {
                 '&:hover': {
                   transform: 'rotate(180deg)',
                   borderColor: 'primary.main',
-                  bgcolor: alpha(mode === 'light' ? '#016396' : '#0284c7', 0.1),
+                  bgcolor: alpha(mode === 'light' ? '#339af0' : '#339af0', 0.1),
                 },
               }}
             >
@@ -112,8 +112,8 @@ const ModernHome: React.FC = () => {
                 textTransform: 'none',
                 fontWeight: 600,
                 background: mode === 'light'
-                  ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
-                  : 'linear-gradient(135deg, #0284c7 0%, #016396 100%)',
+                  ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
+                  : 'linear-gradient(135deg, #339af0 0%, #339af0 100%)',
               }}
             >
               Get Started
@@ -126,8 +126,8 @@ const ModernHome: React.FC = () => {
       <Box
         sx={{
           background: mode === 'light'
-            ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
-            : 'linear-gradient(135deg, #014a6e 0%, #0284c7 100%)',
+            ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
+            : 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
           color: 'white',
           py: 12,
           position: 'relative',
@@ -161,7 +161,7 @@ const ModernHome: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{
                     bgcolor: 'white',
-                    color: mode === 'light' ? '#016396' : '#014a6e',
+                    color: mode === 'light' ? '#339af0' : '#1c7ed6',
                     px: 4,
                     py: 1.5,
                     borderRadius: '12px',
@@ -260,7 +260,7 @@ const ModernHome: React.FC = () => {
                   variant="h3" 
                   sx={{ 
                     fontWeight: 800, 
-                    color: mode === 'light' ? '#016396' : '#0284c7', 
+                    color: mode === 'light' ? '#339af0' : '#339af0', 
                     mb: 1 
                   }}
                 >
@@ -303,7 +303,7 @@ const ModernHome: React.FC = () => {
                     boxShadow: mode === 'light'
                       ? '0 12px 40px rgba(102, 126, 234, 0.2)'
                       : '0 12px 40px rgba(59, 130, 246, 0.3)',
-                    borderColor: mode === 'light' ? '#016396' : '#0284c7',
+                    borderColor: mode === 'light' ? '#339af0' : '#339af0',
                   },
                 }}
               >
@@ -351,8 +351,8 @@ const ModernHome: React.FC = () => {
                   p: 4,
                   borderRadius: '24px',
                   background: mode === 'light'
-                    ? 'linear-gradient(135deg, #016396 0%, #014a6e 100%)'
-                    : 'linear-gradient(135deg, #014a6e 0%, #0284c7 100%)',
+                    ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
+                    : 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                   color: 'white',
                 }}
               >
@@ -370,7 +370,7 @@ const ModernHome: React.FC = () => {
                   onClick={() => navigate('/register')}
                   sx={{
                     bgcolor: 'white',
-                    color: mode === 'light' ? '#016396' : '#014a6e',
+                    color: mode === 'light' ? '#339af0' : '#1c7ed6',
                     py: 2,
                     borderRadius: '12px',
                     textTransform: 'none',
@@ -453,3 +453,5 @@ const ModernHome: React.FC = () => {
 };
 
 export default ModernHome;
+
+

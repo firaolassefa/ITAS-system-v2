@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Paper, Typography, Box, Grid, FormControl, InputLabel, Select, MenuItem,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -103,7 +103,7 @@ const Analytics: React.FC = () => {
             <Box sx={{ mb: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' : 'linear-gradient(135deg, #339af0 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
                     Analytics Dashboard
                   </Typography>
                   <Typography variant="body1" sx={{ color: 'text.secondary' }}>
@@ -112,8 +112,8 @@ const Analytics: React.FC = () => {
                 </Box>
                 <Button variant="contained" startIcon={<DownloadIcon />}
                   onClick={handleExportReport}
-                  sx={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', px: 3, py: 1.5, fontWeight: 600,
-                    '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }
+                  sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', color: '#fff', px: 3, py: 1.5, fontWeight: 600,
+                    '&:hover': { background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)' }
                   }}>
                   Export Report
                 </Button>
@@ -141,8 +141,8 @@ const Analytics: React.FC = () => {
                   </Grid>
                   <Grid item xs={12} md={3}>
                     <Button variant="contained" fullWidth onClick={loadAnalytics}
-                      sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', fontWeight: 600,
-                        '&:hover': { background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)' }
+                      sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', color: '#fff', fontWeight: 600,
+                        '&:hover': { background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)' }
                       }}>
                       Apply Filters
                     </Button>
@@ -163,10 +163,10 @@ const Analytics: React.FC = () => {
               {/* Overview Stats - Enhanced with Animations */}
               <Grid container spacing={2.5} sx={{ mb: 4 }}>
                 {[
-                  { label: 'Total Users', value: overviewStats.totalUsers, change: '+12%', icon: <UsersIcon />, color: '#667eea', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-                  { label: 'Active Users', value: overviewStats.activeUsers, change: '72% rate', icon: <CheckIcon />, color: '#10B981', gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
+                  { label: 'Total Users', value: overviewStats.totalUsers, change: '+12%', icon: <UsersIcon />, color: '#339af0', gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' },
+                  { label: 'Active Users', value: overviewStats.activeUsers, change: '72% rate', icon: <CheckIcon />, color: '#339af0', gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' },
                   { label: 'Enrollments', value: overviewStats.courseEnrollments, change: '+8%', icon: <CourseIcon />, color: '#F59E0B', gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
-                  { label: 'Completion', value: `${overviewStats.completionRate}%`, change: '+5%', icon: <TrendIcon />, color: '#8B5CF6', gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
+                  { label: 'Completion', value: `${overviewStats.completionRate}%`, change: '+5%', icon: <TrendIcon />, color: '#339af0', gradient: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' },
                 ].map((stat, index) => (
                   <Grid item xs={12} sm={6} md={3} key={index}>
                     <Zoom in timeout={600 + index * 100}>
@@ -308,7 +308,7 @@ const Analytics: React.FC = () => {
                         left: '-100%',
                         width: '100%',
                         height: '100%',
-                        background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent)',
+                        background: 'linear-gradient(90deg, transparent, rgba(1, 99, 150, 0.1), transparent)',
                         animation: 'shimmer 3s infinite',
                         '@keyframes shimmer': {
                           '0%': { left: '-100%' },
@@ -321,10 +321,10 @@ const Analytics: React.FC = () => {
                           sx={{
                             p: 1.5,
                             borderRadius: 2,
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                             color: 'white',
                             display: 'flex',
-                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                            boxShadow: '0 4px 12px rgba(1, 99, 150, 0.3)',
                             animation: 'iconBounce 2s ease-in-out infinite',
                             '@keyframes iconBounce': {
                               '0%, 100%': { transform: 'translateY(0)' },
@@ -385,7 +385,7 @@ const Analytics: React.FC = () => {
                                             width: `${course.completionRate}%`,
                                             height: '100%',
                                             background: course.completionRate >= 70 
-                                              ? 'linear-gradient(90deg, #10B981 0%, #059669 100%)'
+                                              ? 'linear-gradient(90deg, #339af0 0%, #1c7ed6 100%)'
                                               : 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)',
                                             borderRadius: 3,
                                             animation: 'progressGrow 1.5s ease-out',
@@ -414,7 +414,7 @@ const Analytics: React.FC = () => {
                                   </TableCell>
                                   <TableCell align="right">
                                     <Chip label={course.completionRate >= 70 ? 'High' : 'Medium'} size="small"
-                                      sx={{ background: course.completionRate >= 70 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: course.completionRate >= 70 ? '#10B981' : '#F59E0B', border: `1px solid ${course.completionRate >= 70 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`, fontWeight: 600 }}
+                                      sx={{ background: course.completionRate >= 70 ? 'rgba(1, 99, 150, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: course.completionRate >= 70 ? '#339af0' : '#F59E0B', border: `1px solid ${course.completionRate >= 70 ? 'rgba(1, 99, 150, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`, fontWeight: 600 }}
                                     />
                                   </TableCell>
                                 </TableRow>
@@ -452,7 +452,7 @@ const Analytics: React.FC = () => {
                               {userEngagement.map((item, index) => (
                                 <TableRow key={index} sx={{ '&:hover': { background: mode === 'light' ? '#f9fafb' : '#334155' }, animation: `fadeIn 0.5s ease ${index * 0.1}s both` }}>
                                   <TableCell>
-                                    <Chip label={item.category} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontWeight: 600 }} />
+                                    <Chip label={item.category} size="small" sx={{ background: 'rgba(1, 99, 150, 0.15)', color: '#339af0', border: '1px solid rgba(1, 99, 150, 0.3)', fontWeight: 600 }} />
                                   </TableCell>
                                   <TableCell align="right" sx={{ color: 'text.primary', fontWeight: 600 }}>{item.activeUsers}</TableCell>
                                   <TableCell align="right" sx={{ color: 'text.secondary' }}>{item.avgTime}</TableCell>
@@ -460,7 +460,7 @@ const Analytics: React.FC = () => {
                                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
                                       <Typography sx={{ color: 'text.primary', fontWeight: 600 }}>{item.completionRate}%</Typography>
                                       <Box sx={{ width: 60, height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
-                                        <Box sx={{ width: `${item.completionRate}%`, height: '100%', background: 'linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%)', borderRadius: 3 }} />
+                                        <Box sx={{ width: `${item.completionRate}%`, height: '100%', background: 'linear-gradient(90deg, #339af0 0%, #1c7ed6 100%)', borderRadius: 3 }} />
                                       </Box>
                                     </Box>
                                   </TableCell>
@@ -502,7 +502,7 @@ const Analytics: React.FC = () => {
                               </Box>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>Count: {resource.count}</Typography>
-                                <Typography variant="body2" sx={{ color: '#10B981', fontWeight: 600 }}>{resource.downloads.toLocaleString()} downloads</Typography>
+                                <Typography variant="body2" sx={{ color: '#339af0', fontWeight: 600 }}>{resource.downloads.toLocaleString()} downloads</Typography>
                               </Box>
                             </Paper>
                           </Zoom>
@@ -518,8 +518,8 @@ const Analytics: React.FC = () => {
                         <SpeedIcon /> System Performance
                       </Typography>
                       {[
-                        { label: 'Server Uptime', value: '99.8%', color: '#10B981' },
-                        { label: 'Response Time', value: '120ms', color: '#667eea' },
+                        { label: 'Server Uptime', value: '99.8%', color: '#339af0' },
+                        { label: 'Response Time', value: '120ms', color: '#339af0' },
                         { label: 'Error Rate', value: '0.2%', color: '#F59E0B' },
                       ].map((metric, index) => (
                         <Box key={index} sx={{ mb: 3 }}>
@@ -574,3 +574,6 @@ const Analytics: React.FC = () => {
 };
 
 export default Analytics;
+
+
+

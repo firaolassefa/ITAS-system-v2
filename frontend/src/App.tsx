@@ -1,69 +1,69 @@
-import React, { useState } from 'react';
+﻿import React, { useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { CircularProgress, Box } from '@mui/material';
 
 // Theme
 import { ThemeProvider } from './theme/ThemeContext';
 
-// Pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-
-// Public Pages
-import ModernHome from './pages/public/ModernHome';
-import PublicCourses from './pages/public/Courses';
-import PublicResources from './pages/public/Resources';
-
-// Taxpayer Pages
-import TaxpayerDashboard from './pages/taxpayer/Dashboard';
-import TaxpayerCourses from './pages/taxpayer/Courses';
-import CourseDetail from './pages/taxpayer/CourseDetail';
-import ModuleLesson from './pages/taxpayer/ModuleLesson';
-import TaxpayerResources from './pages/taxpayer/Resources';
-import TaxpayerCertificates from './pages/taxpayer/Certificates';
-import PracticeQuestions from './pages/taxpayer/PracticeQuestions';
-import ModuleQuiz from './pages/taxpayer/ModuleQuiz';
-import FinalExam from './pages/taxpayer/FinalExam';
-import TakeAssessment from './pages/taxpayer/TakeAssessment';
-import PracticeQuiz from './pages/taxpayer/PracticeQuiz';
-
-// Admin Pages - Different dashboards for each role
-import SystemAdminDashboard from './pages/admin/SystemAdminDashboard';
-import ContentAdminDashboard from './pages/admin/ContentAdminDashboard';
-import TrainingAdminDashboard from './pages/admin/TrainingAdminDashboard';
-import CommOfficerDashboard from './pages/admin/CommOfficerDashboard';
-import ManagerDashboard from './pages/admin/ManagerDashboard';
-import AuditorDashboard from './pages/admin/AuditorDashboard';
-
-import UploadResource from './pages/admin/UploadResource';
-import ResourceManagement from './pages/admin/ResourceManagement';
-import Analytics from './pages/admin/Analytics';
-import ResourceVersion from './pages/admin/ResourceVersion';
-import WebinarManagement from './pages/admin/WebinarManagement';
-import NotificationCenter from './pages/admin/NotificationCenter';
-import UserRoleManagement from './pages/admin/UserRoleManagement';
-import CourseManagement from './pages/admin/CourseManagement';
-import ResourceUpload from './pages/admin/ResourceUpload';
-import QuestionManagement from './pages/admin/QuestionManagement';
-import AssessmentManagement from './pages/admin/AssessmentManagement';
-import ModuleContentManager from './pages/admin/ModuleContentManager';
-
-// Shared Pages
-import Profile from './pages/Profile';
-
-// Layout Components
+// Layout Components (loaded eagerly — needed immediately)
 import TaxpayerLayout from './components/TaxpayerLayout';
 import AdminLayout from './components/AdminLayout';
 import StaffLayout from './components/StaffLayout';
 
-// Staff Pages
-import MORStaffDashboard from './pages/staff/Dashboard';
-import InternalTraining from './pages/staff/InternalTraining';
-import StaffCertificates from './pages/staff/Certificates';
-import StaffCompliance from './pages/staff/Compliance';
-import StaffAssessments from './pages/staff/Assessments';
+// Auth pages (loaded eagerly — first thing user sees)
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
-// Shared Components
-import PlaceholderPage from './components/PlaceholderPage';
+// All other pages — lazy loaded (only downloaded when navigated to)
+const ModernHome = lazy(() => import('./pages/public/ModernHome'));
+const PublicCourses = lazy(() => import('./pages/public/Courses'));
+const PublicResources = lazy(() => import('./pages/public/Resources'));
+
+const TaxpayerDashboard = lazy(() => import('./pages/taxpayer/Dashboard'));
+const TaxpayerCourses = lazy(() => import('./pages/taxpayer/Courses'));
+const CourseDetail = lazy(() => import('./pages/taxpayer/CourseDetail'));
+const ModuleLesson = lazy(() => import('./pages/taxpayer/ModuleLesson'));
+const TaxpayerResources = lazy(() => import('./pages/taxpayer/Resources'));
+const TaxpayerCertificates = lazy(() => import('./pages/taxpayer/Certificates'));
+const PracticeQuestions = lazy(() => import('./pages/taxpayer/PracticeQuestions'));
+const ModuleQuiz = lazy(() => import('./pages/taxpayer/ModuleQuiz'));
+const FinalExam = lazy(() => import('./pages/taxpayer/FinalExam'));
+const TakeAssessment = lazy(() => import('./pages/taxpayer/TakeAssessment'));
+const PracticeQuiz = lazy(() => import('./pages/taxpayer/PracticeQuiz'));
+
+const SystemAdminDashboard = lazy(() => import('./pages/admin/SystemAdminDashboard'));
+const ContentAdminDashboard = lazy(() => import('./pages/admin/ContentAdminDashboard'));
+const TrainingAdminDashboard = lazy(() => import('./pages/admin/TrainingAdminDashboard'));
+const CommOfficerDashboard = lazy(() => import('./pages/admin/CommOfficerDashboard'));
+const ManagerDashboard = lazy(() => import('./pages/admin/ManagerDashboard'));
+const AuditorDashboard = lazy(() => import('./pages/admin/AuditorDashboard'));
+const UploadResource = lazy(() => import('./pages/admin/UploadResource'));
+const ResourceManagement = lazy(() => import('./pages/admin/ResourceManagement'));
+const Analytics = lazy(() => import('./pages/admin/Analytics'));
+const ResourceVersion = lazy(() => import('./pages/admin/ResourceVersion'));
+const WebinarManagement = lazy(() => import('./pages/admin/WebinarManagement'));
+const NotificationCenter = lazy(() => import('./pages/admin/NotificationCenter'));
+const UserRoleManagement = lazy(() => import('./pages/admin/UserRoleManagement'));
+const CourseManagement = lazy(() => import('./pages/admin/CourseManagement'));
+const ResourceUpload = lazy(() => import('./pages/admin/ResourceUpload'));
+const QuestionManagement = lazy(() => import('./pages/admin/QuestionManagement'));
+const AssessmentManagement = lazy(() => import('./pages/admin/AssessmentManagement'));
+const ModuleContentManager = lazy(() => import('./pages/admin/ModuleContentManager'));
+
+const Profile = lazy(() => import('./pages/Profile'));
+const MORStaffDashboard = lazy(() => import('./pages/staff/Dashboard'));
+const InternalTraining = lazy(() => import('./pages/staff/InternalTraining'));
+const StaffCertificates = lazy(() => import('./pages/staff/Certificates'));
+const StaffCompliance = lazy(() => import('./pages/staff/Compliance'));
+const StaffAssessments = lazy(() => import('./pages/staff/Assessments'));
+const PlaceholderPage = lazy(() => import('./components/PlaceholderPage'));
+
+// Loading fallback
+const PageLoader = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+    <CircularProgress sx={{ color: '#339af0' }} />
+  </Box>
+);
 
 function App() {
   const [user, setUser] = useState<any>(() => {
@@ -176,6 +176,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<ModernHome />} />
@@ -386,9 +387,11 @@ function App() {
             </div>
           } />
         </Routes>
+        </Suspense>
       </Router>
     </ThemeProvider>
   );
 }
 
 export default App;
+

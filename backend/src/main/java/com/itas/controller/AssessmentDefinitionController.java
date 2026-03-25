@@ -142,26 +142,38 @@ public class AssessmentDefinitionController {
     @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> importQuestionsFromFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("moduleId") Long moduleId) {
+            @RequestParam(value = "moduleId", required = false) Long moduleId,
+            @RequestParam(value = "courseId", required = false) Long courseId,
+            @RequestParam(value = "questionCategory", required = false) String questionCategory) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(new ApiResponse<>("Please select a file to upload", null));
             }
-            
+
             String filename = file.getOriginalFilename();
-            if (filename == null || (!filename.endsWith(".docx") && !filename.endsWith(".pdf"))) {
+            if (filename == null || (!filename.endsWith(".docx") && !filename.endsWith(".pdf") && !filename.endsWith(".doc"))) {
                 return ResponseEntity.badRequest()
                     .body(new ApiResponse<>("Only .docx and .pdf files are supported", null));
             }
-            
-            List<Question> questions = questionImportService.importQuestionsFromFile(file, moduleId);
-            
+
+            // For FINAL_EXAM questions, moduleId is not required
+            String category = questionCategory != null ? questionCategory : "QUIZ";
+            boolean isFinalExam = "FINAL_EXAM".equals(category);
+
+            if (!isFinalExam && moduleId == null) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("moduleId is required for Practice and Quiz questions", null));
+            }
+
+            List<Question> questions = questionImportService.importQuestionsFromFile(
+                file, moduleId, courseId, category);
+
             return ResponseEntity.ok(new ApiResponse<>(
-                "Successfully imported " + questions.size() + " questions", 
+                "Successfully imported " + questions.size() + " questions",
                 questions
             ));
-            
+
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to import questions: " + e.getMessage(), null));

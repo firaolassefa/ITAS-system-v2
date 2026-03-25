@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Paper, Typography, Box, Button, Radio, RadioGroup, FormControlLabel,
   Card, CardContent, Alert, Chip, LinearProgress, alpha, CircularProgress,
@@ -148,7 +148,7 @@ const PracticeQuiz: React.FC = () => {
             onClick={handleRestart}
             sx={{
               py: 2,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               fontSize: '1.1rem',
               fontWeight: 700,
             }}
@@ -189,7 +189,7 @@ const PracticeQuiz: React.FC = () => {
               width: 48,
               height: 48,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               color: 'white',
               fontWeight: 700,
               fontSize: '1.2rem',
@@ -217,13 +217,13 @@ const PracticeQuiz: React.FC = () => {
                     p: 2,
                     mb: 1,
                     border: '2px solid',
-                    borderColor: selectedAnswer === answer.answerText ? '#667eea' : '#e5e7eb',
+                    borderColor: selectedAnswer === answer.answerText ? '#339af0' : '#e5e7eb',
                     borderRadius: 2,
-                    background: selectedAnswer === answer.answerText ? alpha('#667eea', 0.05) : 'transparent',
+                    background: selectedAnswer === answer.answerText ? alpha('#339af0', 0.05) : 'transparent',
                     transition: 'all 0.2s',
                     '&:hover': {
-                      background: alpha('#667eea', 0.05),
-                      borderColor: '#667eea',
+                      background: alpha('#339af0', 0.05),
+                      borderColor: '#339af0',
                     },
                   }}
                 />
@@ -239,7 +239,7 @@ const PracticeQuiz: React.FC = () => {
               sx={{
                 mt: 3,
                 py: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                 fontSize: '1.1rem',
                 fontWeight: 700,
               }}
@@ -255,7 +255,7 @@ const PracticeQuiz: React.FC = () => {
               icon={isCorrect ? <CheckCircle /> : <Cancel />}
               sx={{ mb: 3, fontSize: '1.1rem', fontWeight: 600 }}
             >
-              {isCorrect ? '✅ Correct!' : '❌ Incorrect'}
+              {isCorrect ? 'âœ… Correct!' : 'âŒ Incorrect'}
             </Alert>
 
             {/* Show Selected Answer */}
@@ -317,7 +317,7 @@ const PracticeQuiz: React.FC = () => {
                   onClick={handleNext}
                   sx={{
                     py: 2,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                     fontWeight: 700,
                   }}
                 >
@@ -348,3 +348,5 @@ const PracticeQuiz: React.FC = () => {
 };
 
 export default PracticeQuiz;
+
+

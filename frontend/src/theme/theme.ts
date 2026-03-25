@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+﻿import { createTheme } from '@mui/material/styles';
 
 declare module '@mui/material/styles' {
   interface Palette {
@@ -23,9 +23,9 @@ declare module '@mui/material/styles' {
 export const theme = createTheme({
   palette: {
     primary: {
-      main: '#016396', // MOR Blue
-      light: '#0284c7',
-      dark: '#014a6e',
+      main: '#339af0', // MOR Blue
+      light: '#339af0',
+      dark: '#1c7ed6',
       contrastText: '#ffffff',
     },
     secondary: {
@@ -63,10 +63,10 @@ export const theme = createTheme({
       secondary: '#94A3B8',
     },
     gradient: {
-      primary: 'linear-gradient(135deg, #016396 0%, #0284c7 100%)',
+      primary: 'linear-gradient(135deg, #339af0 0%, #339af0 100%)',
       secondary: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       success: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-      info: 'linear-gradient(135deg, #016396 0%, #0284c7 100%)',
+      info: 'linear-gradient(135deg, #339af0 0%, #339af0 100%)',
     },
   },
   typography: {
@@ -184,9 +184,9 @@ export const theme = createTheme({
           },
         },
         contained: {
-          background: 'linear-gradient(135deg, #016396 0%, #0284c7 100%)',
+          background: 'linear-gradient(135deg, #339af0 0%, #339af0 100%)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #014a6e 0%, #016396 100%)',
+            background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
             boxShadow: '0 16px 48px rgba(1, 99, 150, 0.5)',
           },
         },
@@ -195,7 +195,7 @@ export const theme = createTheme({
           borderColor: 'rgba(1, 99, 150, 0.5)',
           '&:hover': {
             borderWidth: 2,
-            borderColor: '#016396',
+            borderColor: '#339af0',
             background: 'rgba(1, 99, 150, 0.1)',
           },
         },
@@ -253,7 +253,7 @@ export const theme = createTheme({
               transform: 'translateY(-2px)',
               boxShadow: '0 8px 32px rgba(37, 99, 235, 0.2)',
               '& fieldset': {
-                borderColor: '#2563EB',
+                borderColor: '#1c7ed6',
                 borderWidth: 2,
               },
             },
@@ -261,7 +261,7 @@ export const theme = createTheme({
           '& .MuiInputLabel-root': {
             color: '#94A3B8',
             '&.Mui-focused': {
-              color: '#2563EB',
+              color: '#1c7ed6',
             },
           },
           '& .MuiOutlinedInput-input': {
@@ -293,3 +293,4 @@ export const theme = createTheme({
     },
   },
 });
+

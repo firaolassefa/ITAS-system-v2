@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, alpha, Chip, Paper, IconButton, Tooltip, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -40,7 +40,7 @@ const FuturisticHome: React.FC = () => {
   const textPrimary = darkMode ? '#F8FAFC' : '#0A0F1E';
   const textSecondary = darkMode ? alpha('#F8FAFC', 0.7) : '#64748B';
   const cardBg = darkMode ? alpha('#1a1f3a', 0.5) : '#FFFFFF';
-  const accentColor = '#00E0FF';
+  const accentColor = '#74c0fc';
 
   const features = [
     {
@@ -48,7 +48,7 @@ const FuturisticHome: React.FC = () => {
       title: 'Smart Learning',
       description: 'AI-powered course recommendations',
       color: accentColor,
-      gradient: 'linear-gradient(135deg, #00E0FF 0%, #0099CC 100%)',
+      gradient: 'linear-gradient(135deg, #74c0fc 0%, #339af0 100%)',
     },
     {
       icon: <Analytics sx={{ fontSize: 48 }} />,
@@ -105,3 +105,4 @@ const FuturisticHome: React.FC = () => {
 
   return (
     <Box sx={{ bgcolor: bgColor, minHeight: '100vh', position: 'relative', overflow: 'hidden', transition: 'background-color 0.5s' }}>
+

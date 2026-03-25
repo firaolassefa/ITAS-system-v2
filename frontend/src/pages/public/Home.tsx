@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Container, Typography, Button, Box, Grid, Card, CardContent, AppBar, Toolbar, Fade, Grow, Zoom, useScrollTrigger, alpha, useTheme, Chip, Avatar, CardActions } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -74,8 +74,8 @@ const PublicHome: React.FC = () => {
       icon: <School sx={{ fontSize: 48 }} />,
       title: 'Smart Learning Management',
       description: 'Enroll, track progress, complete modules, and earn certificates with our intelligent learning system',
-      color: '#2563EB',
-      gradient: 'linear-gradient(135deg, #2563EB 0%, #1E40AF 100%)',
+      color: '#1c7ed6',
+      gradient: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)',
     },
     {
       icon: <MenuBook sx={{ fontSize: 48 }} />,
@@ -115,7 +115,7 @@ const PublicHome: React.FC = () => {
   ];
 
   const stats = [
-    { value: '10,000+', label: 'Users Trained', icon: <People sx={{ fontSize: 40 }} />, color: '#2563EB' },
+    { value: '10,000+', label: 'Users Trained', icon: <People sx={{ fontSize: 40 }} />, color: '#1c7ed6' },
     { value: '95%', label: 'Course Completion', icon: <TrendingUp sx={{ fontSize: 40 }} />, color: '#10B981' },
     { value: '50+', label: 'Educational Resources', icon: <MenuBook sx={{ fontSize: 40 }} />, color: '#8B5CF6' },
     { value: '100+', label: 'Webinars Hosted', icon: <VideoLibrary sx={{ fontSize: 40 }} />, color: '#F59E0B' },
@@ -151,17 +151,17 @@ const PublicHome: React.FC = () => {
                 display: 'inline-flex',
                 p: 1,
                 borderRadius: 2,
-                background: `linear-gradient(135deg, ${alpha('#2563EB', 0.2)} 0%, ${alpha('#8B5CF6', 0.2)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha('#1c7ed6', 0.2)} 0%, ${alpha('#8B5CF6', 0.2)} 100%)`,
                 mr: 2,
               }}
             >
-              <School sx={{ fontSize: 28, color: '#2563EB' }} />
+              <School sx={{ fontSize: 28, color: '#1c7ed6' }} />
             </Box>
             <Typography 
               variant="h6" 
               sx={{ 
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 50%, #22D3EE 100%)',
+                background: 'linear-gradient(135deg, #1c7ed6 0%, #8B5CF6 50%, #22D3EE 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -176,7 +176,7 @@ const PublicHome: React.FC = () => {
             sx={{ 
               mr: 2,
               color: '#F8FAFC',
-              '&:hover': { color: '#2563EB' },
+              '&:hover': { color: '#1c7ed6' },
               textTransform: 'none',
               fontWeight: 600,
             }}
@@ -189,7 +189,7 @@ const PublicHome: React.FC = () => {
             sx={{ 
               mr: 3,
               color: '#F8FAFC',
-              '&:hover': { color: '#2563EB' },
+              '&:hover': { color: '#1c7ed6' },
               textTransform: 'none',
               fontWeight: 600,
             }}
@@ -206,12 +206,12 @@ const PublicHome: React.FC = () => {
               textTransform: 'none',
               fontWeight: 600,
               borderWidth: 2,
-              borderColor: alpha('#2563EB', 0.5),
+              borderColor: alpha('#1c7ed6', 0.5),
               color: '#F8FAFC',
               '&:hover': {
                 borderWidth: 2,
-                borderColor: '#2563EB',
-                background: alpha('#2563EB', 0.1),
+                borderColor: '#1c7ed6',
+                background: alpha('#1c7ed6', 0.1),
               },
             }}
           >
@@ -225,9 +225,9 @@ const PublicHome: React.FC = () => {
               borderRadius: 3,
               textTransform: 'none',
               fontWeight: 600,
-              background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 100%)',
+              background: 'linear-gradient(135deg, #1c7ed6 0%, #8B5CF6 100%)',
               '&:hover': {
-                background: 'linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%)',
+                background: 'linear-gradient(135deg, #1c7ed6 0%, #7C3AED 100%)',
                 transform: 'translateY(-2px)',
                 boxShadow: '0 8px 25px rgba(37, 99, 235, 0.4)',
               },
@@ -692,3 +692,4 @@ const PublicHome: React.FC = () => {
 };
 
 export default PublicHome;
+

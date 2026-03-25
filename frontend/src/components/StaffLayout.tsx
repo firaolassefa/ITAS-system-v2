@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   Box,
   Drawer,
@@ -160,7 +160,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               noWrap
               sx={{
                 fontWeight: 700,
-                color: mode === 'light' ? '#016396' : 'white',
+                color: mode === 'light' ? '#339af0' : 'white',
               }}
             >
               MOR Staff
@@ -190,11 +190,11 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   color: mode === 'light' ? '#1e293b' : 'white',
                   '&.Mui-selected': {
-                    bgcolor: mode === 'light' ? '#e0f2fe' : alpha('#016396', 0.2),
-                    borderLeft: '4px solid #016396',
-                    color: '#016396',
+                    bgcolor: mode === 'light' ? '#e0f2fe' : alpha('#339af0', 0.2),
+                    borderLeft: '4px solid #339af0',
+                    color: '#339af0',
                     '&:hover': {
-                      bgcolor: mode === 'light' ? '#bae6fd' : alpha('#016396', 0.3),
+                      bgcolor: mode === 'light' ? '#bae6fd' : alpha('#339af0', 0.3),
                     },
                   },
                   '&:hover': {
@@ -205,7 +205,7 @@ const StaffLayout: React.FC<StaffLayoutProps> = ({ children }) => {
               >
                 <ListItemIcon
                   sx={{ 
-                    color: location.pathname === item.path ? '#016396' : (mode === 'light' ? '#64748b' : alpha('#fff', 0.7)),
+                    color: location.pathname === item.path ? '#339af0' : (mode === 'light' ? '#64748b' : alpha('#fff', 0.7)),
                     minWidth: 40,
                   }}
                 >

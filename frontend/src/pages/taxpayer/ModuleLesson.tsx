@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Box, Typography, Paper, Button, Chip, LinearProgress,
   Card, CardContent, Divider, Alert, Collapse, IconButton, Stack,
@@ -145,7 +145,7 @@ const ModuleLesson: React.FC = () => {
             p: 4,
             mb: 3,
             borderRadius: 4,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
             color: '#FFFFFF',
             position: 'relative',
             overflow: 'hidden',
@@ -226,7 +226,7 @@ const ModuleLesson: React.FC = () => {
               mb: 3,
               borderRadius: 3,
               border: '1px solid',
-              borderColor: alpha('#667eea', 0.2),
+              borderColor: alpha('#339af0', 0.2),
             }}
           >
             <CardContent sx={{ p: 3 }}>
@@ -332,7 +332,7 @@ const ModuleLesson: React.FC = () => {
                 onClick={() => toggleSection('content')}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Description sx={{ color: '#667eea' }} />
+                  <Description sx={{ color: '#339af0' }} />
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     Lesson Content
                   </Typography>
@@ -350,7 +350,7 @@ const ModuleLesson: React.FC = () => {
                     '& ul, & ol': { pl: 3, mb: 2 },
                     '& li': { mb: 1 },
                     '& code': {
-                      background: alpha('#667eea', 0.1),
+                      background: alpha('#339af0', 0.1),
                       padding: '2px 6px',
                       borderRadius: 1,
                       fontFamily: 'monospace',
@@ -409,7 +409,7 @@ const ModuleLesson: React.FC = () => {
               sx={{
                 textTransform: 'none',
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               }}
             >
               Practice Questions
@@ -445,3 +445,5 @@ const ModuleLesson: React.FC = () => {
 };
 
 export default ModuleLesson;
+
+

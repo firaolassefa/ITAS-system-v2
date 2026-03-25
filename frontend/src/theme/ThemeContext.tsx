@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme, Theme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 
@@ -37,9 +37,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             ? {
                 // Light Mode
                 primary: {
-                  main: '#016396',
-                  light: '#0284c7',
-                  dark: '#014a6e',
+                  main: '#339af0',
+                  light: '#339af0',
+                  dark: '#1c7ed6',
                   contrastText: '#ffffff',
                 },
                 secondary: {
@@ -60,9 +60,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             : {
                 // Dark Mode
                 primary: {
-                  main: '#0284c7',
+                  main: '#339af0',
                   light: '#38bdf8',
-                  dark: '#016396',
+                  dark: '#339af0',
                   contrastText: '#ffffff',
                 },
                 secondary: {
@@ -124,12 +124,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               },
               contained: {
                 background: mode === 'light' 
-                  ? 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)'
-                  : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
+                  : 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                 '&:hover': {
                   background: mode === 'light'
-                    ? 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)'
-                    : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+                    ? 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)'
+                    : 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                 },
               },
             },
@@ -165,3 +165,5 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </ThemeContext.Provider>
   );
 };
+
+

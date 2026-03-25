@@ -34,6 +34,18 @@ public class User {
 
     private String companyName;
 
+    @Column(name = "tin_number", unique = true)
+    private String tinNumber;
+
+    @Column(name = "tin_verified")
+    private boolean tinVerified = false;
+
+    @Column(name = "taxpayer_type")
+    private String taxpayerType;
+
+    @Column(name = "region")
+    private String region;
+
     // ✅ ADDED phoneNumber field
     @Column(name = "phone_number")
     private String phoneNumber;
@@ -136,6 +148,15 @@ public class User {
     public void setCompanyName(String companyName) { 
         this.companyName = companyName; 
     }
+
+    public String getTinNumber() { return tinNumber; }
+    public void setTinNumber(String tinNumber) { this.tinNumber = tinNumber; }
+    public boolean isTinVerified() { return tinVerified; }
+    public void setTinVerified(boolean tinVerified) { this.tinVerified = tinVerified; }
+    public String getTaxpayerType() { return taxpayerType; }
+    public void setTaxpayerType(String taxpayerType) { this.taxpayerType = taxpayerType; }
+    public String getRegion() { return region; }
+    public void setRegion(String region) { this.region = region; }
 
     public String getPhoneNumber() { 
         return phoneNumber; 

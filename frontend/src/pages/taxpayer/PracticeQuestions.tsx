@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Box, Button, Typography, Paper, Radio, RadioGroup,
   FormControlLabel, Alert, CircularProgress, Card, CardContent,
@@ -204,7 +204,7 @@ const PracticeQuestions: React.FC = () => {
                       ? '#EF4444'
                       : '#e0e0e0'
                     : selectedAnswer === answer.id
-                    ? '#667eea'
+                    ? '#339af0'
                     : '#e0e0e0',
                   bgcolor: showFeedback
                     ? answer.isCorrect
@@ -246,7 +246,7 @@ const PracticeQuestions: React.FC = () => {
               sx={{ mt: 3 }}
             >
               <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
-                {feedback.correct ? '✅ Correct!' : '❌ Not quite right'}
+                {feedback.correct ? 'âœ… Correct!' : 'âŒ Not quite right'}
               </Typography>
               {feedback.explanation && (
                 <Typography variant="body2">
@@ -305,7 +305,7 @@ const PracticeQuestions: React.FC = () => {
       {isLastQuestion && showFeedback && (
         <Alert severity="success" sx={{ mb: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-            🎉 Practice Complete!
+            ðŸŽ‰ Practice Complete!
           </Typography>
           <Typography variant="body2">
             You got {correctCount} out of {questions.length} questions correct.
@@ -318,3 +318,5 @@ const PracticeQuestions: React.FC = () => {
 };
 
 export default PracticeQuestions;
+
+

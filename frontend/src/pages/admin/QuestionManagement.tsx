@@ -1,32 +1,38 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Grid, Typography, IconButton, Card, CardContent,
-  MenuItem, Alert, CircularProgress, Chip, Radio, RadioGroup,
-  FormControlLabel, FormControl, FormLabel, Divider, Paper,
+  MenuItem, Alert, CircularProgress, Chip, Radio,
+  FormControlLabel, Divider, Paper, Tabs, Tab, alpha,
 } from '@mui/material';
-import {
-  Add, Edit, Delete, Quiz, CheckCircle, Cancel, Upload,
-} from '@mui/icons-material';
+import { Add, Edit, Delete, Quiz, Upload, EmojiEvents, MenuBook } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
 
+const BLUE = '#339af0';
+const GOLD = '#f59e0b';
+
+type QCategory = 'PRACTICE' | 'QUIZ' | 'FINAL_EXAM';
+
+interface Answer { answerText: string; isCorrect: boolean; order: number; }
 interface Question {
-  id?: number;
-  moduleId: number;
-  questionText: string;
-  questionType: string;
-  isPractice: boolean;
-  explanation?: string;
-  points: number;
-  order: number;
+  id?: number; moduleId?: number; courseId?: number;
+  questionText: string; questionType: string; questionCategory: QCategory;
+  isPractice: boolean; explanation?: string; points: number; order: number;
   answers: Answer[];
 }
 
-interface Answer {
-  answerText: string;
-  isCorrect: boolean;
-  order: number;
-}
+const defaultAnswers = (): Answer[] => [
+  { answerText: '', isCorrect: false, order: 0 },
+  { answerText: '', isCorrect: false, order: 1 },
+  { answerText: '', isCorrect: false, order: 2 },
+  { answerText: '', isCorrect: false, order: 3 },
+];
+
+const TABS = [
+  { cat: 'PRACTICE' as QCategory, label: 'Practice', color: BLUE, desc: 'Unlimited attempts · Instant feedback · Shown inside module lessons' },
+  { cat: 'QUIZ' as QCategory, label: 'Quiz', color: GOLD, desc: 'Must pass to unlock next module · Linked to a specific module' },
+  { cat: 'FINAL_EXAM' as QCategory, label: 'Final Exam', color: BLUE, desc: 'Course-level · 75% to pass · Certificate auto-generated on pass' },
+];
 
 const QuestionManagement: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
@@ -34,614 +40,331 @@ const QuestionManagement: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<number | ''>('');
   const [selectedModule, setSelectedModule] = useState<number | ''>('');
+  const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [formData, setFormData] = useState<Question>({
-    moduleId: 0,
-    questionText: '',
-    questionType: 'MULTIPLE_CHOICE',
-    isPractice: false,
-    explanation: '',
-    points: 1,
-    order: 0,
-    answers: [
-      { answerText: '', isCorrect: false, order: 0 },
-      { answerText: '', isCorrect: false, order: 1 },
-    ],
+  const [editing, setEditing] = useState<Question | null>(null);
+  const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [form, setForm] = useState<Question>({
+    questionText: '', questionType: 'MULTIPLE_CHOICE', questionCategory: 'PRACTICE',
+    isPractice: true, points: 1, order: 0, answers: defaultAnswers(),
   });
 
-  useEffect(() => {
-    loadCourses();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCourse) {
-      loadModules(selectedCourse as number);
-    }
-  }, [selectedCourse]);
-
-  useEffect(() => {
-    if (selectedModule) {
-      loadQuestions(selectedModule as number);
-    }
-  }, [selectedModule]);
+  useEffect(() => { loadCourses(); }, []);
+  useEffect(() => { if (selectedCourse) loadModules(selectedCourse as number); }, [selectedCourse]);
+  useEffect(() => { loadQ(); }, [selectedModule, selectedCourse, tab]);
 
   const loadCourses = async () => {
-    try {
-      const response = await apiClient.get('/courses');
-      setCourses(response.data.data || response.data || []);
-    } catch (error) {
-      console.error('Failed to load courses:', error);
-    }
+    try { const r = await apiClient.get('/courses'); setCourses(r.data.data || r.data || []); } catch (e) { console.error(e); }
   };
 
-  const loadModules = async (courseId: number) => {
+  const loadModules = async (cid: number) => {
     try {
-      const response = await apiClient.get(`/modules/course/${courseId}`);
-      setModules(response.data.data || response.data || []);
-      setSelectedModule('');
-      setQuestions([]);
-    } catch (error) {
-      console.error('Failed to load modules:', error);
-    }
+      const r = await apiClient.get(`/modules/course/${cid}`);
+      setModules(r.data.data || r.data || []);
+      setSelectedModule(''); setQuestions([]);
+    } catch (e) { console.error(e); }
   };
 
-  const loadQuestions = async (moduleId: number) => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get(`/questions/module/${moduleId}`);
-      setQuestions(response.data.data || response.data || []);
-    } catch (error) {
-      console.error('Failed to load questions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpenDialog = (question?: Question) => {
-    if (question) {
-      setEditingQuestion(question);
-      setFormData(question);
+  const loadQ = async () => {
+    const cat = TABS[tab].cat;
+    if (cat === 'FINAL_EXAM') {
+      if (!selectedCourse) return;
+      try { setLoading(true); const r = await apiClient.get(`/questions/course/${selectedCourse}/final-exam`); setQuestions(r.data.data || r.data || []); }
+      catch (e) { console.error(e); } finally { setLoading(false); }
     } else {
-      setEditingQuestion(null);
-      const nextOrder = questions.length;
-      setFormData({
-        moduleId: selectedModule as number,
-        questionText: '',
-        questionType: 'MULTIPLE_CHOICE',
-        isPractice: false,
-        explanation: '',
-        points: 1,
-        order: nextOrder,
-        answers: [
-          { answerText: '', isCorrect: false, order: 0 },
-          { answerText: '', isCorrect: false, order: 1 },
-        ],
-      });
+      if (!selectedModule) return;
+      try {
+        setLoading(true);
+        const r = await apiClient.get(`/questions/module/${selectedModule}`);
+        const all: Question[] = r.data.data || r.data || [];
+        setQuestions(all.filter(q => (q.questionCategory || (q.isPractice ? 'PRACTICE' : 'QUIZ')) === cat));
+      } catch (e) { console.error(e); } finally { setLoading(false); }
     }
+  };
+
+  const openAdd = (q?: Question) => {
+    const cat = TABS[tab].cat;
+    if (q) { setEditing(q); setForm({ ...q, questionCategory: q.questionCategory || (q.isPractice ? 'PRACTICE' : 'QUIZ') }); }
+    else { setEditing(null); setForm({ questionText: '', questionType: 'MULTIPLE_CHOICE', questionCategory: cat, isPractice: cat === 'PRACTICE', points: 1, order: questions.length, answers: defaultAnswers(), moduleId: selectedModule as number, courseId: selectedCourse as number }); }
     setOpenDialog(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingQuestion(null);
-    setMessage(null);
-  };
-
-  const handleAddAnswer = () => {
-    setFormData({
-      ...formData,
-      answers: [
-        ...formData.answers,
-        { answerText: '', isCorrect: false, order: formData.answers.length },
-      ],
-    });
-  };
-
-  const handleRemoveAnswer = (index: number) => {
-    if (formData.answers.length > 2) {
-      setFormData({
-        ...formData,
-        answers: formData.answers.filter((_, i) => i !== index),
-      });
-    }
-  };
-
-  const handleAnswerChange = (index: number, field: string, value: any) => {
-    const newAnswers = [...formData.answers];
-    newAnswers[index] = { ...newAnswers[index], [field]: value };
-    setFormData({ ...formData, answers: newAnswers });
-  };
-
   const handleSubmit = async () => {
-    // Validation
-    if (!formData.questionText.trim()) {
-      setMessage({ type: 'error', text: 'Question text is required' });
-      return;
-    }
-
-    if (formData.answers.length < 2) {
-      setMessage({ type: 'error', text: 'At least 2 answers are required' });
-      return;
-    }
-
-    const hasCorrectAnswer = formData.answers.some(a => a.isCorrect);
-    if (!hasCorrectAnswer) {
-      setMessage({ type: 'error', text: 'At least one answer must be marked as correct' });
-      return;
-    }
-
-    if (formData.isPractice && !formData.explanation?.trim()) {
-      setMessage({ type: 'error', text: 'Explanation is required for practice questions' });
-      return;
-    }
-
+    if (!form.questionText.trim()) { setMsg({ type: 'error', text: 'Question text required' }); return; }
+    if (!form.answers.some(a => a.isCorrect)) { setMsg({ type: 'error', text: 'Mark one answer as correct' }); return; }
+    if (form.questionCategory === 'PRACTICE' && !form.explanation?.trim()) { setMsg({ type: 'error', text: 'Explanation required for practice questions' }); return; }
+    const payload: any = { ...form, isPractice: form.questionCategory === 'PRACTICE' };
+    if (form.questionCategory === 'FINAL_EXAM') { payload.courseId = selectedCourse; delete payload.moduleId; }
+    else { payload.moduleId = selectedModule; }
     try {
       setLoading(true);
-      if (editingQuestion) {
-        await apiClient.put(`/questions/${editingQuestion.id}`, formData);
-        setMessage({ type: 'success', text: 'Question updated successfully!' });
-      } else {
-        await apiClient.post('/questions', formData);
-        setMessage({ type: 'success', text: 'Question created successfully!' });
-      }
-
-      await loadQuestions(selectedModule as number);
-      setTimeout(() => {
-        handleCloseDialog();
-      }, 1500);
-    } catch (error: any) {
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to save question',
-      });
-    } finally {
-      setLoading(false);
-    }
+      if (editing?.id) { await apiClient.put(`/questions/${editing.id}`, payload); setMsg({ type: 'success', text: 'Updated!' }); }
+      else { await apiClient.post('/questions', payload); setMsg({ type: 'success', text: 'Created!' }); }
+      await loadQ();
+      setTimeout(() => { setOpenDialog(false); setEditing(null); setMsg(null); }, 1200);
+    } catch (e: any) { setMsg({ type: 'error', text: e.response?.data?.message || 'Failed' }); }
+    finally { setLoading(false); }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this question?')) {
-      try {
-        await apiClient.delete(`/questions/${id}`);
-        await loadQuestions(selectedModule as number);
-      } catch (error) {
-        alert('Failed to delete question');
-      }
-    }
+    if (!window.confirm('Delete this question?')) return;
+    try { await apiClient.delete(`/questions/${id}`); await loadQ(); } catch { alert('Failed to delete'); }
   };
 
-  const handleFileUpload = async () => {
-    if (!uploadFile || !selectedModule) {
-      setMessage({ type: 'error', text: 'Please select a file and module' });
-      return;
-    }
-
+  const handleUpload = async () => {
+    const cat = TABS[tab].cat;
+    const tid = cat === 'FINAL_EXAM' ? selectedCourse : selectedModule;
+    if (!uploadFile || !tid) { setMsg({ type: 'error', text: 'Select a file first' }); return; }
     try {
       setLoading(true);
-      const formData = new FormData();
-      formData.append('file', uploadFile);
-      formData.append('moduleId', selectedModule.toString());
-
-      const response = await apiClient.post('/assessment-definitions/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const data = response.data.data || response.data;
-      setMessage({ 
-        type: 'success', 
-        text: `Successfully imported ${Array.isArray(data) ? data.length : 0} questions!` 
-      });
-      setUploadDialogOpen(false);
-      setUploadFile(null);
-      await loadQuestions(selectedModule as number);
-    } catch (error: any) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to upload file' 
-      });
-    } finally {
-      setLoading(false);
-    }
+      const fd = new FormData();
+      fd.append('file', uploadFile);
+      fd.append('moduleId', tid.toString());
+      fd.append('questionCategory', cat);
+      if (cat === 'FINAL_EXAM') fd.append('courseId', selectedCourse.toString());
+      const r = await apiClient.post('/assessment-definitions/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const data = r.data.data || r.data;
+      setMsg({ type: 'success', text: `Imported ${Array.isArray(data) ? data.length : 0} questions!` });
+      setUploadOpen(false); setUploadFile(null); await loadQ();
+    } catch (e: any) { setMsg({ type: 'error', text: e.response?.data?.message || 'Upload failed' }); }
+    finally { setLoading(false); }
   };
 
-  const practiceQuestions = questions.filter(q => q.isPractice);
-  const quizQuestions = questions.filter(q => !q.isPractice);
+  const cur = TABS[tab];
+  const needsMod = cur.cat !== 'FINAL_EXAM';
+  const canLoad = cur.cat === 'FINAL_EXAM' ? !!selectedCourse : !!selectedModule;
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
-        Question Management
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4 }}>
+        <Box sx={{ width: 4, height: 32, borderRadius: 2, bgcolor: BLUE }} />
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Question Management</Typography>
+      </Box>
 
-      {/* Selection Panel */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
-            <TextField
-              fullWidth
-              select
-              label="Select Course"
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(Number(e.target.value) || '')}
-            >
+      <Paper sx={{ p: 3, mb: 3, border: `1px solid ${alpha(BLUE, 0.15)}`, borderRadius: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={needsMod ? 4 : 6}>
+            <TextField fullWidth select label="Select Course" value={selectedCourse}
+              onChange={(e) => setSelectedCourse(Number(e.target.value) || '')}>
               <MenuItem value="">Choose a course...</MenuItem>
-              {courses.map((course) => (
-                <MenuItem key={course.id} value={course.id}>
-                  {course.title}
-                </MenuItem>
-              ))}
+              {courses.map(c => <MenuItem key={c.id} value={c.id}>{c.title}</MenuItem>)}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={5}>
-            <TextField
-              fullWidth
-              select
-              label="Select Module"
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(Number(e.target.value) || '')}
-              disabled={!selectedCourse}
-            >
-              <MenuItem value="">Choose a module...</MenuItem>
-              {modules.map((module) => (
-                <MenuItem key={module.id} value={module.id}>
-                  {module.title}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={1.5}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Add />}
-              onClick={() => setUploadDialogOpen(true)}
-              disabled={!selectedModule}
-              sx={{ height: '56px' }}
-            >
+          {needsMod && (
+            <Grid item xs={12} md={4}>
+              <TextField fullWidth select label="Select Module" value={selectedModule}
+                onChange={(e) => setSelectedModule(Number(e.target.value) || '')} disabled={!selectedCourse}>
+                <MenuItem value="">Choose a module...</MenuItem>
+                {modules.map(m => <MenuItem key={m.id} value={m.id}>{m.title}</MenuItem>)}
+              </TextField>
+            </Grid>
+          )}
+          <Grid item xs={12} md={needsMod ? 4 : 6} sx={{ display: 'flex', gap: 1 }}>
+            <Button fullWidth variant="outlined" startIcon={<Upload />} onClick={() => setUploadOpen(true)}
+              disabled={!canLoad} sx={{ height: 56, borderColor: BLUE, color: BLUE }}>
               Upload File
             </Button>
-          </Grid>
-          <Grid item xs={12} md={0.5}></Grid>
-          <Grid item xs={12} md={1.5}>
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenDialog()}
-              disabled={!selectedModule}
-              sx={{ height: '56px' }}
-            >
+            <Button fullWidth variant="contained" startIcon={<Add />} onClick={() => openAdd()}
+              disabled={!canLoad} sx={{ height: 56, bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' } }}>
               Add Question
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Questions Display */}
-      {selectedModule && (
-        <Grid container spacing={3}>
-          {/* Practice Questions */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Quiz color="primary" />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Practice Questions ({practiceQuestions.length})
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  For learning - unlimited attempts, instant feedback
-                </Typography>
+      <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+        <Tabs value={tab} onChange={(_, v) => setTab(v)}
+          sx={{ borderBottom: `2px solid ${alpha(BLUE, 0.1)}`,
+            '& .MuiTab-root': { fontWeight: 700, textTransform: 'none', minHeight: 56 },
+            '& .Mui-selected': { color: BLUE },
+            '& .MuiTabs-indicator': { bgcolor: BLUE, height: 3 } }}>
+          <Tab icon={<MenuBook />} iconPosition="start" label="Practice" />
+          <Tab icon={<Quiz />} iconPosition="start" label="Quiz" />
+          <Tab icon={<EmojiEvents />} iconPosition="start" label="Final Exam" />
+        </Tabs>
+      </Paper>
 
-                {loading ? (
-                  <CircularProgress />
-                ) : practiceQuestions.length === 0 ? (
-                  <Alert severity="info">No practice questions yet</Alert>
-                ) : (
-                  practiceQuestions.map((q, index) => (
-                    <Paper key={q.id} sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
-                            {index + 1}. {q.questionText}
-                          </Typography>
-                          <Chip label={`${q.points} point${q.points > 1 ? 's' : ''}`} size="small" sx={{ mr: 1 }} />
-                          <Chip label={q.questionType} size="small" color="primary" />
-                        </Box>
-                        <Box>
-                          <IconButton size="small" onClick={() => handleOpenDialog(q)}>
-                            <Edit />
-                          </IconButton>
-                          <IconButton size="small" color="error" onClick={() => handleDelete(q.id!)}>
-                            <Delete />
-                          </IconButton>
-                        </Box>
+      <Alert severity="info" sx={{ mb: 3, bgcolor: alpha(BLUE, 0.04), border: `1px solid ${alpha(BLUE, 0.2)}` }}>
+        <strong>{cur.label}:</strong> {cur.desc}
+        {cur.cat === 'FINAL_EXAM' && <span> — Users need <strong>75%</strong> to receive a certificate.</span>}
+      </Alert>
+
+      {!canLoad ? (
+        <Paper sx={{ p: 6, textAlign: 'center', border: `1px dashed ${alpha(BLUE, 0.3)}`, borderRadius: 2 }}>
+          <Typography color="text.secondary">
+            {cur.cat === 'FINAL_EXAM' ? 'Select a course above to manage final exam questions' : 'Select a course and module above to manage questions'}
+          </Typography>
+        </Paper>
+      ) : loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress sx={{ color: BLUE }} /></Box>
+      ) : questions.length === 0 ? (
+        <Paper sx={{ p: 6, textAlign: 'center', border: `1px dashed ${alpha(BLUE, 0.3)}`, borderRadius: 2 }}>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>No {cur.label} questions yet</Typography>
+          <Button variant="contained" startIcon={<Add />} onClick={() => openAdd()}
+            sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' } }}>
+            Add First Question
+          </Button>
+        </Paper>
+      ) : (
+        <Grid container spacing={2}>
+          {questions.map((q, i) => (
+            <Grid item xs={12} key={q.id}>
+              <Paper sx={{ p: 3, borderRadius: 2, borderLeft: `4px solid ${cur.color}`,
+                border: `1px solid ${alpha(cur.color, 0.2)}`, transition: 'all 0.2s',
+                '&:hover': { boxShadow: `0 4px 16px ${alpha(cur.color, 0.15)}` } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                      <Chip label={`Q${i + 1}`} size="small" sx={{ bgcolor: cur.color, color: 'white', fontWeight: 700 }} />
+                      <Chip label={`${q.points} pt${q.points > 1 ? 's' : ''}`} size="small" variant="outlined" />
+                      <Chip label={q.questionType} size="small" variant="outlined" />
+                    </Box>
+                    <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>{q.questionText}</Typography>
+                    {q.answers && (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {q.answers.map((a, ai) => (
+                          <Chip key={ai} label={a.answerText} size="small"
+                            sx={{ bgcolor: a.isCorrect ? alpha(BLUE, 0.1) : 'transparent',
+                              border: `1px solid ${a.isCorrect ? BLUE : '#e0e0e0'}`,
+                              color: a.isCorrect ? BLUE : 'text.secondary',
+                              fontWeight: a.isCorrect ? 700 : 400 }} />
+                        ))}
                       </Box>
-                    </Paper>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Quiz Questions */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <CheckCircle color="success" />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Quiz Questions ({quizQuestions.length})
-                  </Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', ml: 2 }}>
+                    <IconButton size="small" onClick={() => openAdd(q)} sx={{ color: BLUE }}>
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleDelete(q.id!)}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  For assessment - must pass to unlock next module
-                </Typography>
-
-                {loading ? (
-                  <CircularProgress />
-                ) : quizQuestions.length === 0 ? (
-                  <Alert severity="info">No quiz questions yet</Alert>
-                ) : (
-                  quizQuestions.map((q, index) => (
-                    <Paper key={q.id} sx={{ p: 2, mb: 2, border: '1px solid #e0e0e0' }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
-                            {index + 1}. {q.questionText}
-                          </Typography>
-                          <Chip label={`${q.points} point${q.points > 1 ? 's' : ''}`} size="small" sx={{ mr: 1 }} />
-                          <Chip label={q.questionType} size="small" color="success" />
-                        </Box>
-                        <Box>
-                          <IconButton size="small" onClick={() => handleOpenDialog(q)}>
-                            <Edit />
-                          </IconButton>
-                          <IconButton size="small" color="error" onClick={() => handleDelete(q.id!)}>
-                            <Delete />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    </Paper>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
+              </Paper>
+            </Grid>
+          ))}
         </Grid>
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingQuestion ? 'Edit Question' : 'Add New Question'}
+      <Dialog open={openDialog} onClose={() => { setOpenDialog(false); setMsg(null); }} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, borderBottom: `3px solid ${cur.color}` }}>
+          {editing ? 'Edit' : 'Add'} {cur.label} Question
         </DialogTitle>
-        <DialogContent>
-          {message && (
-            <Alert severity={message.type} sx={{ mb: 2 }} onClose={() => setMessage(null)}>
-              {message.text}
-            </Alert>
-          )}
-
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+        <DialogContent sx={{ pt: 3 }}>
+          {msg && <Alert severity={msg.type} sx={{ mb: 2 }} onClose={() => setMsg(null)}>{msg.text}</Alert>}
+          <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Question Text"
-                value={formData.questionText}
-                onChange={(e) => setFormData({ ...formData, questionText: e.target.value })}
-              />
+              <TextField fullWidth multiline rows={3} label="Question Text" value={form.questionText}
+                onChange={(e) => setForm({ ...form, questionText: e.target.value })} />
             </Grid>
-
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                select
-                label="Question Type"
-                value={formData.questionType}
-                onChange={(e) => setFormData({ ...formData, questionType: e.target.value })}
-              >
+            <Grid item xs={6}>
+              <TextField fullWidth select label="Question Type" value={form.questionType}
+                onChange={(e) => setForm({ ...form, questionType: e.target.value })}>
                 <MenuItem value="MULTIPLE_CHOICE">Multiple Choice</MenuItem>
-                <MenuItem value="TRUE_FALSE">True/False</MenuItem>
+                <MenuItem value="TRUE_FALSE">True / False</MenuItem>
               </TextField>
             </Grid>
-
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                select
-                label="Question Category"
-                value={formData.isPractice ? 'practice' : 'quiz'}
-                onChange={(e) => setFormData({ ...formData, isPractice: e.target.value === 'practice' })}
-              >
-                <MenuItem value="practice">Practice (Learning)</MenuItem>
-                <MenuItem value="quiz">Quiz (Assessment)</MenuItem>
-              </TextField>
+            <Grid item xs={6}>
+              <TextField fullWidth type="number" label="Points" value={form.points}
+                onChange={(e) => setForm({ ...form, points: parseInt(e.target.value) || 1 })} />
             </Grid>
-
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Points"
-                value={formData.points}
-                onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 1 })}
-              />
-            </Grid>
-
-            {formData.isPractice && (
+            {form.questionCategory === 'PRACTICE' && (
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  label="Explanation (for practice questions)"
-                  value={formData.explanation || ''}
-                  onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
-                  helperText="This will be shown after the user answers"
-                />
+                <TextField fullWidth multiline rows={2} label="Explanation (shown after answer)"
+                  value={form.explanation || ''}
+                  onChange={(e) => setForm({ ...form, explanation: e.target.value })} />
               </Grid>
             )}
-
             <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Answers
-              </Typography>
-
-              {formData.answers.map((answer, index) => (
-                <Paper key={index} sx={{ p: 2, mb: 2, bgcolor: '#f5f5f5' }}>
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Answer Options</Typography>
+              {form.answers.map((ans, idx) => (
+                <Paper key={idx} sx={{ p: 2, mb: 1.5, bgcolor: ans.isCorrect ? alpha(BLUE, 0.05) : '#fafafa',
+                  border: `1px solid ${ans.isCorrect ? BLUE : '#e0e0e0'}`, borderRadius: 2 }}>
                   <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} md={8}>
-                      <TextField
-                        fullWidth
-                        label={`Answer ${index + 1}`}
-                        value={answer.answerText}
-                        onChange={(e) => handleAnswerChange(index, 'answerText', e.target.value)}
-                      />
+                      <TextField fullWidth label={`Option ${String.fromCharCode(65 + idx)}`}
+                        value={ans.answerText}
+                        onChange={(e) => {
+                          const a = [...form.answers]; a[idx] = { ...a[idx], answerText: e.target.value };
+                          setForm({ ...form, answers: a });
+                        }} />
                     </Grid>
                     <Grid item xs={6} md={2}>
                       <FormControlLabel
-                        control={
-                          <Radio
-                            checked={answer.isCorrect}
-                            onChange={(e) => {
-                              // Only one answer can be correct
-                              const newAnswers = formData.answers.map((a, i) => ({
-                                ...a,
-                                isCorrect: i === index,
-                              }));
-                              setFormData({ ...formData, answers: newAnswers });
-                            }}
-                          />
-                        }
-                        label="Correct"
+                        control={<Radio checked={ans.isCorrect} onChange={() => {
+                          setForm({ ...form, answers: form.answers.map((x, i) => ({ ...x, isCorrect: i === idx })) });
+                        }} sx={{ color: BLUE, '&.Mui-checked': { color: BLUE } }} />}
+                        label={<Typography variant="body2" sx={{ fontWeight: ans.isCorrect ? 700 : 400, color: ans.isCorrect ? BLUE : 'text.secondary' }}>Correct</Typography>}
                       />
                     </Grid>
                     <Grid item xs={6} md={2}>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleRemoveAnswer(index)}
-                        disabled={formData.answers.length <= 2}
-                      >
-                        <Delete />
-                      </IconButton>
+                      <IconButton color="error" onClick={() => {
+                        if (form.answers.length > 2) setForm({ ...form, answers: form.answers.filter((_, i) => i !== idx) });
+                      }} disabled={form.answers.length <= 2}><Delete /></IconButton>
                     </Grid>
                   </Grid>
                 </Paper>
               ))}
-
-              <Button
-                variant="outlined"
-                startIcon={<Add />}
-                onClick={handleAddAnswer}
-                disabled={formData.answers.length >= 6}
-              >
-                Add Answer
+              <Button variant="outlined" startIcon={<Add />}
+                onClick={() => setForm({ ...form, answers: [...form.answers, { answerText: '', isCorrect: false, order: form.answers.length }] })}
+                disabled={form.answers.length >= 6} sx={{ borderColor: BLUE, color: BLUE }}>
+                Add Option
               </Button>
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : editingQuestion ? 'Update' : 'Create'}
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => { setOpenDialog(false); setMsg(null); }}>Cancel</Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={loading}
+            sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' } }}>
+            {loading ? <CircularProgress size={20} /> : editing ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* File Upload Dialog */}
-      <Dialog open={uploadDialogOpen} onClose={() => setUploadDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Import Questions from File (Like W3Schools!)</DialogTitle>
+      {/* Upload Dialog */}
+      <Dialog open={uploadOpen} onClose={() => { setUploadOpen(false); setUploadFile(null); setMsg(null); }} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>Import {cur.label} Questions</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Alert severity="info" sx={{ fontSize: '0.9rem' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                Upload Word (.docx) or PDF with questions in this format:
-              </Typography>
-              <Box component="pre" sx={{ 
-                bgcolor: '#f5f5f5', 
-                p: 2, 
-                borderRadius: 1, 
-                fontSize: '0.85rem',
-                overflow: 'auto',
-                fontFamily: 'monospace'
-              }}>
+            <Alert severity="info">
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Upload .docx or .pdf with this format:</Typography>
+              <Box component="pre" sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1, fontSize: '0.82rem', overflow: 'auto', fontFamily: 'monospace' }}>
 {`Question 1: What is VAT?
-Type: Practice
+Type: ${cur.cat === 'PRACTICE' ? 'Practice' : cur.cat === 'FINAL_EXAM' ? 'FinalExam' : 'Quiz'}
 A) Value Added Tax
 B) Variable Annual Tax
 C) Verified Asset Tax
 D) None of the above
 Correct Answer: A
 Explanation: VAT stands for Value Added Tax
-Points: 10
-
-Question 2: What is the VAT rate?
-Type: Exam
-A) 5%
-B) 10%
-C) 15%
-D) 20%
-Correct Answer: C
-Explanation: Standard VAT rate is 15%
 Points: 10`}
               </Box>
-              <Typography variant="body2" sx={{ mt: 2, fontWeight: 600 }}>
-                📝 Type: Practice = Unlimited tries, see answers (like W3Schools)<br />
-                📝 Type: Exam = For certificate, limited tries<br />
-                📝 If no Type specified, defaults to Exam
-              </Typography>
+              {cur.cat === 'FINAL_EXAM' && (
+                <Typography variant="body2" sx={{ mt: 1, fontWeight: 600, color: BLUE }}>
+                  Final Exam: users need 75% to earn a certificate.
+                </Typography>
+              )}
             </Alert>
-
-            {message && (
-              <Alert severity={message.type} onClose={() => setMessage(null)}>
-                {message.text}
-              </Alert>
-            )}
-
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<Upload />}
-              fullWidth
-              sx={{ py: 2 }}
-            >
+            {msg && <Alert severity={msg.type} onClose={() => setMsg(null)}>{msg.text}</Alert>}
+            <Button variant="outlined" component="label" startIcon={<Upload />} fullWidth
+              sx={{ py: 2, borderColor: BLUE, color: BLUE }}>
               {uploadFile ? uploadFile.name : 'Choose File (.docx or .pdf)'}
-              <input
-                type="file"
-                hidden
-                accept=".docx,.pdf,.doc"
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-              />
+              <input type="file" hidden accept=".docx,.pdf,.doc" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
             </Button>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => {
-            setUploadDialogOpen(false);
-            setUploadFile(null);
-            setMessage(null);
-          }}>
-            Cancel
-          </Button>
-          <Button 
-            variant="contained" 
-            onClick={handleFileUpload} 
-            disabled={!uploadFile || loading}
+          <Button onClick={() => { setUploadOpen(false); setUploadFile(null); setMsg(null); }}>Cancel</Button>
+          <Button variant="contained" onClick={handleUpload} disabled={!uploadFile || loading}
             startIcon={loading ? <CircularProgress size={20} /> : <Upload />}
-          >
+            sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' } }}>
             {loading ? 'Uploading...' : 'Upload & Import'}
           </Button>
         </DialogActions>
@@ -651,3 +374,4 @@ Points: 10`}
 };
 
 export default QuestionManagement;
+

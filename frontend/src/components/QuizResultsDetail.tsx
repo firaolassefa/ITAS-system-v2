@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Box, Typography, Paper, Chip, Stack, LinearProgress, Divider,
@@ -52,7 +52,7 @@ const QuizResultsDetail: React.FC<QuizResultsDetailProps> = ({
 
   const getGradeColor = () => {
     if (results.percentage >= 90) return '#10B981';
-    if (results.percentage >= 80) return '#3B82F6';
+    if (results.percentage >= 80) return '#339af0';
     if (results.percentage >= 70) return '#F59E0B';
     return '#EF4444';
   };
@@ -342,3 +342,4 @@ const QuizResultsDetail: React.FC<QuizResultsDetailProps> = ({
 };
 
 export default QuizResultsDetail;
+

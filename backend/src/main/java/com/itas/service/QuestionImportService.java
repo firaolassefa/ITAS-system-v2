@@ -33,7 +33,8 @@ public class QuestionImportService {
     /**
      * Import questions from Word or PDF file
      */
-    public List<Question> importQuestionsFromFile(MultipartFile file, Long moduleId) throws IOException {
+    public List<Question> importQuestionsFromFile(MultipartFile file, Long moduleId,
+                                                   Long courseId, String questionCategory) throws IOException {
         String filename = file.getOriginalFilename();
         String text;
 
@@ -45,8 +46,14 @@ public class QuestionImportService {
             throw new IllegalArgumentException("Unsupported file format. Please upload .docx or .pdf file");
         }
 
-        List<Question> questions = parseQuestions(text, moduleId);
+        String category = questionCategory != null ? questionCategory : "QUIZ";
+        List<Question> questions = parseQuestions(text, moduleId, courseId, category);
         return questionRepository.saveAll(questions);
+    }
+
+    // Keep old signature for backward compatibility
+    public List<Question> importQuestionsFromFile(MultipartFile file, Long moduleId) throws IOException {
+        return importQuestionsFromFile(file, moduleId, null, "QUIZ");
     }
 
     /**
@@ -74,55 +81,53 @@ public class QuestionImportService {
 
     /**
      * Parse questions from extracted text
-     * Expected format:
-     * Question 1: What is VAT?
-     * Type: Practice (or Exam)
-     * A) Value Added Tax
-     * B) Variable Annual Tax
-     * C) Verified Asset Tax
-     * D) None of the above
-     * Correct Answer: A
-     * Explanation: VAT stands for Value Added Tax (optional)
-     * Points: 10 (optional, default 1)
      */
-    private List<Question> parseQuestions(String text, Long moduleId) {
+    private List<Question> parseQuestions(String text, Long moduleId, Long courseId, String questionCategory) {
         List<Question> questions = new ArrayList<>();
-        
-        // Get module
-        Module module = moduleRepository.findById(moduleId)
-            .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
-        
+
+        Module module = null;
+        if (moduleId != null) {
+            module = moduleRepository.findById(moduleId)
+                .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
+            // auto-fill courseId from module if not provided
+            if (courseId == null && module.getCourse() != null) {
+                courseId = module.getCourse().getId();
+            }
+        }
+
         // Split by "Question X:" pattern
         String[] blocks = text.split("(?i)Question\\s+\\d+:");
-        
+
         int order = 1;
         for (int i = 1; i < blocks.length; i++) {
             String block = blocks[i].trim();
             if (block.isEmpty()) continue;
-
             try {
-                Question question = parseQuestionBlock(block, module, order);
-                if (question != null) {
-                    questions.add(question);
-                    order++;
-                }
+                Question question = parseQuestionBlock(block, module, courseId, questionCategory, order);
+                if (question != null) { questions.add(question); order++; }
             } catch (Exception e) {
                 System.err.println("Failed to parse question block: " + e.getMessage());
-                // Continue with next question
             }
         }
-
         return questions;
+    }
+
+    // backward compat
+    private List<Question> parseQuestions(String text, Long moduleId) {
+        return parseQuestions(text, moduleId, null, "QUIZ");
     }
 
     /**
      * Parse a single question block
      */
-    private Question parseQuestionBlock(String block, Module module, int order) {
+    private Question parseQuestionBlock(String block, Module module, Long courseId,
+                                         String questionCategory, int order) {
         Question question = new Question();
-        question.setModule(module);
+        if (module != null) question.setModule(module);
+        if (courseId != null) question.setCourseId(courseId);
         question.setQuestionType(QuestionType.MULTIPLE_CHOICE);
-        question.setIsPractice(false); // Default to exam question
+        question.setQuestionCategory(questionCategory != null ? questionCategory : "QUIZ");
+        question.setIsPractice("PRACTICE".equals(questionCategory));
         question.setOrder(order);
 
         // Extract question text (first line before options)
@@ -176,10 +181,17 @@ public class QuestionImportService {
         }
 
         // Set question type based on Type field
-        if (questionTypeStr != null && questionTypeStr.contains("PRACTICE")) {
-            question.setIsPractice(true);
-        } else {
-            question.setIsPractice(false); // Exam question
+        if (questionTypeStr != null) {
+            if (questionTypeStr.contains("PRACTICE")) {
+                question.setQuestionCategory("PRACTICE");
+                question.setIsPractice(true);
+            } else if (questionTypeStr.contains("FINALEXAM") || questionTypeStr.contains("FINAL_EXAM") || questionTypeStr.contains("FINAL")) {
+                question.setQuestionCategory("FINAL_EXAM");
+                question.setIsPractice(false);
+            } else {
+                question.setQuestionCategory("QUIZ");
+                question.setIsPractice(false);
+            }
         }
 
         // Set question properties
@@ -251,10 +263,6 @@ public class QuestionImportService {
             throw new IllegalArgumentException("Unsupported file format. Please upload .docx or .pdf file");
         }
 
-        // Get module
-        Module module = moduleRepository.findById(moduleId)
-            .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
-
-        return parseQuestions(text, moduleId);
+        return parseQuestions(text, moduleId, null, "QUIZ");
     }
 }

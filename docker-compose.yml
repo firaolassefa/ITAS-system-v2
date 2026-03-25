@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+
+  # ── PostgreSQL Database ──────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: itas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-itas_db}
+      POSTGRES_USER: ${DB_USER:-itas_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-itas_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-itas_user} -d ${DB_NAME:-itas_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No port exposed to host — only backend can reach it
+    networks:
+      - itas-net
+
+  # ── Spring Boot Backend ──────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: itas-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-itas_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-itas_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-itas_pass}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 9090
+      # JWT secret — override in .env on server
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-min-32-chars}
+    networks:
+      - itas-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ── React Frontend (nginx) ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Pass API URL at build time so Vite can embed it
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: itas-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - itas-net
+
+volumes:
+  postgres_data:
+
+networks:
+  itas-net:
+    driver: bridge

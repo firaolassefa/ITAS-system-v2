@@ -259,10 +259,10 @@ const CourseDetail: React.FC = () => {
         onClick={() => navigate('/taxpayer/courses')}
         sx={{ 
           mb: 3,
-          color: mode === 'light' ? '#1e3a8a' : '#3b82f6',
+          color: mode === 'light' ? '#1c7ed6' : '#339af0',
           fontWeight: 600,
           '&:hover': {
-            bgcolor: mode === 'light' ? alpha('#1e3a8a', 0.05) : alpha('#3b82f6', 0.05),
+            bgcolor: mode === 'light' ? alpha('#1c7ed6', 0.05) : alpha('#339af0', 0.05),
           },
         }}
       >
@@ -337,7 +337,7 @@ const CourseDetail: React.FC = () => {
           p: 4,
           borderRadius: 4,
           background: mode === 'light'
-            ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)'
+            ? 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)'
             : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
           color: 'white',
           position: 'relative',
@@ -507,8 +507,8 @@ const CourseDetail: React.FC = () => {
                 sx={{
                   width: 100,
                   height: 100,
-                  bgcolor: mode === 'light' ? alpha('#1e3a8a', 0.1) : alpha('#3b82f6', 0.2),
-                  color: mode === 'light' ? '#1e3a8a' : '#3b82f6',
+                  bgcolor: mode === 'light' ? alpha('#1c7ed6', 0.1) : alpha('#339af0', 0.2),
+                  color: mode === 'light' ? '#1c7ed6' : '#339af0',
                   mx: 'auto',
                   mb: 3,
                 }}
@@ -560,7 +560,7 @@ const CourseDetail: React.FC = () => {
                   background: mode === 'light'
                     ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)'
                     : 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
-                  border: `1px solid ${mode === 'light' ? alpha('#3b82f6', 0.2) : alpha('#3b82f6', 0.3)}`,
+                  border: `1px solid ${mode === 'light' ? alpha('#339af0', 0.2) : alpha('#339af0', 0.3)}`,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
@@ -568,7 +568,7 @@ const CourseDetail: React.FC = () => {
                     sx={{
                       width: 56,
                       height: 56,
-                      bgcolor: mode === 'light' ? '#3b82f6' : alpha('#3b82f6', 0.3),
+                      bgcolor: mode === 'light' ? '#339af0' : alpha('#339af0', 0.3),
                       color: 'white',
                       fontWeight: 700,
                       fontSize: '1.5rem',
@@ -840,7 +840,7 @@ const CourseDetail: React.FC = () => {
                   mb: 3,
                   borderRadius: 4,
                   background: mode === 'light'
-                    ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)'
+                    ? 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)'
                     : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
                   color: 'white',
                 }}
@@ -869,7 +869,7 @@ const CourseDetail: React.FC = () => {
                       onClick={() => navigate(`/taxpayer/courses/${id}/modules/${currentModuleData?.id}/lesson`)}
                       sx={{
                         bgcolor: 'white',
-                        color: '#1e3a8a',
+                        color: '#1c7ed6',
                         fontWeight: 700,
                         '&:hover': {
                           bgcolor: alpha('#fff', 0.9),
@@ -1063,8 +1063,8 @@ const CourseDetail: React.FC = () => {
                             sx={{
                               width: 32,
                               height: 32,
-                              bgcolor: isCurrent ? '#3b82f6' : alpha('#3b82f6', 0.1),
-                              color: isCurrent ? 'white' : '#3b82f6',
+                              bgcolor: isCurrent ? '#339af0' : alpha('#339af0', 0.1),
+                              color: isCurrent ? 'white' : '#339af0',
                               fontSize: '0.875rem',
                               fontWeight: 700,
                             }}
@@ -1091,8 +1091,8 @@ const CourseDetail: React.FC = () => {
                             sx={{ 
                               mt: 0.5,
                               height: 20,
-                              bgcolor: alpha('#3b82f6', 0.1),
-                              color: '#3b82f6',
+                              bgcolor: alpha('#339af0', 0.1),
+                              color: '#339af0',
                               fontWeight: 600,
                               fontSize: '0.7rem',
                             }} 
@@ -1149,7 +1149,7 @@ const CourseDetail: React.FC = () => {
             <List disablePadding>
               <ListItem sx={{ px: 0, py: 1.5 }}>
                 <ListItemIcon sx={{ minWidth: 40 }}>
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#3b82f6', 0.1), color: '#3b82f6' }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: alpha('#339af0', 0.1), color: '#339af0' }}>
                     <TrendingUp fontSize="small" />
                   </Avatar>
                 </ListItemIcon>
@@ -1235,4 +1235,5 @@ const CourseDetail: React.FC = () => {
 };
 
 export default CourseDetail;
+
 

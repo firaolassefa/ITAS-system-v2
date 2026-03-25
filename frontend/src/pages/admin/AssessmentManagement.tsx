@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Paper, Typography, Box, Button, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, Grid,
@@ -241,7 +241,7 @@ const AssessmentManagement: React.FC = () => {
                 setDialogOpen(true);
               }}
               sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                 borderRadius: 3,
               }}
             >
@@ -257,10 +257,10 @@ const AssessmentManagement: React.FC = () => {
       {/* Info Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={6}>
-          <Card sx={{ background: alpha('#667eea', 0.1), border: '2px solid', borderColor: alpha('#667eea', 0.3) }}>
+          <Card sx={{ background: alpha('#339af0', 0.1), border: '2px solid', borderColor: alpha('#339af0', 0.3) }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Quiz sx={{ fontSize: 40, color: '#667eea' }} />
+                <Quiz sx={{ fontSize: 40, color: '#339af0' }} />
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>Module Quiz</Typography>
                   <Typography variant="body2" color="text.secondary">Practice & Learning</Typography>
@@ -275,10 +275,10 @@ const AssessmentManagement: React.FC = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Card sx={{ background: alpha('#10B981', 0.1), border: '2px solid', borderColor: alpha('#10B981', 0.3) }}>
+          <Card sx={{ background: alpha('#339af0', 0.1), border: '2px solid', borderColor: alpha('#339af0', 0.3) }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <EmojiEvents sx={{ fontSize: 40, color: '#10B981' }} />
+                <EmojiEvents sx={{ fontSize: 40, color: '#339af0' }} />
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>Final Exam</Typography>
                   <Typography variant="body2" color="text.secondary">Certification Assessment</Typography>
@@ -322,7 +322,7 @@ const AssessmentManagement: React.FC = () => {
               {(tabValue === 0 ? moduleQuizzes : finalExams).map((assessment) => {
                 const course = courses.find(c => c.id === assessment.courseId);
                 return (
-                  <TableRow key={assessment.id} sx={{ '&:hover': { background: alpha('#667eea', 0.05) } }}>
+                  <TableRow key={assessment.id} sx={{ '&:hover': { background: alpha('#339af0', 0.05) } }}>
                     <TableCell sx={{ fontWeight: 600 }}>{assessment.title}</TableCell>
                     <TableCell>{course?.title || 'Unknown'}</TableCell>
                     <TableCell>{assessment.moduleId ? `Module ${assessment.moduleId}` : '-'}</TableCell>
@@ -552,3 +552,5 @@ const AssessmentManagement: React.FC = () => {
 };
 
 export default AssessmentManagement;
+
+

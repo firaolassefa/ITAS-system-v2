@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -164,7 +164,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
           gutterBottom
           sx={{
             fontWeight: 700,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             mb: 2,
@@ -187,10 +187,10 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+              background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.1) 0%, rgba(1, 74, 110, 0.1) 100%)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(102, 126, 234, 0.2)',
-              borderTop: '3px solid #667eea',
+              border: '1px solid rgba(1, 99, 150, 0.2)',
+              borderTop: '3px solid #339af0',
               borderRadius: '12px',
               px: 3,
               py: 1.5,
@@ -200,11 +200,11 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
                 transform: 'translateY(-5px)',
-                boxShadow: '0 12px 40px rgba(102, 126, 234, 0.3)',
+                boxShadow: '0 12px 40px rgba(1, 99, 150, 0.3)',
               },
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#667eea' }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#339af0' }}>
               {stats.total}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -214,10 +214,10 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
           
           <Box
             sx={{
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
+              background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              borderTop: '3px solid #EF4444',
+              border: '1px solid rgba(1, 99, 150, 0.2)',
+              borderTop: '3px solid #339af0',
               borderRadius: '12px',
               px: 3,
               py: 1.5,
@@ -227,11 +227,11 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
                 transform: 'translateY(-5px)',
-                boxShadow: '0 12px 40px rgba(239, 68, 68, 0.3)',
+                boxShadow: '0 12px 40px rgba(1, 99, 150, 0.3)',
               },
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#EF4444' }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#339af0' }}>
               {stats.pdfs}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -241,10 +241,10 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
           
           <Box
             sx={{
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+              background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.1) 0%, rgba(1, 74, 110, 0.1) 100%)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(102, 126, 234, 0.2)',
-              borderTop: '3px solid #667eea',
+              border: '1px solid rgba(1, 99, 150, 0.2)',
+              borderTop: '3px solid #339af0',
               borderRadius: '12px',
               px: 3,
               py: 1.5,
@@ -254,11 +254,11 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
                 transform: 'translateY(-5px)',
-                boxShadow: '0 12px 40px rgba(102, 126, 234, 0.3)',
+                boxShadow: '0 12px 40px rgba(1, 99, 150, 0.3)',
               },
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#667eea' }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#339af0' }}>
               {stats.videos}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -268,10 +268,10 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
           
           <Box
             sx={{
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%)',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(16, 185, 129, 0.2)',
-              borderTop: '3px solid #10B981',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              borderTop: '3px solid #f59e0b',
               borderRadius: '12px',
               px: 3,
               py: 1.5,
@@ -281,11 +281,11 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
                 transform: 'translateY(-5px)',
-                boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
+                boxShadow: '0 12px 40px rgba(245, 158, 11, 0.3)',
               },
             }}
           >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#10B981' }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#f59e0b' }}>
               {stats.articles}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -328,9 +328,9 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
         sx={{ 
           p: 3, 
           mb: 4,
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+          background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.05) 0%, rgba(1, 74, 110, 0.05) 100%)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(102, 126, 234, 0.1)',
+          border: '1px solid rgba(1, 99, 150, 0.1)',
           borderRadius: '16px',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         }}
@@ -343,17 +343,17 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: '#667eea' }} />,
+                startAdornment: <SearchIcon sx={{ mr: 1, color: '#339af0' }} />,
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
+                    boxShadow: '0 4px 20px rgba(1, 99, 150, 0.2)',
                   },
                   '&.Mui-focused': {
-                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+                    boxShadow: '0 4px 20px rgba(1, 99, 150, 0.3)',
                   },
                 },
               }}
@@ -370,7 +370,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                   borderRadius: '12px',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
+                    boxShadow: '0 4px 20px rgba(1, 99, 150, 0.2)',
                   },
                 }}
               >
@@ -392,7 +392,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                   borderRadius: '12px',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
+                    boxShadow: '0 4px 20px rgba(1, 99, 150, 0.2)',
                   },
                 }}
               >
@@ -413,13 +413,13 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                 sx={{
                   '& .MuiToggleButton-root': {
                     borderRadius: '8px',
-                    border: '1px solid rgba(102, 126, 234, 0.3)',
-                    color: '#667eea',
+                    border: '1px solid rgba(1, 99, 150, 0.3)',
+                    color: '#339af0',
                     '&.Mui-selected': {
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                       color: 'white',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                        background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                       },
                     },
                   },
@@ -442,16 +442,16 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                 }}
                 sx={{
                   borderRadius: '12px',
-                  borderColor: '#667eea',
-                  color: '#667eea',
+                  borderColor: '#339af0',
+                  color: '#339af0',
                   minWidth: 'auto',
                   px: 2,
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    borderColor: '#667eea',
-                    background: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: '#339af0',
+                    background: 'rgba(1, 99, 150, 0.1)',
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+                    boxShadow: '0 4px 20px rgba(1, 99, 150, 0.3)',
                   },
                 }}
               >
@@ -468,8 +468,8 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
           severity="info"
           sx={{
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-            border: '1px solid rgba(102, 126, 234, 0.2)',
+            background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.1) 0%, rgba(1, 74, 110, 0.1) 100%)',
+            border: '1px solid rgba(1, 99, 150, 0.2)',
           }}
         >
           No resources found matching your criteria. Try adjusting your filters.
@@ -502,22 +502,22 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                         p: 3, 
                         cursor: 'pointer',
                         height: '100%',
-                        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                        background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.05) 0%, rgba(1, 74, 110, 0.05) 100%)',
                         backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(102, 126, 234, 0.1)',
-                        borderTop: '3px solid #667eea',
+                        border: '1px solid rgba(1, 99, 150, 0.1)',
+                        borderTop: '3px solid #339af0',
                         borderRadius: '16px',
                         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                         '&:hover': {
                           transform: 'translateY(-12px) scale(1.02)',
-                          boxShadow: '0 20px 60px rgba(102, 126, 234, 0.3)',
-                          border: '1px solid rgba(102, 126, 234, 0.3)',
+                          boxShadow: '0 20px 60px rgba(1, 99, 150, 0.3)',
+                          border: '1px solid rgba(1, 99, 150, 0.3)',
                         },
                       }} 
                       onClick={() => handlePlayVideo(resource.id)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <PlayIcon sx={{ fontSize: 40, color: '#667eea', mr: 1 }} />
+                        <PlayIcon sx={{ fontSize: 40, color: '#339af0', mr: 1 }} />
                         <Typography 
                           variant="h6"
                           sx={{ fontWeight: 700 }}
@@ -532,7 +532,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                         label="Click to play" 
                         size="small"
                         sx={{
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                           color: 'white',
                           fontWeight: 600,
                         }}
@@ -562,15 +562,15 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                   sx={{ 
                     p: 3, 
                     mb: 2,
-                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                    background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.05) 0%, rgba(1, 74, 110, 0.05) 100%)',
                     backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(102, 126, 234, 0.1)',
-                    borderLeft: '4px solid #667eea',
+                    border: '1px solid rgba(1, 99, 150, 0.1)',
+                    borderLeft: '4px solid #339af0',
                     borderRadius: '12px',
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       transform: 'translateX(8px)',
-                      boxShadow: '0 8px 30px rgba(102, 126, 234, 0.2)',
+                      boxShadow: '0 8px 30px rgba(1, 99, 150, 0.2)',
                     },
                   }}
                 >
@@ -587,7 +587,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                           label={resource.resourceType} 
                           size="small"
                           sx={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                             color: 'white',
                             fontWeight: 600,
                           }}
@@ -596,7 +596,7 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                           label={resource.category} 
                           size="small" 
                           variant="outlined"
-                          sx={{ borderColor: '#667eea', color: '#667eea' }}
+                          sx={{ borderColor: '#339af0', color: '#339af0' }}
                         />
                       </Box>
                     </Grid>
@@ -607,16 +607,16 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                           onClick={() => handlePlayVideo(resource.id)}
                           sx={{
                             borderRadius: '12px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                             color: 'white',
                             fontWeight: 600,
                             px: 3,
                             py: 1,
                             transition: 'all 0.3s ease',
                             '&:hover': {
-                              background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                              background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                               transform: 'translateY(-2px)',
-                              boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                              boxShadow: '0 8px 25px rgba(1, 99, 150, 0.4)',
                             },
                           }}
                         >
@@ -628,16 +628,16 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                             onClick={() => handleViewPDF(resource.id, resource.fileName)}
                             sx={{
                               borderRadius: '12px',
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                               color: 'white',
                               fontWeight: 600,
                               px: 3,
                               py: 1,
                               transition: 'all 0.3s ease',
                               '&:hover': {
-                                background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                                background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                                 transform: 'translateY(-2px)',
-                                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                                boxShadow: '0 8px 25px rgba(1, 99, 150, 0.4)',
                               },
                             }}
                           >
@@ -649,15 +649,15 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                             variant="outlined"
                             sx={{
                               borderRadius: '12px',
-                              borderColor: '#667eea',
-                              color: '#667eea',
+                              borderColor: '#339af0',
+                              color: '#339af0',
                               fontWeight: 600,
                               px: 3,
                               py: 1,
                               transition: 'all 0.3s ease',
                               '&:hover': {
-                                borderColor: '#667eea',
-                                background: 'rgba(102, 126, 234, 0.1)',
+                                borderColor: '#339af0',
+                                background: 'rgba(1, 99, 150, 0.1)',
                                 transform: 'translateY(-2px)',
                               },
                             }}
@@ -671,16 +671,16 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
                           onClick={() => handleDownload(resource.id, resource.fileName)}
                           sx={{
                             borderRadius: '12px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                             color: 'white',
                             fontWeight: 600,
                             px: 3,
                             py: 1,
                             transition: 'all 0.3s ease',
                             '&:hover': {
-                              background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                              background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                               transform: 'translateY(-2px)',
-                              boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                              boxShadow: '0 8px 25px rgba(1, 99, 150, 0.4)',
                             },
                           }}
                         >
@@ -708,9 +708,9 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
             width: '80%', 
             maxWidth: 800, 
             p: 3,
-            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+            background: 'linear-gradient(135deg, rgba(1, 99, 150, 0.1) 0%, rgba(1, 74, 110, 0.1) 100%)',
             backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(102, 126, 234, 0.2)',
+            border: '1px solid rgba(1, 99, 150, 0.2)',
             borderRadius: '20px',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
           }}
@@ -728,15 +728,15 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
               mt: 3,
               py: 1.5,
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               color: 'white',
               fontWeight: 600,
               fontSize: '1rem',
               transition: 'all 0.3s ease',
               '&:hover': {
-                background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
                 transform: 'translateY(-2px)',
-                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                boxShadow: '0 8px 25px rgba(1, 99, 150, 0.4)',
               },
             }}
           >
@@ -749,3 +749,5 @@ const Resources: React.FC<ResourcesProps> = ({ user }) => {
 };
 
 export default Resources;
+
+

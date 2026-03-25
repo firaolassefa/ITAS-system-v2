@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Box, Button, Typography, Paper, Radio, RadioGroup,
   FormControlLabel, Alert, CircularProgress, Card, CardContent,
@@ -216,12 +216,12 @@ const ModuleQuiz: React.FC = () => {
                     p: 2,
                     mb: 1,
                     border: '2px solid',
-                    borderColor: answers[question.id] === answer.id ? '#667eea' : '#e0e0e0',
+                    borderColor: answers[question.id] === answer.id ? '#339af0' : '#e0e0e0',
                     cursor: 'pointer',
                     transition: 'all 0.3s',
                     '&:hover': {
-                      borderColor: '#667eea',
-                      bgcolor: '#667eea10',
+                      borderColor: '#339af0',
+                      bgcolor: '#339af010',
                     },
                   }}
                   onClick={() => handleAnswerChange(question.id, answer.id)}
@@ -270,7 +270,7 @@ const ModuleQuiz: React.FC = () => {
         <DialogContent>
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-              {result?.passed ? 'Congratulations! 🎉' : 'Not Quite There Yet'}
+              {result?.passed ? 'Congratulations! ðŸŽ‰' : 'Not Quite There Yet'}
             </Typography>
             
             <Paper sx={{ p: 3, mb: 2, bgcolor: result?.passed ? '#10B98110' : '#F59E0B10' }}>
@@ -289,7 +289,7 @@ const ModuleQuiz: React.FC = () => {
             {result?.passed && (
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  🔓 Next module unlocked!
+                  ðŸ”“ Next module unlocked!
                 </Typography>
               </Alert>
             )}
@@ -333,3 +333,5 @@ const ModuleQuiz: React.FC = () => {
 };
 
 export default ModuleQuiz;
+
+

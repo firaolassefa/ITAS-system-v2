@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar, Box, CssBaseline, Drawer, IconButton, List, ListItem,
@@ -59,7 +59,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: mode === 'light' ? '#016396' : '#1e293b',
+        bgcolor: mode === 'light' ? '#339af0' : '#1e293b',
         color: 'white',
       }}
     >
@@ -165,7 +165,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          bgcolor: mode === 'light' ? '#016396' : '#1e293b',
+          bgcolor: mode === 'light' ? '#339af0' : '#1e293b',
           borderBottom: '1px solid',
           borderColor: alpha('#fff', 0.1),
         }}
@@ -247,7 +247,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
             sx: {
               mt: 1.5,
               borderRadius: '12px',
-              bgcolor: mode === 'light' ? '#016396' : '#1e293b',
+              bgcolor: mode === 'light' ? '#339af0' : '#1e293b',
               color: 'white',
               minWidth: 200,
             },
@@ -311,3 +311,4 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
 };
 
 export default TaxpayerLayout;
+

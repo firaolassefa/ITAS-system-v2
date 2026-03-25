@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Grid, Typography, Box, Card, CardContent,
   Avatar, Paper, Chip, alpha, List, ListItem, ListItemText, ListItemAvatar,
 } from '@mui/material';
 import {
-  School, VideoCall, Assessment, People,
-  Event, PlayCircle, CheckCircle, TrendingUp,
+  School, VideoCall, People, Event, PlayCircle, CheckCircle,
 } from '@mui/icons-material';
 import { apiClient } from '../../utils/axiosConfig';
 import { useThemeMode } from '../../theme/ThemeContext';
+
+const BLUE = '#339af0';
+const GOLD = '#f59e0b';
 
 const TrainingAdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -16,15 +18,12 @@ const TrainingAdminDashboard: React.FC = () => {
   const { mode } = useThemeMode();
   const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+  useEffect(() => { loadDashboard(); }, []);
 
   const loadDashboard = async () => {
     try {
       const cacheKey = `dashboard_TRAINING_ADMIN_${user.id}`;
       const cached = localStorage.getItem(cacheKey);
-      
       if (cached) {
         const cachedData = JSON.parse(cached);
         if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
@@ -32,15 +31,10 @@ const TrainingAdminDashboard: React.FC = () => {
           setLoading(false);
         }
       }
-
       const response = await apiClient.get('/dashboard/training-admin');
       const freshData = response.data.data || response.data;
-      
       setData(freshData);
-      localStorage.setItem(cacheKey, JSON.stringify({
-        data: freshData,
-        timestamp: Date.now(),
-      }));
+      localStorage.setItem(cacheKey, JSON.stringify({ data: freshData, timestamp: Date.now() }));
     } catch (error) {
       console.error('Dashboard load error:', error);
     } finally {
@@ -59,26 +53,10 @@ const TrainingAdminDashboard: React.FC = () => {
   }
 
   const stats = [
-    { 
-      label: 'Total Courses', 
-      value: data.totalCourses || 0, 
-      icon: <School />, 
-      color: mode === 'light' ? '#8B5CF6' : '#a78bfa', 
-      bg: mode === 'light' 
-        ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' 
-        : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)' 
-    },
-    { label: 'Active Webinars', value: data.upcomingWebinars || 0, icon: <VideoCall />, color: '#10B981', bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
-    { 
-      label: 'Total Enrollments', 
-      value: data.totalEnrollments || 0, 
-      icon: <People />, 
-      color: mode === 'light' ? '#F59E0B' : '#fbbf24', 
-      bg: mode === 'light' 
-        ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' 
-        : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' 
-    },
-    { label: 'Completion Rate', value: `${data.completionRate || 0}%`, icon: <CheckCircle />, color: '#06B6D4', bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
+    { label: 'Total Courses', value: data.totalCourses || 0, icon: <School />, color: BLUE, bg: `linear-gradient(135deg, ${BLUE} 0%, #1c7ed6 100%)` },
+    { label: 'Active Webinars', value: data.upcomingWebinars || 0, icon: <VideoCall />, color: GOLD, bg: `linear-gradient(135deg, ${GOLD} 0%, #d97706 100%)` },
+    { label: 'Total Enrollments', value: data.totalEnrollments || 0, icon: <People />, color: BLUE, bg: `linear-gradient(135deg, ${BLUE} 0%, #1c7ed6 100%)` },
+    { label: 'Completion Rate', value: `${data.completionRate || 0}%`, icon: <CheckCircle />, color: GOLD, bg: `linear-gradient(135deg, ${GOLD} 0%, #d97706 100%)` },
   ];
 
   const upcomingWebinars = [
@@ -89,17 +67,14 @@ const TrainingAdminDashboard: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
       <Box sx={{ mb: 5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Box>
-            <Typography 
-              variant="h3" 
-              sx={{ 
+            <Typography
+              variant="h3"
+              sx={{
                 fontWeight: 800,
-                background: mode === 'light'
-                  ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)'
-                  : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
+                background: `linear-gradient(135deg, ${BLUE} 0%, #1c7ed6 100%)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -113,14 +88,10 @@ const TrainingAdminDashboard: React.FC = () => {
           </Box>
           <Avatar
             sx={{
-              width: 80,
-              height: 80,
-              background: mode === 'light'
-                ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)'
-                : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
-              fontSize: '2rem',
-              fontWeight: 700,
-              boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3)',
+              width: 80, height: 80,
+              background: `linear-gradient(135deg, ${BLUE} 0%, #1c7ed6 100%)`,
+              fontSize: '2rem', fontWeight: 700,
+              boxShadow: `0 8px 32px ${alpha(BLUE, 0.3)}`,
             }}
           >
             {user?.fullName?.charAt(0) || 'T'}
@@ -128,49 +99,34 @@ const TrainingAdminDashboard: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Main Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Card
               elevation={0}
               sx={{
-                position: 'relative',
-                overflow: 'hidden',
-                height: '100%',
+                position: 'relative', overflow: 'hidden', height: '100%',
                 background: mode === 'light' ? 'white' : '#1e293b',
                 border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
-                borderRadius: 3,
-                transition: 'all 0.3s',
+                borderRadius: 3, transition: 'all 0.3s',
                 '&:hover': {
-                  transform: 'translateY(-8px) rotate(1deg)',
+                  transform: 'translateY(-8px)',
                   boxShadow: `0 20px 40px ${alpha(stat.color, 0.25)}`,
                   borderColor: stat.color,
                 },
                 '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '5px',
-                  background: stat.bg,
+                  content: '""', position: 'absolute', top: 0, left: 0, right: 0,
+                  height: '5px', background: stat.bg,
                 },
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                <Box sx={{ mb: 3 }}>
                   <Box
                     sx={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 3,
-                      background: stat.bg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      boxShadow: `0 8px 24px ${alpha(stat.color, 0.3)}`,
+                      width: 56, height: 56, borderRadius: 3, background: stat.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', boxShadow: `0 8px 24px ${alpha(stat.color, 0.3)}`,
                     }}
                   >
                     {stat.icon}
@@ -188,29 +144,24 @@ const TrainingAdminDashboard: React.FC = () => {
         ))}
       </Grid>
 
-      {/* Upcoming Webinars */}
-      <Paper 
+      <Paper
         elevation={0}
-        sx={{ 
-          p: 4, 
-          borderRadius: 3,
-          background: mode === 'light'
-            ? 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)'
-            : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-          border: `1px solid ${mode === 'light' ? '#ddd6fe' : '#334155'}`,
+        sx={{
+          p: 4, borderRadius: 3,
+          background: mode === 'light' ? 'linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)' : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          border: `1px solid ${mode === 'light' ? alpha(BLUE, 0.2) : '#334155'}`,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
-            Upcoming Webinars
-          </Typography>
-          <Chip 
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ width: 4, height: 24, borderRadius: 2, bgcolor: BLUE }} />
+            <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              Upcoming Webinars
+            </Typography>
+          </Box>
+          <Chip
             label={`${upcomingWebinars.length} Scheduled`}
-            sx={{
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-              color: 'white',
-              fontWeight: 700,
-            }}
+            sx={{ background: `linear-gradient(135deg, ${BLUE} 0%, #1c7ed6 100%)`, color: 'white', fontWeight: 700 }}
           />
         </Box>
         <List sx={{ p: 0 }}>
@@ -218,31 +169,25 @@ const TrainingAdminDashboard: React.FC = () => {
             <ListItem
               key={index}
               sx={{
-                mb: 2,
-                p: 3,
-                borderRadius: 2,
+                mb: 2, p: 3, borderRadius: 2,
                 background: mode === 'light' ? 'white' : '#1e293b',
-                border: webinar.status === 'starting-soon' 
-                  ? '2px solid #10B981' 
+                border: webinar.status === 'starting-soon'
+                  ? `2px solid ${GOLD}`
                   : `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}`,
                 transition: 'all 0.3s',
-                '&:hover': {
-                  transform: 'translateX(8px)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-                },
+                '&:hover': { transform: 'translateX(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' },
               }}
             >
               <ListItemAvatar>
                 <Avatar
                   sx={{
-                    width: 56,
-                    height: 56,
-                    background: webinar.status === 'starting-soon' 
-                      ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                      : 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    width: 56, height: 56,
+                    background: webinar.status === 'starting-soon'
+                      ? `linear-gradient(135deg, ${GOLD} 0%, #d97706 100%)`
+                      : `linear-gradient(135deg, ${BLUE} 0%, #1c7ed6 100%)`,
                     boxShadow: webinar.status === 'starting-soon'
-                      ? '0 4px 16px rgba(16, 185, 129, 0.3)'
-                      : '0 4px 16px rgba(139, 92, 246, 0.3)',
+                      ? `0 4px 16px ${alpha(GOLD, 0.3)}`
+                      : `0 4px 16px ${alpha(BLUE, 0.3)}`,
                   }}
                 >
                   {webinar.status === 'starting-soon' ? <PlayCircle /> : <VideoCall />}
@@ -255,32 +200,28 @@ const TrainingAdminDashboard: React.FC = () => {
                   </Typography>
                 }
                 secondary={
-                  <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                    <Chip 
+                  <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+                    <Chip
                       icon={<Event sx={{ fontSize: 16 }} />}
                       label={webinar.date}
                       size="small"
-                      sx={{ background: alpha('#8B5CF6', 0.1), color: '#8B5CF6', fontWeight: 600 }}
+                      sx={{ background: alpha(BLUE, 0.1), color: BLUE, fontWeight: 600 }}
                     />
-                    <Chip 
+                    <Chip
                       icon={<People sx={{ fontSize: 16 }} />}
                       label={`${webinar.attendees} registered`}
                       size="small"
-                      sx={{ background: alpha('#10B981', 0.1), color: '#10B981', fontWeight: 600 }}
+                      sx={{ background: alpha(GOLD, 0.1), color: GOLD, fontWeight: 600 }}
                     />
                     {webinar.status === 'starting-soon' && (
-                      <Chip 
+                      <Chip
                         label="Starting Soon"
                         size="small"
-                        sx={{ 
-                          background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                          color: 'white',
-                          fontWeight: 700,
+                        sx={{
+                          background: `linear-gradient(135deg, ${GOLD} 0%, #d97706 100%)`,
+                          color: 'white', fontWeight: 700,
                           animation: 'pulse 2s infinite',
-                          '@keyframes pulse': {
-                            '0%, 100%': { opacity: 1 },
-                            '50%': { opacity: 0.7 },
-                          },
+                          '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.7 } },
                         }}
                       />
                     )}
@@ -296,3 +237,4 @@ const TrainingAdminDashboard: React.FC = () => {
 };
 
 export default TrainingAdminDashboard;
+

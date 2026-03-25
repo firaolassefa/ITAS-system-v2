@@ -48,7 +48,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
+        // Allow all origins — handles cloud deployments, different ports, etc.
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -82,6 +83,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/webinars", "/webinars/upcoming", "/webinars/*", "/webinars/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/webinars", "/api/webinars/upcoming", "/api/webinars/*", "/api/webinars/**").permitAll()
                 .requestMatchers("/help/**", "/api/help/**").permitAll()
+                .requestMatchers("/tin/**", "/api/tin/**").permitAll()
                 
                 // Dashboard endpoints - require authentication
                 .requestMatchers("/dashboard/**", "/api/dashboard/**").authenticated()

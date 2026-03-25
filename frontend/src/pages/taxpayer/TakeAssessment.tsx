@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Paper, Typography, Box, Button, Radio, RadioGroup, FormControlLabel,
   FormControl, LinearProgress, Chip, Alert, Dialog, DialogTitle, DialogContent,
@@ -155,6 +155,9 @@ const TakeAssessment: React.FC = () => {
       const earnedPoints = answersArray.reduce((sum, a) => sum + a.pointsEarned, 0);
       const percentage = (earnedPoints / totalPoints) * 100;
 
+      // Final exam requires 75%, module quiz uses assessment's passingScore
+      const requiredScore = assessment?.isFinalExam ? 75 : (assessment?.passingScore || 70);
+
       const payload = {
         userId,
         assessmentDefinitionId: parseInt(assessmentId!),
@@ -162,7 +165,7 @@ const TakeAssessment: React.FC = () => {
         score: earnedPoints,
         totalPoints,
         percentage,
-        passed: percentage >= (assessment?.passingScore || 70),
+        passed: percentage >= requiredScore,
         answers: JSON.stringify(answersArray),
         timeTakenMinutes: Math.ceil((assessment!.timeLimitMinutes * 60 - timeRemaining) / 60),
       };
@@ -190,11 +193,9 @@ const TakeAssessment: React.FC = () => {
 
   const generateCertificate = async () => {
     try {
-      await apiClient.post('/certificates/generate', {
-        userId,
-        courseId: assessment?.courseId,
-        assessmentId: parseInt(assessmentId!),
-      });
+      const courseId = (assessment as any)?.courseId;
+      if (!courseId) { console.warn('No courseId on assessment, skipping cert generation'); return; }
+      await apiClient.post('/certificates/generate', { userId, courseId });
     } catch (err) {
       console.error('Failed to generate certificate:', err);
     }
@@ -246,7 +247,7 @@ const TakeAssessment: React.FC = () => {
                 borderRadius: '50%',
                 background: assessment.isFinalExam
                   ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  : 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                 mb: 2,
               }}
             >
@@ -273,7 +274,7 @@ const TakeAssessment: React.FC = () => {
 
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={6}>
-              <Card sx={{ background: alpha('#667eea', 0.1) }}>
+              <Card sx={{ background: alpha('#339af0', 0.1) }}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     Questions
@@ -309,13 +310,13 @@ const TakeAssessment: React.FC = () => {
               </Card>
             </Grid>
             <Grid item xs={6}>
-              <Card sx={{ background: alpha('#8B5CF6', 0.1) }}>
+              <Card sx={{ background: alpha('#339af0', 0.1) }}>
                 <CardContent>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     Attempts Remaining
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 700, color: attemptsRemaining > 0 ? '#10B981' : '#EF4444' }}>
-                    {attemptsRemaining} / {assessment.maxAttempts === 999 ? '∞' : assessment.maxAttempts}
+                    {attemptsRemaining} / {assessment.maxAttempts === 999 ? 'âˆž' : assessment.maxAttempts}
                   </Typography>
                 </CardContent>
               </Card>
@@ -359,8 +360,8 @@ const TakeAssessment: React.FC = () => {
           <Alert severity={assessment.isFinalExam ? 'warning' : 'info'} icon={<Info />} sx={{ mb: 3 }}>
             {assessment.isFinalExam ? (
               <>
-                This is a final exam. You have {attemptsRemaining} attempt(s) remaining. 
-                Correct answers will NOT be shown. Passing this exam will generate your certificate.
+                This is a <strong>Final Exam</strong>. You need <strong>75%</strong> to pass and earn your certificate.
+                You have {attemptsRemaining} attempt(s) remaining. Correct answers will NOT be shown.
               </>
             ) : (
               <>
@@ -380,7 +381,7 @@ const TakeAssessment: React.FC = () => {
               py: 2,
               background: assessment.isFinalExam
                 ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                : 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               fontSize: '1.1rem',
               fontWeight: 700,
             }}
@@ -399,13 +400,13 @@ const TakeAssessment: React.FC = () => {
               This is your LAST attempt for this final exam. Make sure you're ready!
             </Alert>
             <Typography variant="body2">
-              • You have {assessment.timeLimitMinutes} minutes to complete
+              â€¢ You have {assessment.timeLimitMinutes} minutes to complete
               <br />
-              • You need {assessment.passingScore}% to pass
+              â€¢ You need {assessment.passingScore}% to pass
               <br />
-              • Correct answers will NOT be shown
+              â€¢ Correct answers will NOT be shown
               <br />
-              • If you fail, you cannot retake this exam
+              â€¢ If you fail, you cannot retake this exam
             </Typography>
           </DialogContent>
           <DialogActions>
@@ -478,7 +479,7 @@ const TakeAssessment: React.FC = () => {
                 sx={{
                   background: answers[question.id]
                     ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    : 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                   color: 'white',
                   fontWeight: 700,
                 }}
@@ -504,12 +505,12 @@ const TakeAssessment: React.FC = () => {
                       p: 2,
                       mb: 1,
                       border: '2px solid',
-                      borderColor: answers[question.id] === option ? '#667eea' : '#e5e7eb',
+                      borderColor: answers[question.id] === option ? '#339af0' : '#e5e7eb',
                       borderRadius: 2,
-                      background: answers[question.id] === option ? alpha('#667eea', 0.05) : 'transparent',
+                      background: answers[question.id] === option ? alpha('#339af0', 0.05) : 'transparent',
                       '&:hover': {
-                        background: alpha('#667eea', 0.05),
-                        borderColor: '#667eea',
+                        background: alpha('#339af0', 0.05),
+                        borderColor: '#339af0',
                       },
                     }}
                   />
@@ -606,13 +607,17 @@ const TakeAssessment: React.FC = () => {
 
           {result.passed && assessment.isFinalExam && (
             <Alert severity="success" icon={<EmojiEvents />} sx={{ mb: 3 }}>
-              Your certificate has been generated! Check your certificates page.
+              You scored {result.percentage.toFixed(1)}% — your certificate has been generated! Check your Certificates page.
             </Alert>
           )}
 
           {!result.passed && assessment.isFinalExam && (
             <Alert severity="warning" sx={{ mb: 3 }}>
-              You have {assessment.maxAttempts - attempts.length - 1} attempt(s) remaining.
+              You need <strong>75%</strong> to pass the final exam and earn a certificate. 
+              You scored {result.percentage.toFixed(1)}%. 
+              {assessment.maxAttempts - attempts.length - 1 > 0
+                ? ` You have ${assessment.maxAttempts - attempts.length - 1} attempt(s) remaining.`
+                : ' No attempts remaining.'}
             </Alert>
           )}
 
@@ -679,7 +684,7 @@ const TakeAssessment: React.FC = () => {
                   setResult(null);
                   loadAssessment();
                 }}
-                sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' }}
               >
                 Try Again
               </Button>
@@ -694,3 +699,6 @@ const TakeAssessment: React.FC = () => {
 };
 
 export default TakeAssessment;
+
+
+

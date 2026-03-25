@@ -14,7 +14,7 @@ public class Question {
     private Long id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id", nullable = false)
+    @JoinColumn(name = "module_id", nullable = true)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "questions", "course"})
     private Module module;
     
@@ -36,7 +36,14 @@ public class Question {
     
     @Column(name = "is_practice")
     private Boolean isPractice = false; // false = quiz/exam, true = practice
-    
+
+    // PRACTICE | QUIZ | FINAL_EXAM
+    @Column(name = "question_category")
+    private String questionCategory = "QUIZ";
+
+    @Column(name = "course_id")
+    private Long courseId; // used when questionCategory = FINAL_EXAM
+
     @Column(columnDefinition = "TEXT")
     private String explanation; // Explanation for practice questions
     
@@ -70,8 +77,21 @@ public class Question {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
     public Boolean getIsPractice() { return isPractice; }
-    public void setIsPractice(Boolean isPractice) { this.isPractice = isPractice; }
-    
+    public void setIsPractice(Boolean isPractice) {
+        this.isPractice = isPractice;
+        // keep questionCategory in sync
+        if (Boolean.TRUE.equals(isPractice)) this.questionCategory = "PRACTICE";
+    }
+
+    public String getQuestionCategory() { return questionCategory; }
+    public void setQuestionCategory(String questionCategory) {
+        this.questionCategory = questionCategory;
+        this.isPractice = "PRACTICE".equals(questionCategory);
+    }
+
+    public Long getCourseId() { return courseId; }
+    public void setCourseId(Long courseId) { this.courseId = courseId; }
+
     public String getExplanation() { return explanation; }
     public void setExplanation(String explanation) { this.explanation = explanation; }
     

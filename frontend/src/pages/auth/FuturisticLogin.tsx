@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container,
   Paper,
@@ -161,7 +161,7 @@ const FuturisticLogin: React.FC<LoginProps> = ({ onLogin }) => {
                   gutterBottom
                   sx={{ 
                     fontWeight: 800,
-                    background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 50%, #22D3EE 100%)',
+                    background: 'linear-gradient(135deg, #1c7ed6 0%, #8B5CF6 50%, #22D3EE 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -356,3 +356,4 @@ const FuturisticLogin: React.FC<LoginProps> = ({ onLogin }) => {
 };
 
 export default FuturisticLogin;
+

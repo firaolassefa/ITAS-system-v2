@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container, Paper, Typography, Box, TextField, Button,
   Grid, FormControl, InputLabel, Select, MenuItem, Chip,
@@ -264,10 +264,10 @@ const NotificationCenter: React.FC = () => {
 
   const getChannelColor = (channel: string) => {
     switch (channel) {
-      case 'EMAIL': return '#667eea';
-      case 'SMS': return '#10B981';
+      case 'EMAIL': return '#339af0';
+      case 'SMS': return '#339af0';
       case 'IN_APP': return '#F59E0B';
-      default: return '#667eea';
+      default: return '#339af0';
     }
   };
 
@@ -277,7 +277,7 @@ const NotificationCenter: React.FC = () => {
         {/* Header */}
         <Fade in timeout={800}>
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 800, background: mode === 'light' ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' : 'linear-gradient(135deg, #339af0 0%, #60a5fa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
               Notification Center
             </Typography>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
@@ -289,10 +289,10 @@ const NotificationCenter: React.FC = () => {
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {[
-            { label: 'Total Sent', value: stats.totalSent, icon: <SendIcon />, color: '#667eea' },
-            { label: 'Total Opened', value: stats.totalOpened, icon: <CheckIcon />, color: '#10B981' },
+            { label: 'Total Sent', value: stats.totalSent, icon: <SendIcon />, color: '#339af0' },
+            { label: 'Total Opened', value: stats.totalOpened, icon: <CheckIcon />, color: '#339af0' },
             { label: 'Avg Open Rate', value: `${stats.avgOpenRate}%`, icon: <TrendingIcon />, color: '#F59E0B' },
-            { label: 'Campaigns', value: stats.campaigns, icon: <NotifIcon />, color: '#8B5CF6' },
+            { label: 'Campaigns', value: stats.campaigns, icon: <NotifIcon />, color: '#339af0' },
           ].map((stat, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Zoom in timeout={600 + index * 100}>
@@ -361,8 +361,8 @@ const NotificationCenter: React.FC = () => {
                 </Box>
 
                 <Button variant="contained" startIcon={<SendIcon />} onClick={handleSend} fullWidth
-                  sx={{ mt: 3, py: 1.5, background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', color: '#fff', fontWeight: 600, fontSize: '1rem',
-                    '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)' }
+                  sx={{ mt: 3, py: 1.5, background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', color: '#fff', fontWeight: 600, fontSize: '1rem',
+                    '&:hover': { background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)' }
                   }}>
                   {editingId ? 'Update Notification' : 'Send Notification'}
                 </Button>
@@ -378,7 +378,7 @@ const NotificationCenter: React.FC = () => {
                       scheduledTime: ''
                     });
                   }} fullWidth
-                    sx={{ mt: 1, py: 1.5, borderColor: '#667eea', color: '#667eea', fontWeight: 600 }}>
+                    sx={{ mt: 1, py: 1.5, borderColor: '#339af0', color: '#339af0', fontWeight: 600 }}>
                     Cancel Edit
                   </Button>
                 )}
@@ -419,7 +419,7 @@ const NotificationCenter: React.FC = () => {
                               <Typography variant="caption" sx={{ color: 'text.secondary' }}>{new Date(campaign.sentAt).toLocaleDateString()}</Typography>
                             </Box>
                             <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              <IconButton size="small" onClick={() => handleEdit(campaign)} sx={{ color: '#667eea' }}>
+                              <IconButton size="small" onClick={() => handleEdit(campaign)} sx={{ color: '#339af0' }}>
                                 <EditIcon fontSize="small" />
                               </IconButton>
                               <IconButton size="small" onClick={() => openDeleteDialog(campaign.id)} sx={{ color: '#EF4444' }}>
@@ -427,10 +427,10 @@ const NotificationCenter: React.FC = () => {
                               </IconButton>
                             </Box>
                           </Box>
-                          <Chip label={campaign.audience} size="small" sx={{ background: 'rgba(102, 126, 234, 0.15)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)', fontSize: '0.7rem', mb: 1 }} />
+                          <Chip label={campaign.audience} size="small" sx={{ background: 'rgba(1, 99, 150, 0.15)', color: '#339af0', border: '1px solid rgba(1, 99, 150, 0.3)', fontSize: '0.7rem', mb: 1 }} />
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>Sent: {campaign.sent}</Typography>
-                            <Typography variant="body2" sx={{ color: '#10B981', fontWeight: 600 }}>{Math.round((campaign.opened / campaign.sent) * 100)}% opened</Typography>
+                            <Typography variant="body2" sx={{ color: '#339af0', fontWeight: 600 }}>{Math.round((campaign.opened / campaign.sent) * 100)}% opened</Typography>
                           </Box>
                         </Paper>
                       </Zoom>
@@ -444,7 +444,7 @@ const NotificationCenter: React.FC = () => {
 
         {/* Snackbar */}
         <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-          <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ background: snackbar.severity === 'success' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', color: '#fff', fontWeight: 600 }}>
+          <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ background: snackbar.severity === 'success' ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', color: '#fff', fontWeight: 600 }}>
             {snackbar.message}
           </Alert>
         </Snackbar>
@@ -468,3 +468,6 @@ const NotificationCenter: React.FC = () => {
 };
 
 export default NotificationCenter;
+
+
+

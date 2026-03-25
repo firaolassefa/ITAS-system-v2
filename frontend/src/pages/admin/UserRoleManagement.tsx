@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Container,
   Paper,
@@ -274,14 +274,14 @@ const UserRoleManagement: React.FC = () => {
 
   const getRoleColor = (role: string) => {
     const colors: Record<string, string> = {
-      'TAXPAYER': '#667eea',
+      'TAXPAYER': '#339af0',
       'CONTENT_ADMIN': '#F59E0B',
-      'TRAINING_ADMIN': '#10B981',
-      'COMM_OFFICER': '#3B82F6',
-      'MANAGER': '#8B5CF6',
+      'TRAINING_ADMIN': '#339af0',
+      'COMM_OFFICER': '#339af0',
+      'MANAGER': '#339af0',
       'SYSTEM_ADMIN': '#EF4444',
     };
-    return colors[role] || '#667eea';
+    return colors[role] || '#339af0';
   };
 
   return (
@@ -301,8 +301,8 @@ const UserRoleManagement: React.FC = () => {
               sx={{
                 fontWeight: 800,
                 background: mode === 'light'
-                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                  : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
+                  ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
+                  : 'linear-gradient(135deg, #339af0 0%, #60a5fa 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 1,
@@ -319,8 +319,8 @@ const UserRoleManagement: React.FC = () => {
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {[
-            { label: 'Total Users', value: stats.total, icon: <PeopleIcon />, color: '#667eea' },
-            { label: 'Active Users', value: stats.active, icon: <CheckIcon />, color: '#10B981' },
+            { label: 'Total Users', value: stats.total, icon: <PeopleIcon />, color: '#339af0' },
+            { label: 'Active Users', value: stats.active, icon: <CheckIcon />, color: '#339af0' },
             { label: 'Inactive Users', value: stats.inactive, icon: <BlockIcon />, color: '#EF4444' },
             { label: 'Admin Users', value: stats.admins, icon: <AdminIcon />, color: '#F59E0B' },
           ].map((stat, index) => (
@@ -429,14 +429,14 @@ const UserRoleManagement: React.FC = () => {
                   startIcon={<AddIcon />}
                   onClick={() => setAddDialogOpen(true)}
                   sx={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                    background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                     color: '#fff',
                     py: 1.5,
                     fontWeight: 600,
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)',
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)',
+                      boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)',
                     },
                   }}
                 >
@@ -542,10 +542,10 @@ const UserRoleManagement: React.FC = () => {
                                 onChange={() => handleStatusToggle(user.id, user.active)}
                                 sx={{
                                   '& .MuiSwitch-switchBase.Mui-checked': {
-                                    color: '#10B981',
+                                    color: '#339af0',
                                   },
                                   '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                    backgroundColor: '#10B981',
+                                    backgroundColor: '#339af0',
                                   },
                                 }}
                               />
@@ -557,9 +557,9 @@ const UserRoleManagement: React.FC = () => {
                               <IconButton
                                 onClick={() => handleEditUser(user)}
                                 sx={{
-                                  color: '#667eea',
+                                  color: '#339af0',
                                   '&:hover': {
-                                    background: 'rgba(102, 126, 234, 0.1)',
+                                    background: 'rgba(1, 99, 150, 0.1)',
                                   },
                                 }}
                               >
@@ -605,7 +605,7 @@ const UserRoleManagement: React.FC = () => {
           fullWidth
           PaperProps={{
             sx: {
-              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+              background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: 3,
@@ -843,7 +843,7 @@ const UserRoleManagement: React.FC = () => {
               variant="contained"
               sx={{
                 background: '#fff',
-                color: '#10B981',
+                color: '#339af0',
                 fontWeight: 600,
                 px: 3,
                 '&:hover': {
@@ -866,7 +866,7 @@ const UserRoleManagement: React.FC = () => {
           fullWidth
           PaperProps={{
             sx: {
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: 3,
@@ -1015,14 +1015,14 @@ const UserRoleManagement: React.FC = () => {
               onClick={handleSaveUser}
               variant="contained"
               sx={{
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
                 color: '#fff',
                 fontWeight: 600,
                 px: 3,
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)',
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)',
+                  boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)',
                 },
               }}
             >
@@ -1043,7 +1043,7 @@ const UserRoleManagement: React.FC = () => {
             severity={snackbar.severity}
             sx={{
               background: snackbar.severity === 'success' 
-                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
                 : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
               color: '#fff',
               fontWeight: 600,
@@ -1058,3 +1058,6 @@ const UserRoleManagement: React.FC = () => {
 };
 
 export default UserRoleManagement;
+
+
+
