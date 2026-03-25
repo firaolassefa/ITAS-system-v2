@@ -25,7 +25,9 @@ RUN rm -rf ./*
 COPY --from=build /app/dist .
 
 # Copy our optimized nginx config
-COPY ../nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# In CI, nginx.conf is copied into the frontend context before build
+# In local docker-compose, it's available via the copy step too
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
