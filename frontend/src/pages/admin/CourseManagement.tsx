@@ -10,7 +10,7 @@ import { Add, Edit, Delete, Visibility, School, ExpandMore, PlaylistAdd, CloudUp
 import axios from 'axios';
 import ModuleContentDialog from '../../components/ModuleContentDialog';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('itas_token');

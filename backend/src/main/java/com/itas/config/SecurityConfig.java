@@ -48,7 +48,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow all origins — handles cloud deployments, different ports, etc.
+        // Allow all origins â€” handles cloud deployments, different ports, etc.
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
@@ -65,6 +65,7 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -73,6 +74,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/health", "/test-db", "/api/health", "/api/test-db").permitAll()
                 .requestMatchers("/test/**", "/api/test/**").permitAll()
                 .requestMatchers("/auth/**", "/api/auth/**").permitAll()
+                .requestMatchers("/error", "/api/error").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                 
                 // Public access to browse courses and resources (read-only)
@@ -103,8 +105,8 @@ public class SecurityConfig {
                 
                 // File Upload - Content Admin, Training Admin & System Admin
                 .requestMatchers("/files/upload", "/api/files/upload").hasAnyRole("CONTENT_ADMIN", "TRAINING_ADMIN", "SYSTEM_ADMIN")
-                .requestMatchers("/modules/*/upload-content", "/api/modules/*/upload-content").hasAnyRole("CONTENT_ADMIN", "TRAINING_ADMIN", "SYSTEM_ADMIN")
-                .requestMatchers("/modules/*/set-url", "/api/modules/*/set-url").hasAnyRole("CONTENT_ADMIN", "TRAINING_ADMIN", "SYSTEM_ADMIN")
+                .requestMatchers("/modules/*/upload-content", "/api/modules/*/upload-content").authenticated()
+                .requestMatchers("/modules/*/set-url", "/api/modules/*/set-url").authenticated()
                 
                 // Static file serving
                 .requestMatchers("/uploads/**", "/api/uploads/**").permitAll()

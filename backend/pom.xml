@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Add versions for new dependencies -->
         <springdoc.version>2.3.0</springdoc.version>
         <jjwt.version>0.11.5</jjwt.version>

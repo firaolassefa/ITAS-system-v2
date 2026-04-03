@@ -21,17 +21,20 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Use absolute path to ensure files are found
         String uploadsPath = System.getProperty("user.dir") + "/uploads/";
         String certificatesPath = System.getProperty("user.dir") + "/certificates/";
         
-        System.out.println("Serving uploads from: " + uploadsPath);
-        System.out.println("Serving certificates from: " + certificatesPath);
-        
+        // Register under both /uploads/** and /api/uploads/** to handle both URL patterns
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadsPath);
         
+        registry.addResourceHandler("/api/uploads/**")
+                .addResourceLocations("file:" + uploadsPath);
+
         registry.addResourceHandler("/certificates/**")
+                .addResourceLocations("file:" + certificatesPath);
+
+        registry.addResourceHandler("/api/certificates/**")
                 .addResourceLocations("file:" + certificatesPath);
     }
 }

@@ -133,13 +133,15 @@ const NotificationCenter: React.FC = () => {
 
       // Map audience to actual role name
       const roleMapping: Record<string, string> = {
-        'ALL_TAXPAYERS': 'TAXPAYER',
-        'SME': 'TAXPAYER',
-        'INDIVIDUAL': 'TAXPAYER',
-        'NEW_TAXPAYERS': 'TAXPAYER',
-        'COURSE_COMPLETED': 'TAXPAYER',
-        'WEBINAR_REGISTERED': 'TAXPAYER',
+        'ALL_TAXPAYERS': 'TAX_AGENT',
+        'SME': 'TAX_AGENT',
+        'INDIVIDUAL': 'TAX_AGENT',
+        'NEW_TAXPAYERS': 'TAX_AGENT',
+        'COURSE_COMPLETED': 'TAX_AGENT',
+        'WEBINAR_REGISTERED': 'TAX_AGENT',
         'MOR_STAFF': 'MOR_STAFF',
+        'CONTENT_ADMIN': 'CONTENT_ADMIN',
+        'TRAINING_ADMIN': 'TRAINING_ADMIN',
         'ALL': 'ALL',
       };
 
@@ -331,11 +333,15 @@ const NotificationCenter: React.FC = () => {
                     <FormControl fullWidth>
                       <InputLabel>Target Audience</InputLabel>
                       <Select value={notification.audience} label="Target Audience" onChange={(e: SelectChangeEvent) => setNotification({ ...notification, audience: e.target.value })}>
-                        <MenuItem value="ALL_TAXPAYERS">All Taxpayers</MenuItem>
+                        <MenuItem value="ALL">All Users</MenuItem>
+                        <MenuItem value="ALL_TAXPAYERS">All Taxpayers / Tax Agents</MenuItem>
                         <MenuItem value="SME">Small Businesses</MenuItem>
                         <MenuItem value="INDIVIDUAL">Individual Taxpayers</MenuItem>
-                        <MenuItem value="COURSE_COMPLETED">Completed Specific Course</MenuItem>
+                        <MenuItem value="COURSE_COMPLETED">Completed a Course</MenuItem>
                         <MenuItem value="WEBINAR_REGISTERED">Webinar Registrants</MenuItem>
+                        <MenuItem value="MOR_STAFF">MOR Staff</MenuItem>
+                        <MenuItem value="CONTENT_ADMIN">Content Admins</MenuItem>
+                        <MenuItem value="TRAINING_ADMIN">Training Admins</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>

@@ -14,6 +14,13 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
+const getFileUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  // Static files served under /api context path
+  return `${API_BASE_URL}${url}`;
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('itas_token');
   return {
@@ -33,7 +40,7 @@ interface Module {
   videoUrl: string;
   contentUrl: string;
   durationMinutes: number;
-  order: number;
+  moduleOrder: number;
   isLocked: boolean;
 }
 
@@ -48,7 +55,9 @@ const ModuleLesson: React.FC = () => {
   const navigate = useNavigate();
   const [module, setModule] = useState<Module | null>(null);
   const [progress, setProgress] = useState<ModuleProgress | null>(null);
+  const [hasQuiz, setHasQuiz] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
     objectives: true,
     content: true,
@@ -61,13 +70,25 @@ const ModuleLesson: React.FC = () => {
   const loadModuleData = async () => {
     try {
       setLoading(true);
-      const [moduleRes, progressRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/modules/${moduleId}`, getAuthHeaders()),
-        axios.get(`${API_BASE_URL}/module-progress/user/1/module/${moduleId}`, getAuthHeaders()),
-      ]);
+      const moduleRes = await axios.get(`${API_BASE_URL}/modules/${moduleId}`, getAuthHeaders());
+      const moduleData = moduleRes.data.data || moduleRes.data;
+      setModule(moduleData);
 
-      setModule(moduleRes.data.data || moduleRes.data);
-      setProgress(progressRes.data.data || progressRes.data || { completed: false, progress: 0 });
+      // Check if module has quiz questions
+      try {
+        const quizRes = await axios.get(`${API_BASE_URL}/modules/${moduleId}/has-quiz`, getAuthHeaders());
+        const quizData = quizRes.data.data || quizRes.data;
+        setHasQuiz(quizData.hasQuiz === true);
+      } catch { setHasQuiz(false); }
+
+      // Try to get progress (non-critical)
+      try {
+        const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
+        const userId = user?.id || 1;
+        const progressRes = await axios.get(`${API_BASE_URL}/module-progress/user/${userId}/module/${moduleId}`, getAuthHeaders());
+        setProgress(progressRes.data.data || progressRes.data || { completed: false, progress: 0 });
+      } catch { setProgress({ completed: false, progress: 0, completedAt: '' }); }
+
     } catch (error) {
       console.error('Failed to load module:', error);
     } finally {
@@ -79,20 +100,26 @@ const ModuleLesson: React.FC = () => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const markAsComplete = async () => {
+  const handleFinishReading = async () => {
+    setCompleting(true);
     try {
+      const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
+      const userId = user?.id || 1;
       await axios.post(
-        `${API_BASE_URL}/module-progress/complete`,
-        {
-          userId: 1,
-          moduleId: moduleId,
-          progress: 100,
-        },
+        `${API_BASE_URL}/courses/complete-module`,
+        { userId, courseId: Number(courseId), moduleId: Number(moduleId) },
         getAuthHeaders()
       );
-      loadModuleData();
+      if (hasQuiz) {
+        // Has quiz — redirect to quiz
+        navigate(`/taxpayer/courses/${courseId}/modules/${moduleId}/quiz`);
+      } else {
+        // No quiz — go back to course, module is complete
+        navigate(`/taxpayer/courses/${courseId}`);
+      }
     } catch (error) {
-      console.error('Failed to mark as complete:', error);
+      console.error('Failed to complete module:', error);
+      setCompleting(false);
     }
   };
 
@@ -166,7 +193,7 @@ const ModuleLesson: React.FC = () => {
             <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
               <Chip
                 icon={<MenuBook />}
-                label={`Module ${module.order + 1}`}
+                label={`Module ${(module.moduleOrder ?? 0) + 1}`}
                 sx={{
                   background: alpha('#FFFFFF', 0.2),
                   color: '#FFFFFF',
@@ -264,44 +291,56 @@ const ModuleLesson: React.FC = () => {
       {/* Video Content */}
       {module.videoUrl && (
         <Fade in timeout={1000}>
-          <Card
-            elevation={0}
-            sx={{
-              mb: 3,
-              borderRadius: 3,
-              border: '1px solid',
-              borderColor: alpha('#000', 0.1),
-            }}
-          >
+          <Card elevation={0} sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: alpha('#ef4444', 0.2) }}>
             <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <VideoLibrary sx={{ color: '#EF4444' }} />
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Video Lesson
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <VideoLibrary sx={{ color: '#EF4444' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Video Lesson</Typography>
+                </Box>
+                <Button size="small" variant="outlined" sx={{ borderColor: '#ef4444', color: '#ef4444', textTransform: 'none' }}
+                  onClick={() => window.open(getFileUrl(module.videoUrl), '_blank')}>
+                  Open in new tab
+                </Button>
               </Box>
-              <Box
-                sx={{
-                  position: 'relative',
-                  paddingTop: '56.25%',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                  background: '#000',
-                }}
-              >
-                <iframe
-                  src={module.videoUrl}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                  }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+              {module.videoUrl.includes('youtube') || module.videoUrl.includes('youtu.be') || module.videoUrl.includes('vimeo') ? (
+                <Box sx={{ position: 'relative', paddingTop: '56.25%', borderRadius: 2, overflow: 'hidden', background: '#000' }}>
+                  <iframe
+                    src={module.videoUrl.includes('watch?v=') ? module.videoUrl.replace('watch?v=', 'embed/') : module.videoUrl}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ borderRadius: 2, overflow: 'hidden', bgcolor: '#000' }}>
+                  <video controls style={{ width: '100%', maxHeight: 480, display: 'block' }} src={getFileUrl(module.videoUrl)}>
+                    Your browser does not support the video tag.
+                  </video>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Fade>
+      )}
+
+      {/* Reading Material / PDF */}
+      {module.contentUrl && (
+        <Fade in timeout={1100}>
+          <Card elevation={0} sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: alpha('#8b5cf6', 0.2) }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Description sx={{ color: '#8b5cf6' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Reading Material</Typography>
+                </Box>
+                <Button size="small" variant="outlined" sx={{ borderColor: '#8b5cf6', color: '#8b5cf6', textTransform: 'none' }}
+                  onClick={() => window.open(getFileUrl(module.contentUrl), '_blank')}>
+                  Open in new tab
+                </Button>
+              </Box>
+              <Box sx={{ height: 600, borderRadius: 2, overflow: 'hidden' }}>
+                <iframe src={getFileUrl(module.contentUrl)} style={{ width: '100%', height: '100%', border: 'none' }} title="Reading Material" />
               </Box>
             </CardContent>
           </Card>
@@ -392,52 +431,41 @@ const ModuleLesson: React.FC = () => {
             Back to Course
           </Button>
           <Stack direction="row" spacing={2}>
-            {!progress?.completed && (
+            {hasQuiz && (
               <Button
                 variant="outlined"
-                startIcon={<CheckCircle />}
-                onClick={markAsComplete}
+                endIcon={<Quiz />}
+                onClick={() => navigate(`/taxpayer/courses/${courseId}/modules/${moduleId}/practice`)}
                 sx={{ textTransform: 'none', fontWeight: 600 }}
               >
-                Mark as Complete
+                Practice Questions
               </Button>
             )}
             <Button
               variant="contained"
-              endIcon={<Quiz />}
-              onClick={() => navigate(`/taxpayer/courses/${courseId}/modules/${moduleId}/practice`)}
+              disabled={completing || progress?.completed}
+              endIcon={hasQuiz ? <ArrowForward /> : <CheckCircle />}
+              onClick={handleFinishReading}
               sx={{
                 textTransform: 'none',
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
+                background: hasQuiz
+                  ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  : 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
               }}
             >
-              Practice Questions
-            </Button>
-            <Button
-              variant="contained"
-              endIcon={<ArrowForward />}
-              onClick={() => navigate(`/taxpayer/courses/${courseId}/modules/${moduleId}/quiz`)}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-              }}
-            >
-              Take Quiz
+              {completing ? 'Saving...' : progress?.completed ? 'Completed ✓' : hasQuiz ? 'Finish Reading → Take Quiz' : 'Mark as Complete'}
             </Button>
           </Stack>
         </Paper>
       </Fade>
 
       {/* Info Alert */}
-      <Alert
-        severity="info"
-        icon={<InfoOutlined />}
-        sx={{ mt: 3, borderRadius: 3 }}
-      >
+      <Alert severity="info" icon={<InfoOutlined />} sx={{ mt: 3, borderRadius: 3 }}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          Complete the practice questions to test your understanding, then take the quiz to unlock the next module!
+          {hasQuiz
+            ? 'Review the materials above, then click "Finish Reading → Take Quiz" to test your knowledge.'
+            : 'Review the materials above, then click "Mark as Complete" to unlock the next module.'}
         </Typography>
       </Alert>
     </Container>

@@ -15,4 +15,5 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByModuleIdAndIsPracticeFalseOrderByOrderAsc(Long moduleId);
     List<Question> findByCourseIdAndQuestionCategory(Long courseId, String questionCategory);
     List<Question> findByModuleIdAndQuestionCategory(Long moduleId, String questionCategory);
+    long countByModuleIdAndIsPracticeFalse(Long moduleId);
 }

@@ -169,7 +169,7 @@ public class AssessmentService {
      * Unlock next module in sequence
      */
     private void unlockNextModule(com.itas.model.Module currentModule) {
-        List<com.itas.model.Module> modules = moduleRepository.findByCourseOrderByOrderAsc(currentModule.getCourse());
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseOrderByModuleOrderAsc(currentModule.getCourse());
         
         for (int i = 0; i < modules.size() - 1; i++) {
             if (modules.get(i).getId().equals(currentModule.getId())) {
@@ -200,7 +200,7 @@ public class AssessmentService {
      */
     public List<Question> getFinalExamQuestions(Long courseId) {
         // Get all modules for the course
-        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
         
         // Get quiz questions (not practice) from all modules
         List<Question> allQuestions = new java.util.ArrayList<>();
@@ -216,39 +216,37 @@ public class AssessmentService {
      * Submit final exam and generate certificate if passed
      */
     @Transactional
-    public Map<String, Object> submitFinalExam(Long userId, Long courseId, Map<Long, Long> answers) {
+    public Map<String, Object> submitFinalExam(Long userId, Long courseId, Map<String, Object> rawAnswers) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
-        
-        // Check if user has completed all modules
-        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
-        for (com.itas.model.Module module : modules) {
-            ModuleProgress progress = moduleProgressRepository
-                    .findByUserIdAndModuleId(userId, module.getId())
-                    .orElse(null);
-            
-            if (progress == null || !Boolean.TRUE.equals(progress.getCompleted())) {
-                throw new RuntimeException("You must complete all modules before taking the final exam. Module '" + module.getTitle() + "' is not completed.");
+
+        // Convert answers from Map<String, Object> to Map<Long, Long>
+        Map<Long, Long> answers = new HashMap<>();
+        if (rawAnswers != null) {
+            for (Map.Entry<String, Object> entry : rawAnswers.entrySet()) {
+                try {
+                    Long questionId = Long.parseLong(entry.getKey());
+                    Long answerId = entry.getValue() != null ? ((Number) entry.getValue()).longValue() : null;
+                    if (answerId != null) answers.put(questionId, answerId);
+                } catch (Exception ignored) {}
             }
         }
-        
+
         // Get all quiz questions from the course
         List<Question> questions = getFinalExamQuestions(courseId);
-        
+
         if (questions.isEmpty()) {
-            throw new RuntimeException("No exam questions found for this course");
+            throw new RuntimeException("No exam questions found for this course. Please add quiz questions to the modules first.");
         }
-        
+
         int totalPoints = 0;
         int earnedPoints = 0;
-        
-        // Calculate score
+
         for (Question question : questions) {
             totalPoints += question.getPoints();
-            
             Long userAnswerId = answers.get(question.getId());
             if (userAnswerId != null) {
                 for (Answer answer : question.getAnswers()) {
@@ -259,34 +257,31 @@ public class AssessmentService {
                 }
             }
         }
-        
-        // Calculate percentage
+
         double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0;
-        boolean passed = percentage >= 70; // 70% required for final exam
-        
+        boolean passed = percentage >= 70;
+
         Map<String, Object> result = new HashMap<>();
         result.put("totalPoints", totalPoints);
         result.put("earnedPoints", earnedPoints);
         result.put("percentage", Math.round(percentage * 100.0) / 100.0);
         result.put("passed", passed);
         result.put("courseName", course.getTitle());
-        
+
         if (passed) {
-            // Generate certificate
             try {
                 com.itas.model.Certificate certificate = generateCertificate(userId, courseId);
                 result.put("certificateId", certificate.getId());
                 result.put("certificateNumber", certificate.getCertificateNumber());
                 result.put("certificateUrl", "/api/certificates/" + certificate.getId() + "/download");
-                result.put("feedback", "🎉 Congratulations! You passed the final exam with " + Math.round(percentage) + "% and earned your certificate!");
+                result.put("feedback", "Congratulations! You passed the final exam with " + Math.round(percentage) + "% and earned your certificate!");
             } catch (Exception e) {
-                // Certificate might already exist
                 result.put("feedback", "Congratulations! You passed the final exam with " + Math.round(percentage) + "%!");
             }
         } else {
-            result.put("feedback", "You scored " + Math.round(percentage) + "%. You need at least 70% to pass the final exam and earn your certificate. Please review the course materials and try again.");
+            result.put("feedback", "You scored " + Math.round(percentage) + "%. You need at least 70% to pass. Please review the course materials and try again.");
         }
-        
+
         return result;
     }
     
@@ -294,7 +289,7 @@ public class AssessmentService {
      * Check if user can take final exam (all modules completed)
      */
     public Map<String, Object> checkFinalExamEligibility(Long userId, Long courseId) {
-        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
         
         int totalModules = modules.size();
         int completedModules = 0;

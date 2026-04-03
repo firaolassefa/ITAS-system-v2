@@ -1,5 +1,6 @@
 package com.itas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -47,12 +48,13 @@ public class Resource {
     private LocalDateTime updatedAt;
     private LocalDateTime archivedAt;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "resource_tags",
             joinColumns = @JoinColumn(name = "resource_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
+    @JsonIgnoreProperties({"resources"})
     private Set<Tag> tags;
 
     // Constructors

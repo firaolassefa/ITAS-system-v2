@@ -46,6 +46,9 @@ import { modulesAPI } from '../../api/modules';
 import AssessmentQuiz from '../../components/taxpayer/AssessmentQuiz';
 import { useThemeMode } from '../../theme/ThemeContext';
 
+const STATIC_BASE = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
+const getFileUrl = (url: string) => (!url || url.startsWith('http')) ? url : `${STATIC_BASE}${url}`;
+
 const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -59,33 +62,39 @@ const CourseDetail: React.FC = () => {
   const [showCertificateAlert, setShowCertificateAlert] = useState(false);
   const [completionData, setCompletionData] = useState<any>(null);
 
+  const user = JSON.parse(localStorage.getItem('itas_user') || '{}');
+
   useEffect(() => {
     loadCourseData();
   }, [id]);
 
   const loadCourseData = async () => {
     try {
+      const userId = user?.id || 1;
       const [courseRes, enrollmentsRes] = await Promise.all([
         coursesAPI.getCourseById(Number(id)),
-        coursesAPI.getUserEnrollments(1), // Mock user ID - should get from auth
+        coursesAPI.getUserEnrollments(userId),
       ]);
 
       setCourse(courseRes.data);
-      
+
       // Load actual modules from database
       try {
         const modulesRes = await modulesAPI.getModulesByCourse(Number(id));
         const modulesData = Array.isArray(modulesRes) ? modulesRes : [];
-        setModules(modulesData);
-        console.log('Loaded modules:', modulesData);
+        // Sort by moduleOrder ascending to ensure correct order
+        const sorted = [...modulesData].sort((a, b) => (a.moduleOrder ?? a.module_order ?? 0) - (b.moduleOrder ?? b.module_order ?? 0));
+        setModules(sorted);
+        setActiveModule(0); // always start at first module
       } catch (error) {
         console.error('Failed to load modules:', error);
         setModules([]);
       }
-      
-      const userEnrollment = enrollmentsRes.data?.find(
-        (e: any) => e.courseId === Number(id)
-      );
+
+      const enrollmentsData = enrollmentsRes.data || enrollmentsRes || [];
+      const userEnrollment = Array.isArray(enrollmentsData)
+        ? enrollmentsData.find((e: any) => e.courseId === Number(id) || e.course?.id === Number(id))
+        : null;
       setEnrollment(userEnrollment || null);
     } catch (error) {
       console.error('Failed to load course data:', error);
@@ -96,12 +105,10 @@ const CourseDetail: React.FC = () => {
 
   const handleModuleComplete = async () => {
     if (!enrollment) return;
-
-    const newProgress = Math.min(100, enrollment.progress + (100 / course.modules.length));
-    
+    const newProgress = Math.min(100, enrollment.progress + (100 / modules.length));
     try {
       await coursesAPI.updateProgress(enrollment.id, newProgress);
-      await loadCourseData(); // Reload data
+      await loadCourseData();
     } catch (error) {
       console.error('Failed to update progress:', error);
     }
@@ -110,49 +117,30 @@ const CourseDetail: React.FC = () => {
   const handleAssessmentComplete = async (score: number, passed: boolean) => {
     if (passed) {
       try {
-        // Get user from localStorage
-        const userStr = localStorage.getItem('itas_user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        
-        if (!user) {
+        const userId = user?.id;
+        if (!userId) {
           alert('User not found. Please login again.');
           return;
         }
-        
-        // Get the actual module ID from the modules array
+
         const currentModuleData = modules[activeModule];
-        if (!currentModuleData || !currentModuleData.id) {
-          console.error('Module data not found:', currentModuleData);
+        if (!currentModuleData?.id) {
           alert('Module information not found. Please refresh the page.');
           return;
         }
-        
-        console.log('Completing module:', {
-          userId: user.id,
-          courseId: Number(id),
-          moduleId: currentModuleData.id,
-          moduleName: currentModuleData.title
-        });
-        
-        // Complete the current module with actual module ID
-        const result = await coursesAPI.completeModule(user.id, Number(id), currentModuleData.id);
-        console.log('Module completion result:', result);
-        
+
+        const result = await coursesAPI.completeModule(userId, Number(id), currentModuleData.id);
         setCompletionData(result.data);
-        
-        // Check if course is completed
+
         if (result.data?.courseCompleted) {
           setShowCertificateAlert(true);
           setShowAssessment(false);
-          
-          // Show completion dialog with certificate info
           setTimeout(() => {
             if (window.confirm('🎉 Congratulations! You have completed the entire course!\n\nYour certificate has been generated.\n\nWould you like to view your certificate now?')) {
               navigate('/taxpayer/certificates');
             }
           }, 500);
         } else {
-          // Show module completion message
           const remainingModules = result.data?.totalModules - result.data?.completedModules;
           alert(
             `✅ Module "${currentModuleData.title}" completed!\n\n` +
@@ -161,17 +149,12 @@ const CourseDetail: React.FC = () => {
             `Remaining: ${remainingModules} module${remainingModules !== 1 ? 's' : ''}\n\n` +
             `Keep going! Complete all modules to earn your certificate.`
           );
-          
-          // Move to next module
           if (activeModule < modules.length - 1) {
             setActiveModule(activeModule + 1);
           }
         }
-        
         await loadCourseData();
       } catch (error: any) {
-        console.error('Failed to complete module:', error);
-        console.error('Error details:', error.response?.data);
         alert('Failed to update progress: ' + (error.response?.data?.message || error.message));
       }
     } else {
@@ -180,44 +163,36 @@ const CourseDetail: React.FC = () => {
     setShowAssessment(false);
   };
 
-  const mockQuestions = [
-    {
-      id: 1,
-      question: 'What is the primary purpose of VAT?',
-      options: [
-        'To generate government revenue',
-        'To discourage consumption',
-        'To promote exports',
-        'To regulate prices'
-      ],
-      correctAnswer: 0,
-      explanation: 'VAT is a consumption tax designed to generate government revenue.'
-    },
-    {
-      id: 2,
-      question: 'When should a business register for VAT?',
-      options: [
-        'When annual turnover exceeds the threshold',
-        'Immediately upon starting business',
-        'After 2 years of operation',
-        'Only if selling imported goods'
-      ],
-      correctAnswer: 0,
-      explanation: 'Businesses must register for VAT when their taxable turnover exceeds the registration threshold.'
-    },
-    {
-      id: 3,
-      question: 'How often are VAT returns typically filed?',
-      options: [
-        'Monthly or quarterly',
-        'Yearly',
-        'Every 6 months',
-        'Only when requested'
-      ],
-      correctAnswer: 0,
-      explanation: 'VAT returns are usually filed monthly or quarterly depending on the business size.'
+  const [moduleQuestions, setModuleQuestions] = useState<any[]>([]);
+
+  // Load real questions when active module changes
+  useEffect(() => {
+    const currentModule = modules[activeModule];
+    if (currentModule?.id) {
+      loadModuleQuestions(currentModule.id);
     }
-  ];
+  }, [activeModule, modules]);
+
+  const loadModuleQuestions = async (moduleId: number) => {
+    try {
+      const { questionsAPI } = await import('../../api/modules');
+      const data = await questionsAPI.getQuestionsByModule(moduleId);
+      const questions = Array.isArray(data) ? data : [];
+      // Map backend format to AssessmentQuiz format
+      const mapped = questions
+        .filter((q: any) => !q.isPractice)
+        .map((q: any) => ({
+          id: q.id,
+          question: q.questionText,
+          options: (q.answers || []).map((a: any) => a.answerText),
+          correctAnswer: (q.answers || []).findIndex((a: any) => a.isCorrect),
+          explanation: q.explanation || '',
+        }));
+      setModuleQuestions(mapped);
+    } catch (e) {
+      setModuleQuestions([]);
+    }
+  };
 
   if (loading) {
     return (
@@ -543,8 +518,8 @@ const CourseDetail: React.FC = () => {
                 Module Assessment: {currentModule}
               </Typography>
               <AssessmentQuiz
-                questions={mockQuestions}
-                timeLimit={10}
+                questions={moduleQuestions}
+                timeLimit={15}
                 onComplete={handleAssessmentComplete}
               />
             </Paper>
@@ -609,123 +584,99 @@ const CourseDetail: React.FC = () => {
                 </Alert>
               </Paper>
 
-              {/* Learning Materials */}
-              <Grid container spacing={3} sx={{ mb: 3 }}>
-                {/* Video Lecture */}
-                <Grid item xs={12} md={6}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      borderRadius: 3,
-                      border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: mode === 'light' 
-                          ? '0 12px 24px rgba(0,0,0,0.1)'
-                          : '0 12px 24px rgba(0,0,0,0.3)',
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha('#ef4444', 0.1), color: '#ef4444' }}>
-                          <PlayIcon />
-                        </Avatar>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                          Video Lecture
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 40 }}>
-                        {currentModuleData?.videoUrl 
-                          ? 'Watch the instructional video covering key concepts and examples.'
-                          : 'Video content will be available soon.'}
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        disabled={!currentModuleData?.videoUrl}
-                        startIcon={<PlayIcon />}
-                        onClick={() => {
-                          if (currentModuleData?.videoUrl) {
-                            const videoUrl = currentModuleData.videoUrl.startsWith('http') 
-                              ? currentModuleData.videoUrl 
-                              : `http://localhost:9090/api${currentModuleData.videoUrl}`;
-                            window.open(videoUrl, '_blank');
-                          }
-                        }}
-                        sx={{
-                          bgcolor: '#ef4444',
-                          '&:hover': {
-                            bgcolor: '#dc2626',
-                          },
-                        }}
-                      >
-                        {currentModuleData?.videoUrl ? 'Watch Video' : 'Coming Soon'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
+              {/* Learning Materials — inline like W3Schools */}
+              <Box sx={{ mb: 3 }}>
 
-                {/* Reading Material */}
-                <Grid item xs={12} md={6}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      height: '100%',
-                      borderRadius: 3,
-                      border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: mode === 'light' 
-                          ? '0 12px 24px rgba(0,0,0,0.1)'
-                          : '0 12px 24px rgba(0,0,0,0.3)',
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Avatar sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: '#8b5cf6' }}>
-                          <BookIcon />
-                        </Avatar>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                          Reading Material
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3, minHeight: 40 }}>
-                        {currentModuleData?.contentUrl 
-                          ? 'Read the detailed guide with examples and reference materials.'
-                          : 'Reading materials will be available soon.'}
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        disabled={!currentModuleData?.contentUrl}
-                        startIcon={<BookIcon />}
-                        onClick={() => {
-                          if (currentModuleData?.contentUrl) {
-                            const contentUrl = currentModuleData.contentUrl.startsWith('http') 
-                              ? currentModuleData.contentUrl 
-                              : `http://localhost:9090/api${currentModuleData.contentUrl}`;
-                            window.open(contentUrl, '_blank');
-                          }
-                        }}
-                        sx={{
-                          bgcolor: '#8b5cf6',
-                          '&:hover': {
-                            bgcolor: '#7c3aed',
-                          },
-                        }}
-                      >
-                        {currentModuleData?.contentUrl ? 'Open PDF Guide' : 'Coming Soon'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+                {/* Video — embedded inline */}
+                {currentModuleData?.videoUrl ? (
+                  <Paper elevation={0} sx={{
+                    mb: 3, borderRadius: 3, overflow: 'hidden',
+                    border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                  }}>
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 1.5, px: 3, py: 2,
+                      bgcolor: mode === 'light' ? '#fef2f2' : alpha('#ef4444', 0.1),
+                      borderBottom: `1px solid ${mode === 'light' ? '#fecaca' : alpha('#ef4444', 0.2)}`,
+                    }}>
+                      <Avatar sx={{ bgcolor: '#ef4444', width: 32, height: 32 }}>
+                        <PlayIcon sx={{ fontSize: 18 }} />
+                      </Avatar>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Video Lecture</Typography>
+                    </Box>
+                    <Box sx={{ position: 'relative', paddingTop: '56.25%', bgcolor: '#000' }}>
+                      {currentModuleData.videoUrl.includes('youtube') || currentModuleData.videoUrl.includes('youtu.be') || currentModuleData.videoUrl.includes('vimeo') ? (
+                        <iframe
+                          src={currentModuleData.videoUrl.includes('watch?v=')
+                            ? currentModuleData.videoUrl.replace('watch?v=', 'embed/')
+                            : currentModuleData.videoUrl}
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video
+                          controls
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                          src={getFileUrl(currentModuleData.videoUrl)}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      )}
+                    </Box>
+                  </Paper>
+                ) : (
+                  <Paper elevation={0} sx={{
+                    mb: 3, p: 3, borderRadius: 3, textAlign: 'center',
+                    border: `1px dashed ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                    bgcolor: mode === 'light' ? '#fafafa' : alpha('#fff', 0.02),
+                  }}>
+                    <PlayIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">No video uploaded for this module yet</Typography>
+                  </Paper>
+                )}
 
+                {/* PDF / Document — embedded inline */}
+                {currentModuleData?.contentUrl ? (
+                  <Paper elevation={0} sx={{
+                    mb: 3, borderRadius: 3, overflow: 'hidden',
+                    border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                  }}>
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 1.5, px: 3, py: 2,
+                      bgcolor: mode === 'light' ? '#f5f3ff' : alpha('#8b5cf6', 0.1),
+                      borderBottom: `1px solid ${mode === 'light' ? '#ddd6fe' : alpha('#8b5cf6', 0.2)}`,
+                    }}>
+                      <Avatar sx={{ bgcolor: '#8b5cf6', width: 32, height: 32 }}>
+                        <BookIcon sx={{ fontSize: 18 }} />
+                      </Avatar>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Reading Material</Typography>
+                      <Button
+                        size="small" variant="outlined"
+                        sx={{ ml: 'auto', borderColor: '#8b5cf6', color: '#8b5cf6', textTransform: 'none', fontWeight: 600 }}
+                        onClick={() => window.open(getFileUrl(currentModuleData.contentUrl), '_blank')}
+                      >
+                        Open in new tab
+                      </Button>
+                    </Box>
+                    <Box sx={{ height: 600 }}>
+                      <iframe
+                        src={getFileUrl(currentModuleData.contentUrl)}
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        title="Reading Material"
+                      />
+                    </Box>
+                  </Paper>
+                ) : (
+                  <Paper elevation={0} sx={{
+                    mb: 3, p: 3, borderRadius: 3, textAlign: 'center',
+                    border: `1px dashed ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                    bgcolor: mode === 'light' ? '#fafafa' : alpha('#fff', 0.02),
+                  }}>
+                    <BookIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">No reading material uploaded for this module yet</Typography>
+                  </Paper>
+                )}
+              </Box>
 
               {/* Practice & Assessment Actions */}
               <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -1044,15 +995,23 @@ const CourseDetail: React.FC = () => {
               Course Modules
             </Typography>
             <Stepper activeStep={completedModules} orientation="vertical">
-              {(modules.length > 0 ? modules : course.modules || []).map((module: any, index: number) => {
-                const moduleName = typeof module === 'string' ? module : module.title;
+              {modules.map((module: any, index: number) => {
+                const moduleName = module.title || `Module ${index + 1}`;
                 const isCompleted = index < completedModules;
                 const isCurrent = index === activeModule;
-                const isLocked = index > completedModules;
+                // First module always unlocked; others locked if not yet reached
+                const isLocked = index > 0 && index > completedModules;
                 
                 return (
                   <Step key={index}>
                     <StepLabel
+                      onClick={() => {
+                        if (!isLocked) {
+                          setActiveModule(index);
+                          setShowAssessment(false);
+                        }
+                      }}
+                      sx={{ cursor: isLocked ? 'not-allowed' : 'pointer' }}
                       icon={
                         isCompleted ? (
                           <CheckIcon sx={{ color: '#10b981', fontSize: 28 }} />

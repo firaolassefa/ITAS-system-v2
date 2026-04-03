@@ -16,7 +16,7 @@ public class TinController {
     private TinVerificationService tinService;
 
     /**
-     * Verify a TIN number — called from the registration page.
+     * Verify a TIN number â€” called from the registration page.
      * Public endpoint (no auth required) so users can verify before registering.
      * GET /api/tin/verify/{tin}
      */

@@ -67,25 +67,17 @@ public class AuthController {
     })
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            System.out.println("=== LOGIN ATTEMPT ===");
-            System.out.println("Username: " + request.getUsername());
-            System.out.println("Password length: " + (request.getPassword() != null ? request.getPassword().length() : 0));
-            
             if (request.getUsername() == null || request.getPassword() == null) {
-                ApiResponse<Object> errorResponse = new ApiResponse<>("Username and password are required", null);
-                return ResponseEntity.status(400).body(errorResponse);
+                return ResponseEntity.status(400).body(new ApiResponse<>("Username and password are required", null));
             }
-            
-            // Authenticate user
+
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     request.getUsername(),
                     request.getPassword()
                 )
             );
-            
-            System.out.println("Authentication successful!");
-            
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
             // Generate JWT token
@@ -114,16 +106,14 @@ public class AuthController {
             
             LoginResponse response = new LoginResponse();
             response.setToken(token);
+            // Never send password hash to frontend
+            user.setPassword(null);
             response.setUser(user);
             response.setMessage("Login successful");
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            System.out.println("=== LOGIN FAILED ===");
-            System.out.println("Error: " + e.getClass().getName());
-            System.out.println("Message: " + e.getMessage());
-            e.printStackTrace();
             
             ApiResponse<Object> errorResponse = new ApiResponse<>("Invalid username or password", null);
             return ResponseEntity.status(401).body(errorResponse);
@@ -154,9 +144,9 @@ public class AuthController {
         user.setCreatedAt(LocalDateTime.now());
         user.setLastLogin(LocalDateTime.now());
         
-        // Ensure user type is set (default to TAXPAYER if null)
+        // Ensure user type is set (default to TAX_AGENT if null)
         if (user.getUserType() == null) {
-            user.setUserType(UserType.TAXPAYER);
+            user.setUserType(UserType.TAX_AGENT);
         }
         
         // Save to database
@@ -246,5 +236,13 @@ public class AuthController {
         result.put("newPassword", newPassword);
         
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/fix-user-types")
+    public ResponseEntity<?> fixUserTypes() {
+        // This endpoint is no longer needed — all users use TAXPAYER type
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "All external users already use TAXPAYER type");
+        return ResponseEntity.ok(new ApiResponse<>("No changes needed", result));
     }
 }

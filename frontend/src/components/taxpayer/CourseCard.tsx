@@ -113,7 +113,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           >
             <Book fontSize="small" sx={{ color: '#667eea' }} />
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {course.modules.length} modules
+              {course.moduleCount ?? course.modules?.length ?? 0} modules
             </Typography>
           </Box>
         </Box>

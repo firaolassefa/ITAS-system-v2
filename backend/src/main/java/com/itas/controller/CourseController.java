@@ -4,6 +4,8 @@ import com.itas.dto.ApiResponse;
 import com.itas.model.Course;
 import com.itas.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +20,13 @@ public class CourseController {
     private CourseService courseService;
     
     @GetMapping("")
+    @Cacheable(value = "courses", key = "'all'")
     public ResponseEntity<?> getAllCourses() {
         return ResponseEntity.ok(new ApiResponse<>("Success", courseService.getAllCourses()));
     }
     
     @GetMapping("/{id}")
+    @Cacheable(value = "courses", key = "#id")
     public ResponseEntity<?> getCourseById(@PathVariable Long id) {
         try {
             Course course = courseService.getCourseById(id);
@@ -34,6 +38,7 @@ public class CourseController {
     
     @PostMapping("")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
+    @CacheEvict(value = "courses", allEntries = true)
     public ResponseEntity<?> createCourse(@RequestBody Course course) {
         Course created = courseService.createCourse(course);
         return ResponseEntity.ok(new ApiResponse<>("Course created successfully", created));
@@ -41,6 +46,7 @@ public class CourseController {
     
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
+    @CacheEvict(value = "courses", allEntries = true)
     public ResponseEntity<?> updateCourse(@PathVariable Long id, @RequestBody Course course) {
         try {
             Course updated = courseService.updateCourse(id, course);
@@ -52,6 +58,7 @@ public class CourseController {
     
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
+    @CacheEvict(value = "courses", allEntries = true)
     public ResponseEntity<?> deleteCourse(@PathVariable Long id) {
         try {
             courseService.deleteCourse(id);

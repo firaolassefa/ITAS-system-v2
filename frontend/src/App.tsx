@@ -57,6 +57,9 @@ const InternalTraining = lazy(() => import('./pages/staff/InternalTraining'));
 const StaffCertificates = lazy(() => import('./pages/staff/Certificates'));
 const StaffCompliance = lazy(() => import('./pages/staff/Compliance'));
 const StaffAssessments = lazy(() => import('./pages/staff/Assessments'));
+const StaffProgress = lazy(() => import('./pages/staff/Progress'));
+const StaffHelp = lazy(() => import('./pages/staff/Help'));
+const StaffCourses = lazy(() => import('./pages/staff/Courses'));
 const PlaceholderPage = lazy(() => import('./components/PlaceholderPage'));
 
 // Loading fallback
@@ -87,16 +90,11 @@ function App() {
   });
 
   const handleLogin = (userData: any, token: string) => {
-    console.log('🟢 handleLogin called');
-    console.log('   User data:', userData);
-    console.log('   Token:', token?.substring(0, 20) + '...');
-    
-    localStorage.setItem('itas_user', JSON.stringify(userData));
+    // Strip password from stored user data just in case
+    const { password, ...safeUser } = userData;
+    localStorage.setItem('itas_user', JSON.stringify(safeUser));
     localStorage.setItem('itas_token', token);
-    setUser(userData);
-    
-    console.log('   ✅ User and token saved to localStorage');
-    console.log('   ✅ User state updated');
+    setUser(safeUser);
   };
 
   const handleLogout = () => {
@@ -220,16 +218,16 @@ function App() {
           {/* MOR Staff Routes */}
           <Route path="/staff" element={
             <StaffRoute>
-              <StaffLayout />
+              <StaffLayout user={user} onLogout={handleLogout} />
             </StaffRoute>
           }>
             <Route index element={<Navigate to="dashboard" />} />
             <Route path="dashboard" element={<MORStaffDashboard user={user} />} />
             <Route path="training" element={<InternalTraining />} />
             <Route path="internal-training" element={<InternalTraining />} />
-            <Route path="courses" element={<TaxpayerCourses user={user} />} />
-            <Route path="course/:id" element={<CourseDetail />} />
+            <Route path="courses" element={<StaffCourses />} />
             <Route path="courses/:courseId" element={<CourseDetail />} />
+            <Route path="course/:id" element={<CourseDetail />} />
             <Route path="courses/:courseId/modules/:moduleId/lesson" element={<ModuleLesson />} />
             <Route path="courses/:courseId/modules/:moduleId/practice" element={<PracticeQuestions />} />
             <Route path="courses/:courseId/modules/:moduleId/quiz" element={<ModuleQuiz />} />
@@ -239,12 +237,12 @@ function App() {
             <Route path="course/:courseId/final-exam" element={<FinalExam />} />
             <Route path="courses/:courseId/final-exam" element={<FinalExam />} />
             <Route path="assessment/:assessmentId" element={<TakeAssessment />} />
-            <Route path="progress" element={<PlaceholderPage title="My Progress" />} />
+            <Route path="progress" element={<StaffProgress />} />
             <Route path="assessments" element={<StaffAssessments />} />
             <Route path="certificates" element={<StaffCertificates />} />
             <Route path="compliance" element={<StaffCompliance />} />
             <Route path="resources" element={<TaxpayerResources user={user} />} />
-            <Route path="help" element={<PlaceholderPage title="Help & Support" />} />
+            <Route path="help" element={<StaffHelp />} />
           </Route>
 
           {/* Admin Routes with Role-Specific Dashboards */}
@@ -319,12 +317,12 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="question-management" element={
-              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN']}>
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
                 <QuestionManagement />
               </ProtectedRoute>
             } />
             <Route path="assessment-management" element={
-              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN']}>
+              <ProtectedRoute allowedRoles={['CONTENT_ADMIN', 'SYSTEM_ADMIN']}>
                 <AssessmentManagement />
               </ProtectedRoute>
             } />

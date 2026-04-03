@@ -5,6 +5,7 @@ import com.itas.model.Course;
 import com.itas.model.Module;
 import com.itas.repository.CourseRepository;
 import com.itas.repository.ModuleRepository;
+import com.itas.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +34,12 @@ public class ModuleController {
     
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private DataSource dataSource;
     
     @Value("${app.file.upload-dir:./uploads}")
     private String uploadDir;
@@ -42,7 +50,6 @@ public class ModuleController {
             List<Module> modules = moduleRepository.findAll();
             return ResponseEntity.ok(new ApiResponse<>("Success", modules));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to load modules: " + e.getMessage(), null));
         }
@@ -63,12 +70,21 @@ public class ModuleController {
     @GetMapping("/course/{courseId}")
     public ResponseEntity<?> getModulesByCourse(@PathVariable Long courseId) {
         try {
-            List<Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+            List<Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
             return ResponseEntity.ok(new ApiResponse<>("Success", modules));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to load modules: " + e.getMessage(), null));
         }
+    }
+
+    @GetMapping("/{id}/has-quiz")
+    public ResponseEntity<?> hasQuiz(@PathVariable Long id) {
+        long count = questionRepository.countByModuleIdAndIsPracticeFalse(id);
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("hasQuiz", count > 0);
+        result.put("questionCount", count);
+        return ResponseEntity.ok(new ApiResponse<>("Success", result));
     }
     
     @PostMapping("")
@@ -94,7 +110,7 @@ public class ModuleController {
             module.setCourse(course);
             module.setTitle(title);
             module.setDescription(description);
-            module.setOrder(orderIndex);
+            module.setModuleOrder(orderIndex);
             module.setDurationMinutes(durationMinutes);
             module.setContentUrl(contentUrl);
             module.setVideoUrl(videoUrl);
@@ -124,7 +140,7 @@ public class ModuleController {
                 module.setDescription((String) request.get("description"));
             }
             if (request.containsKey("orderIndex")) {
-                module.setOrder(((Number) request.get("orderIndex")).intValue());
+                module.setModuleOrder(((Number) request.get("orderIndex")).intValue());
             }
             if (request.containsKey("durationMinutes")) {
                 module.setDurationMinutes(((Number) request.get("durationMinutes")).intValue());
@@ -159,23 +175,47 @@ public class ModuleController {
         }
     }
     
+    @GetMapping("/{id}/test")
+    public ResponseEntity<?> testEndpoint(@PathVariable Long id) {
+        try {
+            String sql = "SELECT id, title FROM modules WHERE id = ?";
+            try (java.sql.Connection conn = dataSource.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, id);
+                java.sql.ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    return ResponseEntity.ok(new ApiResponse<>("Module found",
+                        java.util.Map.of("id", rs.getLong("id"), "title", rs.getString("title"))));
+                }
+                return ResponseEntity.status(404).body(new ApiResponse<>("Module not found", null));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/{id}/upload-content")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
     public ResponseEntity<?> uploadModuleContent(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file,
             @RequestParam("contentType") String contentType) {
         
+        System.out.println("=== UPLOAD STARTED: module=" + id + " contentType=" + contentType + " file=" + (file != null ? file.getOriginalFilename() : "null") + " size=" + (file != null ? file.getSize() : 0));
+        
         try {
-            Module module = moduleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Module not found"));
+            // Verify module exists
+            if (!moduleRepository.existsById(id)) {
+                return ResponseEntity.status(404)
+                    .body(new ApiResponse<>("Module not found with id: " + id, null));
+            }
             
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(new ApiResponse<>("File is empty", null));
             }
             
-            // Create upload directory if it doesn't exist
+            // Create upload directory
             Path uploadPath = Paths.get(uploadDir, "modules");
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
@@ -183,34 +223,45 @@ public class ModuleController {
             
             // Generate unique filename
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null && originalFilename.contains(".") 
+            String extension = (originalFilename != null && originalFilename.contains("."))
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
                 : "";
             String filename = UUID.randomUUID().toString() + extension;
             
-            // Save file
+            // Save file to disk
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
             
-            // Update module with file path
             String fileUrl = "/uploads/modules/" + filename;
-            if ("video".equalsIgnoreCase(contentType)) {
-                module.setVideoUrl(fileUrl);
-            } else {
-                module.setContentUrl(fileUrl);
+            
+            // Use native JDBC to update only the specific column — avoids missing column issues
+            String column = "video".equalsIgnoreCase(contentType) ? "video_url" : "content_url";
+            String sql = "UPDATE modules SET " + column + " = ?, updated_at = NOW() WHERE id = ?";
+            
+            try (java.sql.Connection conn = dataSource.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, fileUrl);
+                ps.setLong(2, id);
+                ps.executeUpdate();
             }
             
-            module.setUpdatedAt(LocalDateTime.now());
-            Module updated = moduleRepository.save(module);
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("id", id);
+            result.put("fileUrl", fileUrl);
+            result.put("contentType", contentType);
+            result.put("fileName", originalFilename);
+            result.put("fileSize", file.getSize());
             
-            return ResponseEntity.ok(new ApiResponse<>("File uploaded successfully", updated));
+            return ResponseEntity.ok(new ApiResponse<>("File uploaded successfully", result));
             
         } catch (IOException e) {
+            e.printStackTrace();
             return ResponseEntity.status(500)
-                .body(new ApiResponse<>("Failed to upload file: " + e.getMessage(), null));
+                .body(new ApiResponse<>("Failed to save file: " + e.getMessage(), null));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(new ApiResponse<>("Error: " + e.getMessage(), null));
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                .body(new ApiResponse<>("Upload failed: " + e.getMessage(), null));
         }
     }
     
@@ -222,29 +273,34 @@ public class ModuleController {
             @RequestParam("urlType") String urlType) {
         
         try {
-            Module module = moduleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Module not found"));
+            if (!moduleRepository.existsById(id)) {
+                return ResponseEntity.status(404)
+                    .body(new ApiResponse<>("Module not found", null));
+            }
             
             if (url == null || url.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(new ApiResponse<>("URL is required", null));
             }
             
-            // Update module with URL
-            if ("video".equalsIgnoreCase(urlType)) {
-                module.setVideoUrl(url);
-            } else {
-                module.setContentUrl(url);
+            String column = "video".equalsIgnoreCase(urlType) ? "video_url" : "content_url";
+            String sql = "UPDATE modules SET " + column + " = ?, updated_at = NOW() WHERE id = ?";
+            
+            try (java.sql.Connection conn = dataSource.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, url);
+                ps.setLong(2, id);
+                ps.executeUpdate();
             }
             
-            module.setUpdatedAt(LocalDateTime.now());
-            Module updated = moduleRepository.save(module);
-            
-            return ResponseEntity.ok(new ApiResponse<>("URL set successfully", updated));
+            return ResponseEntity.ok(new ApiResponse<>("URL set successfully",
+                java.util.Map.of("id", id, "url", url, "urlType", urlType)));
             
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
+            e.printStackTrace();
+            return ResponseEntity.status(500)
                 .body(new ApiResponse<>("Error: " + e.getMessage(), null));
         }
     }
 }
+

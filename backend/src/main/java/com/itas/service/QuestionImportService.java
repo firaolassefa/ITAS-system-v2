@@ -48,6 +48,14 @@ public class QuestionImportService {
 
         String category = questionCategory != null ? questionCategory : "QUIZ";
         List<Question> questions = parseQuestions(text, moduleId, courseId, category);
+
+        if (questions.isEmpty()) {
+            throw new RuntimeException(
+                "No valid questions found in the file. " +
+                "Make sure each question starts with 'Question N:' and has at least 2 options and a 'Correct Answer:' line."
+            );
+        }
+
         return questionRepository.saveAll(questions);
     }
 
@@ -75,12 +83,31 @@ public class QuestionImportService {
     private String extractTextFromPDF(MultipartFile file) throws IOException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(document);
+            stripper.setSortByPosition(true);
+            stripper.setLineSeparator("\n");
+            String raw = stripper.getText(document);
+
+            // Normalize common PDF extraction issues:
+            // 1. Normalize line endings
+            raw = raw.replace("\r\n", "\n").replace("\r", "\n");
+            // 2. Collapse 3+ blank lines into 2
+            raw = raw.replaceAll("\n{3,}", "\n\n");
+            // 3. Fix "Question1:" → "Question 1:" (no space between word and number)
+            raw = raw.replaceAll("(?i)\\bQuestion(\\d+)", "Question $1");
+            // 4. Ensure "Correct Answer:" is on its own line
+            raw = raw.replaceAll("(?i)(?<!\n)(Correct\\s+Answer:)", "\nCorrect Answer:");
+            // 5. Ensure "Explanation:" is on its own line
+            raw = raw.replaceAll("(?i)(?<!\n)(Explanation:)", "\nExplanation:");
+            // 6. Ensure "Points:" is on its own line
+            raw = raw.replaceAll("(?i)(?<!\n)(Points:)", "\nPoints:");
+
+            return raw;
         }
     }
 
     /**
-     * Parse questions from extracted text
+     * Parse questions from extracted text.
+     * Skips malformed blocks and continues with the rest.
      */
     private List<Question> parseQuestions(String text, Long moduleId, Long courseId, String questionCategory) {
         List<Question> questions = new ArrayList<>();
@@ -89,32 +116,38 @@ public class QuestionImportService {
         if (moduleId != null) {
             module = moduleRepository.findById(moduleId)
                 .orElseThrow(() -> new RuntimeException("Module not found with id: " + moduleId));
-            // auto-fill courseId from module if not provided
             if (courseId == null && module.getCourse() != null) {
                 courseId = module.getCourse().getId();
             }
         }
 
-        // Split by "Question X:" pattern
-        String[] blocks = text.split("(?i)Question\\s+\\d+:");
+        // Split by "Question X:" pattern (flexible: Question 1:, Question 1., Q1:, etc.)
+        String[] blocks = text.split("(?i)(?:Question\\s+\\d+[:.)]|Q\\s*\\d+[:.)])");
 
-        int order = 1;
+        int order = questionRepository.findAll().size();
+        int skipped = 0;
+
         for (int i = 1; i < blocks.length; i++) {
             String block = blocks[i].trim();
             if (block.isEmpty()) continue;
             try {
-                Question question = parseQuestionBlock(block, module, courseId, questionCategory, order);
-                if (question != null) { questions.add(question); order++; }
+                Question question = parseQuestionBlock(block, module, courseId, questionCategory, order + i);
+                if (question != null) {
+                    questions.add(question);
+                } else {
+                    skipped++;
+                }
             } catch (Exception e) {
-                System.err.println("Failed to parse question block: " + e.getMessage());
+                skipped++;
+                System.err.println("Skipped question block " + i + ": " + e.getMessage());
             }
         }
-        return questions;
-    }
 
-    // backward compat
-    private List<Question> parseQuestions(String text, Long moduleId) {
-        return parseQuestions(text, moduleId, null, "QUIZ");
+        if (skipped > 0) {
+            System.out.println("Import summary: " + questions.size() + " imported, " + skipped + " skipped");
+        }
+
+        return questions;
     }
 
     /**

@@ -28,8 +28,6 @@ public class SmsService {
     @Async
     public void sendSms(String phoneNumber, String message) {
         if (!smsEnabled) {
-            System.out.println("📱 SMS DISABLED - Would send to: " + phoneNumber);
-            System.out.println("   Message: " + message);
             return;
         }
         
@@ -37,9 +35,6 @@ public class SmsService {
         // For now, just log it
         try {
             if (twilioAccountSid.isEmpty() || twilioAuthToken.isEmpty()) {
-                System.out.println("⚠️ Twilio credentials not configured");
-                System.out.println("📱 MOCK SMS to: " + phoneNumber);
-                System.out.println("   Message: " + message);
                 return;
             }
             
@@ -51,12 +46,9 @@ public class SmsService {
                 new PhoneNumber(twilioPhoneNumber),
                 message
             ).create();
-            System.out.println("✅ SMS sent successfully. SID: " + twilioMessage.getSid());
             */
-            
-            System.out.println("📱 SMS sent to: " + phoneNumber);
         } catch (Exception e) {
-            System.err.println("❌ Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
+            System.err.println("? Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
         }
     }
     
@@ -66,11 +58,8 @@ public class SmsService {
     @Async
     public void sendBulkSms(List<String> phoneNumbers, String message) {
         if (phoneNumbers == null || phoneNumbers.isEmpty()) {
-            System.out.println("⚠️ No phone numbers provided for bulk SMS");
             return;
         }
-        
-        System.out.println("📱 Sending bulk SMS to " + phoneNumbers.size() + " recipients...");
         
         int successCount = 0;
         int failCount = 0;
@@ -88,11 +77,9 @@ public class SmsService {
                 Thread.sleep(200);
             } catch (Exception e) {
                 failCount++;
-                System.err.println("❌ Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
+                System.err.println("? Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
             }
         }
-        
-        System.out.println("✅ Bulk SMS complete: " + successCount + " sent, " + failCount + " failed");
     }
     
     /**
@@ -119,16 +106,13 @@ public class SmsService {
      */
     public boolean testSmsConfiguration() {
         if (!smsEnabled) {
-            System.out.println("⚠️ SMS is disabled in configuration");
             return false;
         }
         
         if (twilioAccountSid.isEmpty() || twilioAuthToken.isEmpty()) {
-            System.out.println("⚠️ Twilio credentials not configured");
             return false;
         }
-        
-        System.out.println("✅ SMS configuration looks good (Twilio integration pending)");
         return true;
     }
 }
+

@@ -83,19 +83,6 @@ const FinalExam: React.FC = () => {
     }
     try {
       setSubmitting(true);
-      // Calculate score locally
-      let earnedPoints = 0;
-      let totalPoints = 0;
-      questions.forEach(q => {
-        totalPoints += q.points;
-        const selectedId = answers[q.id];
-        if (selectedId) {
-          const selectedAnswer = q.answers.find(a => a.id === selectedId);
-          // We don't have isCorrect on the answer here (hidden for final exam)
-          // Submit to backend which will calculate
-        }
-      });
-
       const response = await apiClient.post(`/assessments/final-exam/submit`, {
         userId: user.id,
         courseId: Number(courseId),
@@ -104,15 +91,6 @@ const FinalExam: React.FC = () => {
       const data = response.data.data || response.data;
       setResult(data);
       setShowResultDialog(true);
-
-      // If passed (75%+), generate certificate
-      if (data.passed) {
-        try {
-          await apiClient.post('/certificates/generate', { userId: user.id, courseId: Number(courseId) });
-        } catch (certErr) {
-          console.error('Certificate generation error:', certErr);
-        }
-      }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to submit exam');
     } finally {
@@ -265,44 +243,106 @@ const FinalExam: React.FC = () => {
       </Paper>
 
       {/* Result Dialog */}
-      <Dialog open={showResultDialog} maxWidth="sm" fullWidth disableEscapeKeyDown>
-        <DialogTitle sx={{ textAlign: 'center', pt: 4 }}>
+      <Dialog open={showResultDialog} maxWidth="md" fullWidth disableEscapeKeyDown
+        PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ textAlign: 'center', pt: 4, pb: 1 }}>
           {result?.passed
             ? <EmojiEvents sx={{ fontSize: 72, color: GOLD }} />
             : <Warning sx={{ fontSize: 72, color: GOLD }} />}
+          <Typography variant="h4" sx={{ fontWeight: 800, mt: 1 }}>
+            {result?.passed ? '🎉 You Passed!' : 'Not Passed'}
+          </Typography>
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>
-              {result?.passed ? 'Congratulations! You Passed!' : 'Not Passed'}
+          {/* Score summary */}
+          <Paper sx={{ p: 3, mb: 3, textAlign: 'center',
+            bgcolor: result?.passed ? alpha(BLUE, 0.05) : alpha(GOLD, 0.08),
+            border: `2px solid ${result?.passed ? BLUE : GOLD}`, borderRadius: 3 }}>
+            <Typography variant="h2" sx={{ fontWeight: 900, color: result?.passed ? BLUE : GOLD }}>
+              {result?.percentage}%
             </Typography>
-            <Paper sx={{ p: 4, mb: 3, bgcolor: result?.passed ? alpha(BLUE, 0.05) : alpha(GOLD, 0.08),
-              border: `2px solid ${result?.passed ? BLUE : GOLD}`, borderRadius: 3 }}>
-              <Typography variant="h2" sx={{ fontWeight: 900, color: result?.passed ? BLUE : GOLD, mb: 1 }}>
-                {result?.percentage}%
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {result?.earnedPoints} / {result?.totalPoints} points
-              </Typography>
-            </Paper>
-            <Alert severity={result?.passed ? 'success' : 'warning'} sx={{ mb: 2 }}>
-              {result?.feedback || (result?.passed
-                ? 'You passed! Your certificate has been generated.'
-                : 'You need 75% to pass. Please review the material and try again.')}
-            </Alert>
-            {result?.passed && (
-              <Alert severity="success" icon={<EmojiEvents />}>
-                Your certificate has been generated. Go to <strong>My Certificates</strong> to view and download it.
-              </Alert>
-            )}
+            <Typography variant="h6" color="text.secondary">
+              {result?.earnedPoints} / {result?.totalPoints} points earned
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+              <Chip label={`✅ Passing score: 75%`} sx={{ fontWeight: 600 }} />
+              <Chip
+                label={result?.passed ? '🏆 Certificate Generated!' : '❌ Not passed yet'}
+                sx={{ fontWeight: 600, bgcolor: result?.passed ? alpha('#10B981', 0.1) : alpha('#ef4444', 0.1),
+                  color: result?.passed ? '#10B981' : '#ef4444' }}
+              />
+            </Box>
+          </Paper>
+
+          <Alert severity={result?.passed ? 'success' : 'warning'} sx={{ mb: 3 }}>
+            {result?.feedback || (result?.passed
+              ? 'Congratulations! Your certificate has been generated.'
+              : 'You need 75% to pass. Review the course and try again.')}
+          </Alert>
+
+          {/* Per-question breakdown */}
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+            📊 Question Breakdown
+          </Typography>
+          <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 1 }}>
+            {questions.map((q, i) => {
+              const selectedAnswerId = answers[q.id];
+              const selectedAnswer = q.answers?.find((a: any) => a.id === selectedAnswerId);
+              const correctAnswer = q.answers?.find((a: any) => a.isCorrect);
+              const isCorrect = selectedAnswer?.isCorrect === true;
+              return (
+                <Paper key={q.id} sx={{
+                  p: 2, mb: 1.5, borderRadius: 2,
+                  borderLeft: `4px solid ${isCorrect ? '#10B981' : '#ef4444'}`,
+                  bgcolor: isCorrect ? alpha('#10B981', 0.04) : alpha('#ef4444', 0.04),
+                  border: `1px solid ${isCorrect ? alpha('#10B981', 0.2) : alpha('#ef4444', 0.2)}`,
+                }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
+                        <Chip label={`Q${i + 1}`} size="small" sx={{ fontWeight: 700, fontSize: '0.7rem' }} />
+                        <Chip
+                          label={isCorrect ? `+${q.points} pts` : `0 / ${q.points} pts`}
+                          size="small"
+                          sx={{
+                            fontWeight: 700, fontSize: '0.7rem',
+                            bgcolor: isCorrect ? alpha('#10B981', 0.15) : alpha('#ef4444', 0.1),
+                            color: isCorrect ? '#10B981' : '#ef4444',
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                        {q.questionText}
+                      </Typography>
+                      {!selectedAnswerId ? (
+                        <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                          ⚠️ Not answered
+                        </Typography>
+                      ) : (
+                        <Box>
+                          <Typography variant="caption" sx={{ color: isCorrect ? '#10B981' : '#ef4444' }}>
+                            {isCorrect ? '✅' : '❌'} Your answer: <strong>{selectedAnswer?.answerText}</strong>
+                          </Typography>
+                          {!isCorrect && correctAnswer && (
+                            <Typography variant="caption" sx={{ display: 'block', color: '#10B981' }}>
+                              ✅ Correct: <strong>{correctAnswer.answerText}</strong>
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                </Paper>
+              );
+            })}
           </Box>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 2 }}>
           {result?.passed ? (
             <Button variant="contained" size="large"
               onClick={() => navigate('/taxpayer/certificates')}
-              sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' } }}>
-              View My Certificates
+              sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' }, fontWeight: 700 }}>
+              🏆 View My Certificate
             </Button>
           ) : (
             <>

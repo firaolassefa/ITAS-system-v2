@@ -116,21 +116,39 @@ const QuestionManagement: React.FC = () => {
 
   const handleUpload = async () => {
     const cat = TABS[tab].cat;
-    const tid = cat === 'FINAL_EXAM' ? selectedCourse : selectedModule;
-    if (!uploadFile || !tid) { setMsg({ type: 'error', text: 'Select a file first' }); return; }
+    if (!uploadFile) { setMsg({ type: 'error', text: 'Please select a file first' }); return; }
+    if (cat === 'FINAL_EXAM' && !selectedCourse) { setMsg({ type: 'error', text: 'Please select a course first' }); return; }
+    if (cat !== 'FINAL_EXAM' && !selectedModule) { setMsg({ type: 'error', text: 'Please select a module first' }); return; }
+
     try {
       setLoading(true);
       const fd = new FormData();
       fd.append('file', uploadFile);
-      fd.append('moduleId', tid.toString());
       fd.append('questionCategory', cat);
-      if (cat === 'FINAL_EXAM') fd.append('courseId', selectedCourse.toString());
-      const r = await apiClient.post('/assessment-definitions/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+
+      if (cat === 'FINAL_EXAM') {
+        // Final exam: only courseId, no moduleId
+        fd.append('courseId', selectedCourse.toString());
+      } else {
+        // Practice / Quiz: moduleId required
+        fd.append('moduleId', selectedModule.toString());
+        if (selectedCourse) fd.append('courseId', selectedCourse.toString());
+      }
+
+      const r = await apiClient.post('/assessment-definitions/import', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       const data = r.data.data || r.data;
-      setMsg({ type: 'success', text: `Imported ${Array.isArray(data) ? data.length : 0} questions!` });
-      setUploadOpen(false); setUploadFile(null); await loadQ();
-    } catch (e: any) { setMsg({ type: 'error', text: e.response?.data?.message || 'Upload failed' }); }
-    finally { setLoading(false); }
+      const count = data?.imported ?? (Array.isArray(data) ? data.length : 0);
+      setMsg({ type: 'success', text: `✅ Successfully imported ${count} question${count !== 1 ? 's' : ''}!` });
+      setUploadFile(null);
+      await loadQ();
+      setTimeout(() => { setUploadOpen(false); setMsg(null); }, 1500);
+    } catch (e: any) {
+      setMsg({ type: 'error', text: e.response?.data?.message || 'Upload failed. Check file format.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cur = TABS[tab];
@@ -330,12 +348,32 @@ const QuestionManagement: React.FC = () => {
 
       {/* Upload Dialog */}
       <Dialog open={uploadOpen} onClose={() => { setUploadOpen(false); setUploadFile(null); setMsg(null); }} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Import {cur.label} Questions</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Alert severity="info">
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Upload .docx or .pdf with this format:</Typography>
-              <Box component="pre" sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1, fontSize: '0.82rem', overflow: 'auto', fontFamily: 'monospace' }}>
+        <DialogTitle sx={{ fontWeight: 700, borderBottom: `3px solid ${cur.color}` }}>
+          📂 Import {cur.label} Questions from File
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+
+            {/* What is this for */}
+            <Alert severity="info" icon={false} sx={{ bgcolor: alpha(BLUE, 0.05), border: `1px solid ${alpha(BLUE, 0.2)}` }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                📌 What does Upload File do?
+              </Typography>
+              <Typography variant="body2">
+                Instead of adding questions one by one, you can write all your questions in a <strong>Word (.docx)</strong> or <strong>PDF</strong> file and upload it here.
+                The system will automatically read the file and create all questions at once.
+              </Typography>
+            </Alert>
+
+            {/* File format */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                📝 Required File Format:
+              </Typography>
+              <Box component="pre" sx={{
+                bgcolor: '#1e1e1e', color: '#d4d4d4', p: 2.5, borderRadius: 2,
+                fontSize: '0.8rem', overflow: 'auto', fontFamily: 'monospace', lineHeight: 1.7,
+              }}>
 {`Question 1: What is VAT?
 Type: ${cur.cat === 'PRACTICE' ? 'Practice' : cur.cat === 'FINAL_EXAM' ? 'FinalExam' : 'Quiz'}
 A) Value Added Tax
@@ -344,28 +382,62 @@ C) Verified Asset Tax
 D) None of the above
 Correct Answer: A
 Explanation: VAT stands for Value Added Tax
+Points: 10
+
+Question 2: What is the standard VAT rate in Saudi Arabia?
+Type: ${cur.cat === 'PRACTICE' ? 'Practice' : cur.cat === 'FINAL_EXAM' ? 'FinalExam' : 'Quiz'}
+A) 5%
+B) 10%
+C) 15%
+D) 20%
+Correct Answer: C
+Explanation: The standard VAT rate is 15%
 Points: 10`}
               </Box>
-              {cur.cat === 'FINAL_EXAM' && (
-                <Typography variant="body2" sx={{ mt: 1, fontWeight: 600, color: BLUE }}>
-                  Final Exam: users need 75% to earn a certificate.
-                </Typography>
-              )}
-            </Alert>
+            </Box>
+
+            {/* Rules */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+              {[
+                { icon: '✅', text: 'Start each question with "Question N:"' },
+                { icon: '✅', text: 'Options must be A) B) C) D)' },
+                { icon: '✅', text: '"Correct Answer: A" (letter only)' },
+                { icon: '✅', text: 'Blank line between questions' },
+                { icon: '⚠️', text: 'Explanation required for Practice' },
+                { icon: '⚠️', text: 'Points defaults to 1 if not set' },
+              ].map((r, i) => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5,
+                  bgcolor: alpha(BLUE, 0.03), borderRadius: 1.5, border: `1px solid ${alpha(BLUE, 0.1)}` }}>
+                  <Typography>{r.icon}</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>{r.text}</Typography>
+                </Box>
+              ))}
+            </Box>
+
             {msg && <Alert severity={msg.type} onClose={() => setMsg(null)}>{msg.text}</Alert>}
+
+            {/* File picker */}
             <Button variant="outlined" component="label" startIcon={<Upload />} fullWidth
-              sx={{ py: 2, borderColor: BLUE, color: BLUE }}>
-              {uploadFile ? uploadFile.name : 'Choose File (.docx or .pdf)'}
-              <input type="file" hidden accept=".docx,.pdf,.doc" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
+              sx={{ py: 2.5, borderColor: uploadFile ? '#10B981' : BLUE, color: uploadFile ? '#10B981' : BLUE,
+                borderStyle: 'dashed', borderWidth: 2, fontSize: '0.95rem', fontWeight: 600 }}>
+              {uploadFile ? `✅ ${uploadFile.name}` : '📁 Click to choose .docx or .pdf file'}
+              <input type="file" hidden accept=".docx,.pdf,.doc"
+                onChange={(e) => { setUploadFile(e.target.files?.[0] || null); setMsg(null); }} />
             </Button>
+
+            {uploadFile && (
+              <Alert severity="success" sx={{ py: 0.5 }}>
+                File ready: <strong>{uploadFile.name}</strong> ({(uploadFile.size / 1024).toFixed(1)} KB)
+              </Alert>
+            )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions sx={{ p: 3, gap: 1 }}>
           <Button onClick={() => { setUploadOpen(false); setUploadFile(null); setMsg(null); }}>Cancel</Button>
           <Button variant="contained" onClick={handleUpload} disabled={!uploadFile || loading}
-            startIcon={loading ? <CircularProgress size={20} /> : <Upload />}
-            sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' } }}>
-            {loading ? 'Uploading...' : 'Upload & Import'}
+            startIcon={loading ? <CircularProgress size={18} /> : <Upload />}
+            sx={{ bgcolor: BLUE, '&:hover': { bgcolor: '#1c7ed6' }, fontWeight: 700, px: 3 }}>
+            {loading ? 'Importing...' : 'Import Questions'}
           </Button>
         </DialogActions>
       </Dialog>

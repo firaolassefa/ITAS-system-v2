@@ -31,7 +31,7 @@ export const resourcesAPI = {
 
   getResourceUrl: (id: number) => {
     const token = localStorage.getItem('itas_token');
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
     return `${API_BASE_URL}/resources/${id}/stream?token=${token}`;
   },
 

@@ -52,20 +52,20 @@ const TaxpayerDashboard: React.FC<{ user?: any }> = ({ user }) => {
       const cacheKey = `dashboard_taxpayer_${user.id}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
-        const cachedData = JSON.parse(cached);
-        if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
-          const d = cachedData.data || {};
+        const { data: cachedData, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 2 * 60 * 1000) {
           setData({
-            enrolledCourses: d.enrolledCourses || 0,
-            completedCourses: d.completedCourses || 0,
-            certificates: d.certificates || 0,
-            averageProgress: Math.round(d.averageProgress || 0),
-            activeCourses: Array.isArray(d.activeCourses) ? d.activeCourses : [],
+            enrolledCourses: cachedData.enrolledCourses || 0,
+            completedCourses: cachedData.completedCourses || 0,
+            certificates: cachedData.certificates || 0,
+            averageProgress: Math.round(cachedData.averageProgress || 0),
+            activeCourses: Array.isArray(cachedData.activeCourses) ? cachedData.activeCourses : [],
           });
           setLoading(false);
+          return;
         }
       }
-      const response = await apiClient.get(`/dashboard/user/${user.id}`);
+      const response = await apiClient.get(`/dashboard/taxpayer/${user.id}`);
       const freshData = response.data.data || response.data;
       const normalized = {
         enrolledCourses: freshData.enrolledCourses || 0,

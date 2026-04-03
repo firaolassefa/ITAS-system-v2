@@ -7,23 +7,13 @@ export const useNotifications = (userRole?: string, userId?: number) => {
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = async () => {
-    if (!userId || userId <= 0) {
-      console.log('useNotifications: Skipping fetchNotifications - invalid userId:', userId);
-      setLoading(false);
-      return;
-    }
-    
+    if (!userId || userId <= 0) { setLoading(false); return; }
     try {
       setLoading(true);
-      console.log('Fetching notifications with role:', userRole, 'userId:', userId);
       const response = await notificationAPI.getUnread(userRole, userId);
-      console.log('Notifications response:', response);
       const data = response.data || response || [];
-      console.log('Parsed notifications data:', data);
       setNotifications(Array.isArray(data) ? data : []);
     } catch (error: any) {
-      console.error('Error fetching notifications:', error);
-      console.error('Error response:', error.response?.data);
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -31,21 +21,12 @@ export const useNotifications = (userRole?: string, userId?: number) => {
   };
 
   const fetchUnreadCount = async () => {
-    if (!userId || userId <= 0) {
-      console.log('useNotifications: Skipping fetchUnreadCount - invalid userId:', userId);
-      return;
-    }
-    
+    if (!userId || userId <= 0) return;
     try {
-      console.log('Fetching unread count with role:', userRole, 'userId:', userId);
       const response = await notificationAPI.getUnreadCount(userRole, userId);
-      console.log('Unread count response:', response);
       const count = response.data || response || 0;
-      console.log('Parsed count:', count);
       setUnreadCount(typeof count === 'number' ? count : 0);
     } catch (error: any) {
-      console.error('Error fetching unread count:', error);
-      console.error('Error response:', error.response?.data);
       setUnreadCount(0);
     }
   };
@@ -71,20 +52,14 @@ export const useNotifications = (userRole?: string, userId?: number) => {
   };
 
   useEffect(() => {
-    // Only fetch if we have valid user data
     if ((userRole || userId) && userId && userId > 0) {
-      console.log('useNotifications: Fetching with role:', userRole, 'userId:', userId);
       fetchNotifications();
       fetchUnreadCount();
-
-      // Poll for new notifications every 30 seconds
       const interval = setInterval(() => {
         fetchUnreadCount();
-      }, 30000);
-
+      }, 120000);
       return () => clearInterval(interval);
     } else {
-      console.log('useNotifications: Skipping fetch - invalid user data', { userRole, userId });
       setLoading(false);
     }
   }, [userRole, userId]);

@@ -83,30 +83,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         },
         typography: {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-          h1: {
-            fontWeight: 800,
-            letterSpacing: '-0.02em',
-          },
-          h2: {
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-          },
-          h3: {
-            fontWeight: 700,
-          },
-          h4: {
-            fontWeight: 700,
-          },
-          h5: {
-            fontWeight: 600,
-          },
-          h6: {
-            fontWeight: 600,
-          },
-          button: {
-            textTransform: 'none',
-            fontWeight: 600,
-          },
+          h1: { fontWeight: 800, fontSize: '2.25rem', letterSpacing: '-0.02em' },
+          h2: { fontWeight: 700, fontSize: '1.875rem', letterSpacing: '-0.01em' },
+          h3: { fontWeight: 700, fontSize: '1.5rem' },
+          h4: { fontWeight: 700, fontSize: '1.25rem' },
+          h5: { fontWeight: 600, fontSize: '1.1rem' },
+          h6: { fontWeight: 600, fontSize: '1rem' },
+          body1: { fontSize: '0.95rem', lineHeight: 1.6 },
+          body2: { fontSize: '0.875rem', lineHeight: 1.6 },
+          caption: { fontSize: '0.78rem' },
+          button: { textTransform: 'none', fontWeight: 600, fontSize: '0.9rem' },
         },
         shape: {
           borderRadius: 12,
@@ -122,16 +108,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 },
               },
-              contained: {
-                background: mode === 'light' 
-                  ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
-                  : 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)',
-                '&:hover': {
-                  background: mode === 'light'
-                    ? 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)'
-                    : 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
-                },
-              },
+              // Do NOT override contained here — let individual components control their own bg
             },
           },
           MuiCard: {

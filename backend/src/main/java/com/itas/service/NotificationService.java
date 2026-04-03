@@ -116,9 +116,18 @@ public class NotificationService {
             // If role is specified, create notifications for all users with that role
             if (notification.getRole() != null && !notification.getRole().isEmpty()) {
                 try {
-                    // Convert string role to UserType enum
-                    UserType userType = UserType.valueOf(notification.getRole());
-                    List<User> targetUsers = userRepository.findByUserType(userType);
+                    List<User> targetUsers;
+
+                    if ("ALL".equalsIgnoreCase(notification.getRole())) {
+                        // Send to all active users
+                        targetUsers = userRepository.findAll().stream()
+                            .filter(u -> u.isActive())
+                            .collect(java.util.stream.Collectors.toList());
+                    } else {
+                        // Convert string role to UserType enum
+                        UserType userType = UserType.valueOf(notification.getRole());
+                        targetUsers = userRepository.findByUserType(userType);
+                    }
                     
                     if (targetUsers.isEmpty()) {
                         // If no users found, still save the notification as a broadcast
@@ -167,7 +176,6 @@ public class NotificationService {
             notification.setSentCount(1);
             return notificationRepository.save(notification);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to send notification: " + e.getMessage(), e);
         }
     }
@@ -291,9 +299,7 @@ public class NotificationService {
                             );
                         }
                     }
-                    System.out.println("✅ Queued " + targetUsers.size() + " emails for sending");
                 } else {
-                    System.out.println("⚠️ EmailService not available - emails not sent");
                 }
             } 
             else if ("SMS".equals(notificationType)) {
@@ -309,14 +315,11 @@ public class NotificationService {
                             smsService.sendSms(user.getPhoneNumber(), smsMessage);
                         }
                     }
-                    System.out.println("✅ Queued " + targetUsers.size() + " SMS for sending");
                 } else {
-                    System.out.println("⚠️ SmsService not available - SMS not sent");
                 }
             }
             else if ("IN_APP".equals(notificationType)) {
                 // In-app notifications are already saved to database
-                System.out.println("✅ In-app notifications saved to database");
             }
             else if ("SYSTEM".equals(notificationType)) {
                 // System notifications - both in-app and email
@@ -331,13 +334,11 @@ public class NotificationService {
                             );
                         }
                     }
-                    System.out.println("✅ System notifications sent (in-app + email)");
                 } else {
-                    System.out.println("✅ System notifications saved (in-app only - email service not available)");
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ Error sending notifications: " + e.getMessage());
+            System.err.println("? Error sending notifications: " + e.getMessage());
             // Don't throw exception - we don't want notification sending to break the save operation
         }
     }
@@ -383,3 +384,4 @@ public class NotificationService {
         return stats;
     }
 }
+

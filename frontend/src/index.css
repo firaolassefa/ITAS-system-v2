@@ -7,36 +7,14 @@
 }
 
 body {
-  font-family: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', sans-serif;
-  background: #0B1220;
-  color: #F8FAFC;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
   overflow-x: hidden;
-  position: relative;
+  /* Background and color are controlled by MUI ThemeProvider — do NOT set here */
 }
 
-/* Animated Background */
+/* Remove the dark animated background — it overrides MUI light mode */
 body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(1, 99, 150, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(2, 132, 199, 0.1) 0%, transparent 50%);
-  animation: backgroundPulse 15s ease-in-out infinite;
-  z-index: -1;
-}
-
-@keyframes backgroundPulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
+  display: none;
 }
 
 /* Animated Particles */
@@ -592,3 +570,36 @@ button, .MuiButton-root {
 .stagger-6 { animation-delay: 0.6s; }
 
 
+
+/* ── Responsive Tables ─────────────────────────────────────────────────────── */
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Mobile Utilities ──────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  /* Reduce padding on small screens */
+  .MuiContainer-root {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Stack dialog actions on mobile */
+  .MuiDialogActions-root {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Full width buttons in dialogs on mobile */
+  .MuiDialogActions-root .MuiButton-root {
+    width: 100%;
+  }
+}
+
+/* ── Prevent horizontal scroll ─────────────────────────────────────────────── */
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}

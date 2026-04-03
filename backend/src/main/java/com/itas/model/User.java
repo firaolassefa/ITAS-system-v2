@@ -1,5 +1,6 @@
 package com.itas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -23,11 +24,12 @@ public class User {
     private String email;
 
     @Enumerated(EnumType.STRING)
-    private UserType userType = UserType.TAXPAYER;
+    private UserType userType = UserType.TAX_AGENT;
 
     // Role relationship
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "assignedBy"})
     private UserRole role;
 
     private String taxNumber;
@@ -46,7 +48,7 @@ public class User {
     @Column(name = "region")
     private String region;
 
-    // ✅ ADDED phoneNumber field
+    // âœ… ADDED phoneNumber field
     @Column(name = "phone_number")
     private String phoneNumber;
 

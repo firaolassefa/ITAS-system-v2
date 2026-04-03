@@ -31,6 +31,11 @@ export const modulesAPI = {
     const response = await apiClient.delete(`/modules/${id}`);
     return response.data;
   },
+
+  hasQuiz: async (moduleId: number) => {
+    const response = await apiClient.get(`/modules/${moduleId}/has-quiz`);
+    return response.data.data || response.data;
+  },
 };
 
 export const questionsAPI = {

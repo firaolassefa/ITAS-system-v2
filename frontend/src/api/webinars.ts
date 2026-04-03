@@ -34,6 +34,18 @@ export const webinarApi = {
     return response.data;
   },
 
+  // Update webinar
+  update: async (id: number, webinarData: Partial<Webinar>) => {
+    const response = await apiClient.put(`/webinars/${id}`, webinarData);
+    return response.data;
+  },
+
+  // Delete webinar
+  delete: async (id: number) => {
+    const response = await apiClient.delete(`/webinars/${id}`);
+    return response.data;
+  },
+
   // Get webinar statistics
   getStats: async () => {
     try {

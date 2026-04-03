@@ -24,14 +24,8 @@ public class Module {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "lesson_content", columnDefinition = "TEXT")
-    private String lessonContent; // Rich HTML content for the lesson
-    
-    @Column(name = "learning_objectives", columnDefinition = "TEXT")
-    private String learningObjectives; // What students will learn
-    
     @Column(name = "module_order")
-    private Integer order;
+    private Integer moduleOrder;
     
     @Column(name = "content_url")
     private String contentUrl;
@@ -57,8 +51,9 @@ public class Module {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"module"})
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"module", "answers"})
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Question> questions = new ArrayList<>();
     
     // Constructors
@@ -77,14 +72,8 @@ public class Module {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     
-    public String getLessonContent() { return lessonContent; }
-    public void setLessonContent(String lessonContent) { this.lessonContent = lessonContent; }
-    
-    public String getLearningObjectives() { return learningObjectives; }
-    public void setLearningObjectives(String learningObjectives) { this.learningObjectives = learningObjectives; }
-    
-    public Integer getOrder() { return order; }
-    public void setOrder(Integer order) { this.order = order; }
+    public Integer getModuleOrder() { return moduleOrder; }
+    public void setModuleOrder(Integer moduleOrder) { this.moduleOrder = moduleOrder; }
     
     public String getContentUrl() { return contentUrl; }
     public void setContentUrl(String contentUrl) { this.contentUrl = contentUrl; }

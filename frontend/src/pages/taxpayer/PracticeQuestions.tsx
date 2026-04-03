@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Button, Typography, Paper, Radio, RadioGroup,
   FormControlLabel, Alert, CircularProgress, Card, CardContent,
@@ -10,7 +10,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('itas_token');

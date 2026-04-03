@@ -10,9 +10,11 @@ import com.itas.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,30 +30,66 @@ public class QuestionController {
     private ModuleRepository moduleRepository;
     
     @GetMapping("/module/{moduleId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getQuestionsByModule(@PathVariable Long moduleId) {
         try {
             List<Question> questions = questionRepository.findByModuleIdOrderByOrderAsc(moduleId);
-            return ResponseEntity.ok(new ApiResponse<>("Success", questions));
+            // Map to safe DTOs to avoid lazy loading issues
+            List<Map<String, Object>> result = toDto(questions);
+            return ResponseEntity.ok(new ApiResponse<>("Success", result));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to load questions: " + e.getMessage(), null));
         }
     }
 
     @GetMapping("/course/{courseId}/final-exam")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getFinalExamQuestions(@PathVariable Long courseId) {
         try {
             List<Question> questions = questionRepository.findByCourseIdAndQuestionCategory(courseId, "FINAL_EXAM");
-            return ResponseEntity.ok(new ApiResponse<>("Final exam questions retrieved", questions));
+            return ResponseEntity.ok(new ApiResponse<>("Final exam questions retrieved", toDto(questions)));
         } catch (Exception e) {
-            // If question_category column doesn't exist yet (migration not run),
-            // return empty list instead of 500 so the frontend shows "no questions" state
             System.err.println("Final exam query failed (migration may be needed): " + e.getMessage());
             return ResponseEntity.ok(new ApiResponse<>("Final exam questions retrieved", java.util.Collections.emptyList()));
         }
-    }    
+    }
+
+    /** Convert questions to plain maps so Jackson never touches lazy proxies */
+    private List<Map<String, Object>> toDto(List<Question> questions) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Question q : questions) {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", q.getId());
+            dto.put("questionText", q.getQuestionText());
+            dto.put("questionType", q.getQuestionType() != null ? q.getQuestionType().name() : "MULTIPLE_CHOICE");
+            dto.put("points", q.getPoints());
+            dto.put("order", q.getOrder());
+            dto.put("isPractice", q.getIsPractice());
+            dto.put("questionCategory", q.getQuestionCategory() != null ? q.getQuestionCategory() : (Boolean.TRUE.equals(q.getIsPractice()) ? "PRACTICE" : "QUIZ"));
+            dto.put("explanation", q.getExplanation());
+            dto.put("courseId", q.getCourseId());
+            dto.put("moduleId", q.getModule() != null ? q.getModule().getId() : null);
+            // Answers
+            List<Map<String, Object>> answers = new ArrayList<>();
+            if (q.getAnswers() != null) {
+                for (Answer a : q.getAnswers()) {
+                    Map<String, Object> aDto = new HashMap<>();
+                    aDto.put("id", a.getId());
+                    aDto.put("answerText", a.getAnswerText());
+                    aDto.put("isCorrect", a.getIsCorrect());
+                    aDto.put("order", a.getOrder());
+                    answers.add(aDto);
+                }
+            }
+            dto.put("answers", answers);
+            list.add(dto);
+        }
+        return list;
+    }
     @PostMapping("")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> createQuestion(@RequestBody Map<String, Object> request) {
         try {
             String questionText = (String) request.get("questionText");
@@ -109,14 +147,13 @@ public class QuestionController {
             return ResponseEntity.ok(new ApiResponse<>("Question created successfully", savedQuestion));
 
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to create question: " + e.getMessage(), null));
         }
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> updateQuestion(@PathVariable Long id, @RequestBody Map<String, Object> request) {
         try {
             Question question = questionRepository.findById(id)
@@ -166,14 +203,13 @@ public class QuestionController {
             return ResponseEntity.ok(new ApiResponse<>("Question updated successfully", updated));
             
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("Failed to update question: " + e.getMessage(), null));
         }
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> deleteQuestion(@PathVariable Long id) {
         try {
             questionRepository.deleteById(id);
@@ -185,7 +221,7 @@ public class QuestionController {
     }
     
     @PostMapping("/bulk-delete")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> bulkDeleteQuestions(@RequestBody Map<String, Object> request) {
         try {
             @SuppressWarnings("unchecked")
@@ -221,7 +257,7 @@ public class QuestionController {
     }
     
     @PostMapping("/duplicate/{id}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> duplicateQuestion(@PathVariable Long id) {
         try {
             Question original = questionRepository.findById(id)
@@ -257,7 +293,7 @@ public class QuestionController {
     }
     
     @GetMapping("/module/{moduleId}/statistics")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN', 'TRAINING_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> getModuleQuestionStatistics(@PathVariable Long moduleId) {
         try {
             List<Question> allQuestions = questionRepository.findByModuleIdOrderByOrderAsc(moduleId);
@@ -450,3 +486,4 @@ public class QuestionController {
         }
     }
 }
+

@@ -173,7 +173,6 @@ public class RoleConfig {
         course1.setCategory("VAT");
         course1.setDifficulty("BEGINNER");
         course1.setDurationHours(4);
-        course1.setModules(Arrays.asList("Introduction to VAT", "VAT Registration Process", "Filing VAT Returns", "Common VAT Mistakes"));
         course1.setPublished(true);
         course1.setCreatedAt(LocalDateTime.now());
         course1.setUpdatedAt(LocalDateTime.now());
@@ -185,7 +184,6 @@ public class RoleConfig {
         course2.setCategory("INCOME_TAX");
         course2.setDifficulty("INTERMEDIATE");
         course2.setDurationHours(6);
-        course2.setModules(Arrays.asList("Understanding Tax Brackets", "Deductions and Allowances", "Filing Online Returns"));
         course2.setPublished(true);
         course2.setCreatedAt(LocalDateTime.now());
         course2.setUpdatedAt(LocalDateTime.now());
@@ -197,7 +195,6 @@ public class RoleConfig {
         course3.setCategory("CORPORATE_TAX");
         course3.setDifficulty("ADVANCED");
         course3.setDurationHours(8);
-        course3.setModules(Arrays.asList("Corporate Tax Structures", "Tax Planning Strategies", "Compliance Reporting"));
         course3.setPublished(true);
         course3.setCreatedAt(LocalDateTime.now());
         course3.setUpdatedAt(LocalDateTime.now());

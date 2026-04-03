@@ -1,5 +1,6 @@
 package com.itas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,10 +13,12 @@ public class Assessment {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "role"})
     private User user;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "questions", "course"})
     private Module module;
     
     @Column(name = "attempt_number", nullable = false)

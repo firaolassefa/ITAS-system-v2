@@ -1,6 +1,7 @@
 // 8-Role System for ITAS Tax Education Platform
 export const ROLES = {
-  TAX_AGENT: 'TAX_AGENT',               // External tax agents accessing tax education
+  TAX_AGENT: 'TAX_AGENT',               // Registered users: full portal access
+  TAXPAYER: 'TAXPAYER',                 // Public landing page: resources only
   MOR_STAFF: 'MOR_STAFF',               // Ministry of Revenue staff (internal users)
   CONTENT_ADMIN: 'CONTENT_ADMIN',       // Manages educational content and resources
   TRAINING_ADMIN: 'TRAINING_ADMIN',     // Manages courses and webinars
@@ -92,7 +93,7 @@ export type Permission = keyof typeof PERMISSIONS;
 
 // Role to permissions mapping based on 8-role requirements
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  [ROLES.TAX_AGENT]: [
+  [ROLES.TAXPAYER]: [
     PERMISSIONS.LOGIN_SSO,
     PERMISSIONS.SEARCH_RESOURCES,
     PERMISSIONS.WATCH_VIDEOS,
@@ -200,7 +201,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
 // Role descriptions for UI display
 export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
-  [ROLES.TAX_AGENT]: 'External tax agent who uses ITAS for tax purposes and accesses educational materials',
+  [ROLES.TAXPAYER]: 'External tax agent who uses ITAS for tax purposes and accesses educational materials',
   [ROLES.MOR_STAFF]: 'Internal Ministry of Revenue staff member who uses learning modules',
   [ROLES.CONTENT_ADMIN]: 'Responsible for managing educational materials and resources',
   [ROLES.TRAINING_ADMIN]: 'Manages courses, modules, and live webinars',
@@ -255,7 +256,7 @@ export const isInternalRole = (userRole: UserRole): boolean => {
 // Get readable role name
 export function getRoleDisplayName(role: UserRole): string {
   const displayNames: Record<UserRole, string> = {
-    [ROLES.TAX_AGENT]: 'Tax Agent',
+    [ROLES.TAXPAYER]: 'Tax Agent',
     [ROLES.MOR_STAFF]: 'MOR Staff',
     [ROLES.CONTENT_ADMIN]: 'Content Administrator',
     [ROLES.TRAINING_ADMIN]: 'Training Administrator',
@@ -271,7 +272,7 @@ export function getRoleDisplayName(role: UserRole): string {
 // Get role description
 export function getRoleDescription(role: UserRole): string {
   const descriptions: Record<UserRole, string> = {
-    [ROLES.TAX_AGENT]: 'Tax agents who can access educational resources and courses',
+    [ROLES.TAXPAYER]: 'Tax agents who can access educational resources and courses',
     [ROLES.MOR_STAFF]: 'Internal Ministry of Revenue staff with access to internal training',
     [ROLES.CONTENT_ADMIN]: 'Manages educational content, resources, and materials',
     [ROLES.TRAINING_ADMIN]: 'Schedules and manages webinars and training sessions',
@@ -287,7 +288,7 @@ export function getRoleDescription(role: UserRole): string {
 // Get routes accessible by role
 export function getAccessibleRoutes(role: UserRole): string[] {
   const routes: Record<UserRole, string[]> = {
-    [ROLES.TAX_AGENT]: [
+    [ROLES.TAXPAYER]: [
       '/taxpayer/dashboard',
       '/taxpayer/courses',
       '/taxpayer/courses/:id',
@@ -407,7 +408,7 @@ export function getMenuItems(role: UserRole) {
     ],
   };
   
-  if (role === ROLES.TAX_AGENT) {
+  if (role === ROLES.TAXPAYER) {
     return allMenuItems.taxpayer;
   } else if (role === ROLES.MOR_STAFF) {
     return allMenuItems.staff;
@@ -422,7 +423,7 @@ export function getMenuItems(role: UserRole) {
 // Get dashboard statistics based on role
 export function getDashboardStats(role: UserRole) {
   const stats: Record<UserRole, Array<{ label: string; key: string }>> = {
-    [ROLES.TAX_AGENT]: [
+    [ROLES.TAXPAYER]: [
       { label: 'Enrolled Courses', key: 'enrolledCourses' },
       { label: 'Completed Courses', key: 'completedCourses' },
       { label: 'Certificates', key: 'certificates' },
@@ -479,5 +480,5 @@ export function getDashboardStats(role: UserRole) {
     ],
   };
   
-  return stats[role] || stats[ROLES.TAX_AGENT];
+  return stats[role] || stats[ROLES.TAXPAYER];
 }

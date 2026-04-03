@@ -75,29 +75,72 @@ public class DashboardController {
     private ModuleProgressRepository moduleProgressRepository;
     
     /**
-     * Get dashboard stats for TAXPAYER
+     * Get dashboard stats for TAXPAYER — optimized single-query approach
      */
-    @GetMapping("/user/{userId}")
-    @Operation(
-        summary = "Get taxpayer dashboard",
-        description = "Retrieve dashboard statistics for a taxpayer user including enrollments, progress, and certificates"
-    )
-    public ResponseEntity<?> getTaxpayerDashboard(
-            @Parameter(description = "User ID", required = true) @PathVariable Long userId) {
+    @GetMapping("/taxpayer/{userId}")
+    public ResponseEntity<?> getTaxpayerDashboard(@PathVariable Long userId) {
         try {
-            System.out.println("=== DASHBOARD REQUEST ===");
-            System.out.println("User ID: " + userId);
-            
             Map<String, Object> data = new HashMap<>();
-            data.put("message", "Dashboard loaded");
-            data.put("userId", userId);
-            
+
+            // Single queries — no N+1
+            long enrolledCourses = enrollmentRepository.countByUserId(userId);
+            long completedCourses = enrollmentRepository.countByUserIdAndProgressGreaterThanEqual(userId, 100);
+            long certificates = certificateRepository.countByUserId(userId);
+            Double avgProgress = enrollmentRepository.findAverageProgressByUserId(userId);
+
+            data.put("enrolledCourses", enrolledCourses);
+            data.put("completedCourses", completedCourses);
+            data.put("certificates", certificates);
+            data.put("averageProgress", avgProgress != null ? (int) Math.round(avgProgress) : 0);
+
+            // Get active enrollments + course data in one go using courseRepository
+            List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndProgressLessThan(userId, 100);
+            List<Long> courseIds = enrollments.stream()
+                .filter(e -> e.getCourseId() != null)
+                .map(Enrollment::getCourseId)
+                .collect(java.util.stream.Collectors.toList());
+
+            // Batch load all courses at once
+            List<com.itas.model.Course> courses = courseIds.isEmpty()
+                ? java.util.Collections.emptyList()
+                : courseRepository.findAllById(courseIds);
+
+            Map<Long, com.itas.model.Course> courseMap = courses.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    com.itas.model.Course::getId, c -> c));
+
+            List<Map<String, Object>> activeCourses = new java.util.ArrayList<>();
+            for (Enrollment enrollment : enrollments) {
+                if (enrollment.getCourseId() == null) continue;
+                com.itas.model.Course course = courseMap.get(enrollment.getCourseId());
+                if (course == null) continue;
+                Map<String, Object> courseData = new HashMap<>();
+                courseData.put("id", course.getId());
+                courseData.put("title", course.getTitle());
+                courseData.put("category", course.getCategory());
+                int progress = (int) enrollment.getProgress();
+                courseData.put("progress", progress);
+                long totalModules = moduleRepository.countByCourseId(course.getId());
+                long completedModules = (long) Math.floor(progress / 100.0 * totalModules);
+                courseData.put("totalModules", totalModules);
+                courseData.put("completedModules", completedModules);
+                activeCourses.add(courseData);
+            }
+            data.put("activeCourses", activeCourses);
+
             return ResponseEntity.ok(new ApiResponse<>("Dashboard data retrieved", data));
         } catch (Exception e) {
-            System.err.println("Dashboard error: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(500).body(new ApiResponse<>("Error loading dashboard: " + e.getMessage(), null));
+            return ResponseEntity.status(500).body(new ApiResponse<>("Error: " + e.getMessage(), null));
         }
+    }
+
+    /**
+     * Legacy endpoint — kept for backward compatibility
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getTaxpayerDashboardLegacy(@PathVariable Long userId) {
+        return getTaxpayerDashboard(userId);
     }
     
     /**
@@ -292,6 +335,7 @@ public class DashboardController {
         
         switch (user.getUserType()) {
             case TAXPAYER:
+            case TAX_AGENT:
                 return getTaxpayerDashboard(user.getId());
             case MOR_STAFF:
                 return getStaffDashboard(user.getId());
@@ -312,3 +356,4 @@ public class DashboardController {
         }
     }
 }
+

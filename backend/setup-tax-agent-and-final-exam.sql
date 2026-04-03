@@ -2,15 +2,15 @@
 -- COMPLETE SETUP: TAX AGENT + FINAL EXAM
 -- ============================================
 -- This script will:
--- 1. Change user type to TAX_AGENT
+-- 1. Change user type to TAXPAYER
 -- 2. Create a complete course with 5 modules
 -- 3. Add 5 quiz questions per module (25 total for final exam)
 -- 4. Enroll the user in the course
 -- ============================================
 
--- Step 1: Change user to TAX_AGENT
+-- Step 1: Change user to TAXPAYER
 UPDATE users 
-SET user_type = 'TAX_AGENT' 
+SET user_type = 'TAXPAYER' 
 WHERE id = 1;
 
 -- Verify user type change
@@ -384,7 +384,7 @@ BEGIN
     ON CONFLICT DO NOTHING;
     
     RAISE NOTICE '✅ Setup Complete!';
-    RAISE NOTICE '- User changed to TAX_AGENT';
+    RAISE NOTICE '- User changed to TAXPAYER';
     RAISE NOTICE '- Course created with 5 modules';
     RAISE NOTICE '- 25 quiz questions added (5 per module)';
     RAISE NOTICE '- User enrolled in course';

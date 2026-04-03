@@ -12,17 +12,9 @@ import java.io.IOException;
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
-    public void commence(HttpServletRequest request, 
+    public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        
-        System.out.println("=== AUTHENTICATION ENTRY POINT TRIGGERED ===");
-        System.out.println("Request URI: " + request.getRequestURI());
-        System.out.println("Request Method: " + request.getMethod());
-        System.out.println("Authorization Header: " + request.getHeader("Authorization"));
-        System.out.println("Auth Exception: " + authException.getMessage());
-        authException.printStackTrace();
-        
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
     }
 }

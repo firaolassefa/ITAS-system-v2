@@ -13,7 +13,7 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "module_id", nullable = true)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "questions", "course"})
     private Module module;

@@ -2,7 +2,6 @@ package com.itas.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "courses")
@@ -14,9 +13,6 @@ public class Course {
     private String category = "VAT";
     private String difficulty = "BEGINNER";
     private int durationHours = 4;
-    
-    @ElementCollection
-    private List<String> modules;
     
     private boolean published = true;
     
@@ -35,8 +31,6 @@ public class Course {
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
     public int getDurationHours() { return durationHours; }
     public void setDurationHours(int durationHours) { this.durationHours = durationHours; }
-    public List<String> getModules() { return modules; }
-    public void setModules(List<String> modules) { this.modules = modules; }
     public boolean isPublished() { return published; }
     public void setPublished(boolean published) { this.published = published; }
     public LocalDateTime getCreatedAt() { return createdAt; }

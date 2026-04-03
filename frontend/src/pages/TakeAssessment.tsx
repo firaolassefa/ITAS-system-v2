@@ -12,7 +12,7 @@ import {
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('itas_token');

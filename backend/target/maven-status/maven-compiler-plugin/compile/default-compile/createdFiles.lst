@@ -1,4 +1,5 @@
 com\itas\controller\ArchiveController.class
+com\itas\service\TinVerificationService.class
 com\itas\model\Notification.class
 com\itas\service\ArchiveService.class
 com\itas\dto\RoleAssignmentRequest.class
@@ -7,6 +8,7 @@ com\itas\config\SecurityConfig.class
 com\itas\service\ResourceService.class
 com\itas\service\CourseService.class
 com\itas\config\OpenApiConfig.class
+com\itas\controller\TinController.class
 com\itas\controller\HelpController.class
 com\itas\model\Enrollment.class
 com\itas\repository\NotificationRepository.class
@@ -70,6 +72,8 @@ com\itas\model\Webinar.class
 com\itas\service\SyncService$2.class
 com\itas\repository\UserRoleRepository.class
 com\itas\controller\AssessmentController.class
+com\itas\config\GlobalExceptionHandler.class
+com\itas\controller\FileServeController.class
 com\itas\controller\ModuleController.class
 com\itas\repository\AssessmentRepository.class
 com\itas\model\HelpContent.class
@@ -91,5 +95,5 @@ com\itas\model\ArchivedResource.class
 com\itas\controller\ResourceController.class
 com\itas\service\FileStorageService.class
 com\itas\controller\AuthController.class
-com\itas\controller\ModuleContentController.class
 com\itas\controller\WebinarController.class
+com\itas\service\TinVerificationService$TinInfo.class

@@ -125,10 +125,10 @@ public class AssessmentController {
         try {
             Long userId = ((Number) request.get("userId")).longValue();
             Long courseId = ((Number) request.get("courseId")).longValue();
-            
+
             @SuppressWarnings("unchecked")
-            Map<Long, Long> answers = (Map<Long, Long>) request.get("answers");
-            
+            Map<String, Object> answers = (Map<String, Object>) request.get("answers");
+
             Map<String, Object> result = assessmentService.submitFinalExam(userId, courseId, answers);
             return ResponseEntity.ok(new ApiResponse<>("Final exam submitted", result));
         } catch (Exception e) {

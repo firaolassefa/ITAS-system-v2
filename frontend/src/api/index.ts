@@ -14,7 +14,7 @@ import { dashboardAPI } from './dashboard';
 import { modulesAPI, questionsAPI } from './modules';
 
 // Configure axios defaults
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
@@ -45,18 +45,18 @@ axios.interceptors.response.use(
                           currentPath === '/register' || 
                           currentPath.startsWith('/public');
       
-      console.log('🔴 [axios default] 401 Error');
+      console.log('ðŸ”´ [axios default] 401 Error');
       console.log('   Current path:', currentPath);
       console.log('   Is public:', isPublicPage);
       console.log('   Request URL:', error.config?.url);
       console.log('   Token exists:', !!localStorage.getItem('itas_token'));
       
       // TEMPORARILY DISABLED - Don't redirect, just log
-      console.log('   ⚠️ REDIRECT DISABLED FOR DEBUGGING');
+      console.log('   âš ï¸ REDIRECT DISABLED FOR DEBUGGING');
       
       // if (!isPublicPage) {
       //   // Token expired or invalid on protected page
-      //   console.log('   ⚠️ Redirecting to login...');
+      //   console.log('   âš ï¸ Redirecting to login...');
       //   localStorage.removeItem('itas_token');
       //   localStorage.removeItem('itas_user');
       //   window.location.href = '/login';

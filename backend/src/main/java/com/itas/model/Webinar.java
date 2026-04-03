@@ -2,7 +2,6 @@ package com.itas.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,8 +23,17 @@ public class Webinar {
     
     private Integer durationMinutes;
     
-    @ElementCollection
-    private List<String> presenters = new ArrayList<>();
+    @Column(length = 1000)
+    private String presentersData; // comma-separated list of presenter names
+
+    public List<String> getPresenters() {
+        if (presentersData == null || presentersData.isEmpty()) return new java.util.ArrayList<>();
+        return java.util.Arrays.asList(presentersData.split(","));
+    }
+
+    public void setPresenters(List<String> presenters) {
+        this.presentersData = presenters == null ? "" : String.join(",", presenters);
+    }
     
     private Integer maxAttendees;
     
@@ -62,8 +70,6 @@ public class Webinar {
     public void setScheduleTime(LocalDateTime scheduleTime) { this.scheduleTime = scheduleTime; }
     public Integer getDurationMinutes() { return durationMinutes; }
     public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
-    public List<String> getPresenters() { return presenters; }
-    public void setPresenters(List<String> presenters) { this.presenters = presenters; }
     public Integer getMaxAttendees() { return maxAttendees; }
     public void setMaxAttendees(Integer maxAttendees) { this.maxAttendees = maxAttendees; }
     public String getTargetAudience() { return targetAudience; }
@@ -84,6 +90,6 @@ public class Webinar {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    
+
     public boolean isRegistrationOpen() { return registrationOpen != null && registrationOpen; }
 }

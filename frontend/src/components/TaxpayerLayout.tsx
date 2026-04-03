@@ -182,7 +182,7 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
           
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Taxpayer Portal
+              Tax Agent Portal
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.8 }}>
               Welcome, {user?.fullName}
@@ -298,10 +298,11 @@ const TaxpayerLayout: React.FC<TaxpayerLayoutProps> = ({ user, onLogout }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          p: { xs: 2, sm: 3 },
+          width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
           mt: 8,
           bgcolor: 'background.default',
+          overflowX: 'hidden',
         }}
       >
         <Outlet />

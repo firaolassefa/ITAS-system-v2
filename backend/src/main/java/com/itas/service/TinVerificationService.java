@@ -49,7 +49,7 @@ public class TinVerificationService {
         if (tinApiEnabled && !tinApiUrl.isEmpty()) {
             return callRealTinApi(cleanTin);
         } else {
-            // Development/demo mode — simulate TIN lookup
+            // Development/demo mode â€” simulate TIN lookup
             return mockTinLookup(cleanTin);
         }
     }
@@ -125,7 +125,7 @@ public class TinVerificationService {
         return null;
     }
 
-    // ── TIN Info DTO ──────────────────────────────────────────────────────────
+    // â”€â”€ TIN Info DTO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public static class TinInfo {
         private String tin;
         private String fullName;

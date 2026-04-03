@@ -37,10 +37,8 @@ public class NotificationController {
             Notification notification = notificationService.getNotificationById(id);
             return ResponseEntity.ok(new ApiResponse<>("Notification retrieved successfully", notification));
         } catch (RuntimeException e) {
-            e.printStackTrace();
             return ResponseEntity.status(404).body(new ApiResponse<>("Notification not found with id: " + id, null));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>("Error retrieving notification: " + e.getMessage(), null));
         }
     }
@@ -64,7 +62,6 @@ public class NotificationController {
             }
             return ResponseEntity.ok(new ApiResponse<>("Unread notifications retrieved successfully", notifications));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
         }
     }
@@ -88,7 +85,6 @@ public class NotificationController {
             }
             return ResponseEntity.ok(new ApiResponse<>("Unread count retrieved successfully", count));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>(e.getMessage(), null));
         }
     }
@@ -123,7 +119,6 @@ public class NotificationController {
             Notification sent = notificationService.sendNotification(notification, 1L);
             return ResponseEntity.ok(new ApiResponse<>("Notification sent successfully", sent));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>("Failed to send notification: " + e.getMessage(), null));
         }
     }

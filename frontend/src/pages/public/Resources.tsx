@@ -80,7 +80,7 @@ const PublicResources: React.FC = () => {
         fileUrl = resource.filePath;
       } else {
         // For local files, use the download endpoint
-        fileUrl = `http://localhost:8080/api/resources/${resource.id}/download`;
+        fileUrl = `http://localhost:9090/api/resources/${resource.id}/download`;
       }
       
       // Open in new tab for download

@@ -39,6 +39,7 @@ const WebinarManagement: React.FC = () => {
     message: '',
     severity: 'success' as 'success' | 'error',
   });
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [webinarData, setWebinarData] = useState({
     title: '',
     description: '',
@@ -149,12 +150,14 @@ const WebinarManagement: React.FC = () => {
         meetingLink: webinarData.meetingLink || undefined,
       };
 
-      await webinarApi.create(webinarPayload);
-      setSnackbar({
-        open: true,
-        message: 'Webinar scheduled successfully!',
-        severity: 'success',
-      });
+      if (editingId) {
+        await webinarApi.update(editingId, webinarPayload);
+        setSnackbar({ open: true, message: 'Webinar updated successfully!', severity: 'success' });
+        setEditingId(null);
+      } else {
+        await webinarApi.create(webinarPayload);
+        setSnackbar({ open: true, message: 'Webinar scheduled successfully!', severity: 'success' });
+      }
       setOpenDialog(false);
       // Reset form
       setWebinarData({
@@ -177,6 +180,34 @@ const WebinarManagement: React.FC = () => {
         message: err.response?.data?.message || 'Failed to schedule webinar',
         severity: 'error',
       });
+    }
+  };
+
+  const handleEdit = (webinar: any) => {
+    setEditingId(webinar.id);
+    const d = new Date(webinar.scheduleTime);
+    setWebinarData({
+      title: webinar.title,
+      description: webinar.description,
+      scheduleDate: d,
+      scheduleTime: d,
+      durationMinutes: webinar.durationMinutes || 60,
+      maxAttendees: webinar.maxAttendees || 100,
+      presenters: webinar.presenters || [''],
+      targetAudience: webinar.targetAudience || 'ALL_TAXPAYERS',
+      meetingLink: webinar.meetingLink || '',
+    });
+    setOpenDialog(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Delete this webinar?')) return;
+    try {
+      await webinarApi.delete(id);
+      setSnackbar({ open: true, message: 'Webinar deleted', severity: 'success' });
+      loadWebinars();
+    } catch (err: any) {
+      setSnackbar({ open: true, message: err.response?.data?.message || 'Failed to delete', severity: 'error' });
     }
   };
 
@@ -299,10 +330,10 @@ const WebinarManagement: React.FC = () => {
                             <Chip label={webinar.status} sx={{ background: webinar.status === 'UPCOMING' ? 'rgba(1, 99, 150, 0.15)' : 'rgba(156, 163, 175, 0.15)', color: webinar.status === 'UPCOMING' ? '#339af0' : '#9CA3AF', border: `1px solid ${webinar.status === 'UPCOMING' ? 'rgba(1, 99, 150, 0.3)' : 'rgba(156, 163, 175, 0.3)'}`, fontWeight: 600 }} />
                           </TableCell>
                           <TableCell align="right">
-                            <IconButton size="small" sx={{ color: '#339af0', '&:hover': { background: 'rgba(1, 99, 150, 0.1)' } }}>
+                            <IconButton size="small" onClick={() => handleEdit(webinar)} sx={{ color: '#339af0', '&:hover': { background: 'rgba(1, 99, 150, 0.1)' } }}>
                               <EditIcon />
                             </IconButton>
-                            <IconButton size="small" sx={{ color: '#EF4444', '&:hover': { background: 'rgba(239, 68, 68, 0.1)' } }}>
+                            <IconButton size="small" onClick={() => handleDelete(webinar.id)} sx={{ color: '#EF4444', '&:hover': { background: 'rgba(239, 68, 68, 0.1)' } }}>
                               <DeleteIcon />
                             </IconButton>
                           </TableCell>
@@ -316,11 +347,11 @@ const WebinarManagement: React.FC = () => {
           </Fade>
 
           {/* Schedule Dialog */}
-          <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth
+          <Dialog open={openDialog} onClose={() => { setOpenDialog(false); setEditingId(null); }} maxWidth="md" fullWidth
             PaperProps={{ sx: { background: mode === 'light' ? 'white' : '#1e293b', borderRadius: 3, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' } }}>
             <DialogTitle sx={{ color: 'text.primary', fontWeight: 700, fontSize: '1.5rem', borderBottom: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}` }}>
-              Schedule New Webinar
-              <IconButton onClick={() => setOpenDialog(false)} sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}>
+              {editingId ? 'Edit Webinar' : 'Schedule New Webinar'}
+              <IconButton onClick={() => { setOpenDialog(false); setEditingId(null); }} sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}>
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
@@ -378,10 +409,10 @@ const WebinarManagement: React.FC = () => {
               </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 2, borderTop: `1px solid ${mode === 'light' ? '#e5e7eb' : '#334155'}` }}>
-              <Button onClick={() => setOpenDialog(false)} sx={{ color: 'text.secondary', '&:hover': { background: '#f9fafb' } }}>Cancel</Button>
+              <Button onClick={() => { setOpenDialog(false); setEditingId(null); }} sx={{ color: 'text.secondary', '&:hover': { background: '#f9fafb' } }}>Cancel</Button>
               <Button onClick={handleSchedule} variant="contained" sx={{ background: 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)', color: '#fff', fontWeight: 600, px: 3,
                 '&:hover': { background: 'linear-gradient(135deg, #1c7ed6 0%, #1c7ed6 100%)', transform: 'translateY(-2px)', boxShadow: '0 8px 16px rgba(1, 99, 150, 0.3)' }
-              }}>Schedule Webinar</Button>
+              }}>{editingId ? 'Update Webinar' : 'Schedule Webinar'}</Button>
             </DialogActions>
           </Dialog>
 

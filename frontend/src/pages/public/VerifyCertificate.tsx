@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 const VerifyCertificate: React.FC = () => {
   const [certificateNumber, setCertificateNumber] = useState('');
@@ -134,7 +134,7 @@ const VerifyCertificate: React.FC = () => {
                     sx={{ mb: 3 }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      ✅ Valid Certificate
+                      âœ… Valid Certificate
                     </Typography>
                     <Typography variant="body2">
                       This certificate is authentic and issued by ITAS
@@ -147,7 +147,7 @@ const VerifyCertificate: React.FC = () => {
                     sx={{ mb: 3 }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      ❌ Invalid Certificate
+                      âŒ Invalid Certificate
                     </Typography>
                     <Typography variant="body2">
                       This certificate number is not found in our records
@@ -256,7 +256,7 @@ const VerifyCertificate: React.FC = () => {
         {/* Footer */}
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           <Typography variant="body2" sx={{ color: 'white' }}>
-            © 2026 Ministry of Revenue Ethiopia - Tax Education Platform
+            Â© 2026 Ministry of Revenue Ethiopia - Tax Education Platform
           </Typography>
         </Box>
       </Container>

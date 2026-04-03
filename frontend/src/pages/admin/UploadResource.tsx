@@ -96,7 +96,7 @@ const UploadResource: React.FC = () => {
       // Set with defaults if empty
       const finalCategories = fetchedCategories.length > 0 ? fetchedCategories : ['INCOME_TAX', 'VAT', 'CORPORATE_TAX', 'CUSTOMS', 'EXCISE', 'GENERAL'];
       const finalTypes = fetchedTypes.length > 0 ? fetchedTypes : ['PDF', 'VIDEO', 'IMAGE', 'DOCUMENT', 'AUDIO'];
-      const finalAudiences = fetchedAudiences.length > 0 ? fetchedAudiences : ['TAXPAYER', 'TAX_AGENT', 'MOR_STAFF', 'ALL'];
+      const finalAudiences = fetchedAudiences.length > 0 ? fetchedAudiences : ['TAXPAYER', 'TAXPAYER', 'MOR_STAFF', 'ALL'];
 
       setCategories(finalCategories);
       setResourceTypes(finalTypes);
@@ -116,7 +116,7 @@ const UploadResource: React.FC = () => {
       // Set defaults on error
       const defaultCategories = ['INCOME_TAX', 'VAT', 'CORPORATE_TAX', 'CUSTOMS', 'EXCISE', 'GENERAL'];
       const defaultTypes = ['PDF', 'VIDEO', 'IMAGE', 'DOCUMENT', 'AUDIO'];
-      const defaultAudiences = ['TAXPAYER', 'TAX_AGENT', 'MOR_STAFF', 'ALL'];
+      const defaultAudiences = ['TAXPAYER', 'TAXPAYER', 'MOR_STAFF', 'ALL'];
 
       setCategories(defaultCategories);
       setResourceTypes(defaultTypes);

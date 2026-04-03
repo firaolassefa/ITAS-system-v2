@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-
+import java.util.Map;
 @RestController
 @RequestMapping("/assessment-definitions")
 public class AssessmentDefinitionController {
@@ -60,7 +60,7 @@ public class AssessmentDefinitionController {
     
     // Create assessment
     @PostMapping
-    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> createAssessment(@RequestBody AssessmentDefinition assessment) {
         try {
             // Validate final exam uniqueness
@@ -97,7 +97,7 @@ public class AssessmentDefinitionController {
     
     // Update assessment
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> updateAssessment(@PathVariable Long id, @RequestBody AssessmentDefinition assessment) {
         return assessmentDefinitionRepository.findById(id)
             .map(existing -> {
@@ -120,7 +120,7 @@ public class AssessmentDefinitionController {
     
     // Delete assessment
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> deleteAssessment(@PathVariable Long id) {
         if (assessmentDefinitionRepository.existsById(id)) {
             assessmentDefinitionRepository.deleteById(id);
@@ -139,7 +139,7 @@ public class AssessmentDefinitionController {
     
     // Import questions from file (Word/PDF)
     @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> importQuestionsFromFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "moduleId", required = false) Long moduleId,
@@ -157,7 +157,6 @@ public class AssessmentDefinitionController {
                     .body(new ApiResponse<>("Only .docx and .pdf files are supported", null));
             }
 
-            // For FINAL_EXAM questions, moduleId is not required
             String category = questionCategory != null ? questionCategory : "QUIZ";
             boolean isFinalExam = "FINAL_EXAM".equals(category);
 
@@ -169,10 +168,13 @@ public class AssessmentDefinitionController {
             List<Question> questions = questionImportService.importQuestionsFromFile(
                 file, moduleId, courseId, category);
 
+            Map<String, Object> result = new java.util.HashMap<>();
+            result.put("imported", questions.size());
+            result.put("questions", questions);
+            result.put("message", "Successfully imported " + questions.size() + " question" + (questions.size() != 1 ? "s" : ""));
+
             return ResponseEntity.ok(new ApiResponse<>(
-                "Successfully imported " + questions.size() + " questions",
-                questions
-            ));
+                "Successfully imported " + questions.size() + " questions", result));
 
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -182,7 +184,7 @@ public class AssessmentDefinitionController {
     
     // Preview questions from file without saving
     @PostMapping("/preview")
-    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @PreAuthorize("hasAnyRole('CONTENT_ADMIN', 'SYSTEM_ADMIN')")
     public ResponseEntity<?> previewQuestionsFromFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("moduleId") Long moduleId) {

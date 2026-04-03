@@ -60,10 +60,18 @@ const ModernHome: React.FC = () => {
       >
         <Toolbar sx={{ py: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <MORLogo width={40} height={40} />
-            <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#339af0' : 'white' }}>
-              MOR Ethiopia
-            </Typography>
+            <Box
+              onClick={() => navigate('/')}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer',
+                '&:hover': { opacity: 0.85 },
+                userSelect: 'none',
+              }}
+            >
+              <MORLogo width={40} height={40} style={{ pointerEvents: 'none' }} />
+              <Typography variant="h6" sx={{ fontWeight: 700, color: mode === 'light' ? '#339af0' : 'white', pointerEvents: 'none' }}>
+                MOR Ethiopia
+              </Typography>
+            </Box>
             <Chip 
               label="Tax Education" 
               size="small" 
@@ -101,12 +109,12 @@ const ModernHome: React.FC = () => {
                 fontWeight: 600,
               }}
             >
-              Login
+              Tax Agent Login
             </Button>
             <Button
               variant="contained"
-              startIcon={<PersonAdd />}
-              onClick={() => navigate('/register')}
+              startIcon={<MenuBook />}
+              onClick={() => navigate('/public/resources')}
               sx={{
                 borderRadius: '8px',
                 textTransform: 'none',
@@ -116,7 +124,7 @@ const ModernHome: React.FC = () => {
                   : 'linear-gradient(135deg, #339af0 0%, #339af0 100%)',
               }}
             >
-              Get Started
+              Taxpayer Resources
             </Button>
           </Stack>
         </Toolbar>
@@ -125,51 +133,72 @@ const ModernHome: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: mode === 'light'
-            ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)'
-            : 'linear-gradient(135deg, #1c7ed6 0%, #339af0 100%)',
+          background: 'linear-gradient(135deg, #1c7ed6 0%, #339af0 60%, #74c0fc 100%)',
           color: 'white',
-          py: 12,
+          py: { xs: 8, md: 12 },
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6}>
+        {/* Background decoration */}
+        <Box sx={{
+          position: 'absolute', top: -80, right: -80,
+          width: 400, height: 400, borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.06)',
+        }} />
+        <Box sx={{
+          position: 'absolute', bottom: -60, left: -60,
+          width: 300, height: 300, borderRadius: '50%',
+          bgcolor: 'rgba(255,255,255,0.04)',
+        }} />
+
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <Grid container spacing={6} alignItems="center">
+            {/* Left: Text + Buttons */}
+            <Grid item xs={12} md={7}>
               <Chip
                 icon={<Verified />}
-                label="Ministry of Revenue Approved"
+                label="Ministry of Revenue — Official Platform"
                 sx={{
-                  bgcolor: 'rgba(255,255,255,0.2)',
+                  bgcolor: 'rgba(255,255,255,0.18)',
                   color: 'white',
                   mb: 3,
                   fontWeight: 600,
+                  border: '1px solid rgba(255,255,255,0.3)',
                 }}
               />
-              <Typography variant="h2" sx={{ fontWeight: 800, mb: 2, lineHeight: 1.2 }}>
-                Master Ethiopian Tax Law
+              <Typography
+                variant="h2"
+                sx={{ fontWeight: 800, mb: 2, lineHeight: 1.15, fontSize: { xs: '2rem', md: '2.75rem' } }}
+              >
+                Master Ethiopian<br />Tax Law
               </Typography>
-              <Typography variant="h5" sx={{ mb: 4, opacity: 0.95, fontWeight: 400 }}>
-                Professional tax education and certification platform for taxpayers and MOR staff
+              <Typography
+                variant="h6"
+                sx={{ mb: 4, opacity: 0.92, fontWeight: 400, lineHeight: 1.6, maxWidth: 520 }}
+              >
+                Professional tax education and certification for taxpayers and MOR staff.
+                Learn, practice, and get certified.
               </Typography>
-              <Stack direction="row" spacing={2}>
+
+              {/* Buttons */}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
                 <Button
                   variant="contained"
-                  size="large"
+                  size="medium"
                   endIcon={<ArrowForward />}
                   onClick={() => navigate('/register')}
                   sx={{
-                    bgcolor: 'white',
-                    color: mode === 'light' ? '#339af0' : '#1c7ed6',
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
+                    background: 'white !important',
+                    color: '#1c7ed6',
+                    px: 3,
+                    py: 1,
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
                     '&:hover': {
-                      bgcolor: mode === 'light' ? '#f8f9fa' : '#e5e7eb',
+                      background: '#f0f7ff !important',
                       transform: 'translateY(-2px)',
                     },
                   }}
@@ -178,63 +207,44 @@ const ModernHome: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  size="large"
+                  size="medium"
                   startIcon={<MenuBook />}
                   onClick={() => navigate('/public/resources')}
                   sx={{
-                    borderColor: 'white',
+                    borderColor: 'rgba(255,255,255,0.7)',
+                    borderWidth: 2,
                     color: 'white',
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
+                    px: 3,
+                    py: 1,
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
                     '&:hover': {
                       borderColor: 'white',
-                      bgcolor: 'rgba(255,255,255,0.1)',
+                      bgcolor: 'rgba(255,255,255,0.12)',
+                      transform: 'translateY(-2px)',
                     },
                   }}
                 >
                   Browse Resources
                 </Button>
               </Stack>
-              <Typography variant="body2" sx={{ mt: 2, opacity: 0.9 }}>
-                ✓ Free access to resources • No login required
+
+              <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                ✓ Free to join &nbsp;•&nbsp; ✓ No credit card &nbsp;•&nbsp; ✓ Certified courses
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: '100%',
-                    maxWidth: 400,
-                    aspectRatio: '1',
-                    borderRadius: '24px',
-                    bgcolor: 'rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    gap: 2,
-                  }}
-                >
-                  <MORLogo width={200} height={200} />
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    MOR Ethiopia
-                  </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                    Tax Education Platform
-                  </Typography>
-                </Box>
+
+            {/* Right: Logo + text only */}
+            <Grid item xs={12} md={5} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center', alignItems: 'center' }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <MORLogo width={200} height={200} style={{ borderRadius: '50%' }} />
+                <Typography variant="h3" sx={{ fontWeight: 800, mt: 2, color: 'white', letterSpacing: 1 }}>
+                  ITAS
+                </Typography>
+                <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 400, mt: 0.5 }}>
+                  Tax Education Platform
+                </Typography>
               </Box>
             </Grid>
           </Grid>
@@ -369,15 +379,17 @@ const ModernHome: React.FC = () => {
                   endIcon={<ArrowForward />}
                   onClick={() => navigate('/register')}
                   sx={{
-                    bgcolor: 'white',
-                    color: mode === 'light' ? '#339af0' : '#1c7ed6',
-                    py: 2,
+                    background: 'white !important',
+                    color: '#1c7ed6',
+                    py: 1.8,
                     borderRadius: '12px',
-                    textTransform: 'none',
                     fontWeight: 700,
-                    fontSize: '1.1rem',
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
                     '&:hover': {
-                      bgcolor: mode === 'light' ? '#f8f9fa' : '#e5e7eb',
+                      background: '#f0f7ff !important',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
                     },
                   }}
                 >

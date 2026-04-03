@@ -13,14 +13,14 @@ VALUES (
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', 
     'Tax Agent User', 
     'taxpayer@example.com', 
-    'TAX_AGENT', 
+    'TAXPAYER', 
     true, 
     NOW()
 )
 ON CONFLICT (username) 
 DO UPDATE SET 
     password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO',
-    user_type = 'TAX_AGENT',
+    user_type = 'TAXPAYER',
     is_active = true,
     full_name = 'Tax Agent User';
 

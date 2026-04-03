@@ -3,11 +3,13 @@ package com.itas.controller;
 import com.itas.dto.ApiResponse;
 import com.itas.model.Resource;
 import com.itas.model.User;
+import com.itas.repository.UserRepository;
 import com.itas.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +25,15 @@ public class ResourceController {
     @Autowired
     private ResourceService resourceService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return null;
+        return userRepository.findByUsername(auth.getName()).orElse(null);
+    }
+
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
     public ResponseEntity<?> uploadResource(
@@ -31,9 +42,9 @@ public class ResourceController {
             @RequestParam("description") String description,
             @RequestParam("resourceType") String resourceType,
             @RequestParam("category") String category,
-            @RequestParam("audience") String audience,
-            @AuthenticationPrincipal User currentUser) throws IOException {
+            @RequestParam("audience") String audience) throws IOException {
 
+        User currentUser = getCurrentUser();
         Resource resource = new Resource();
         resource.setTitle(title);
         resource.setDescription(description);
@@ -110,14 +121,16 @@ public class ResourceController {
             @RequestParam("description") String description,
             @RequestParam("resourceType") String resourceType,
             @RequestParam("category") String category,
-            @RequestParam("audience") String audience,
-            @AuthenticationPrincipal User currentUser) throws IOException {
+            @RequestParam("audience") String audience) throws IOException {
 
-        // Check if user is admin or resource owner
+        User currentUser = getCurrentUser();
+        if (currentUser == null) return ResponseEntity.status(401).body(new ApiResponse<>("Unauthorized", null));
+
         Resource existingResource = resourceService.getResourceById(id);
-        boolean isAdmin = currentUser.getUserType().name().equals("SYSTEM_ADMIN") || 
-                         currentUser.getUserType().name().equals("CONTENT_ADMIN");
-        boolean isOwner = existingResource.getUploadedBy() != null && 
+        boolean isAdmin = currentUser != null && (
+            currentUser.getUserType().name().equals("SYSTEM_ADMIN") ||
+            currentUser.getUserType().name().equals("CONTENT_ADMIN"));
+        boolean isOwner = currentUser != null && existingResource.getUploadedBy() != null && 
                          existingResource.getUploadedBy().getId().equals(currentUser.getId());
         
         if (!isAdmin && !isOwner) {
@@ -154,24 +167,28 @@ public class ResourceController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> deleteResource(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User currentUser) {
-        
-        // Check if user is admin or resource owner
-        Resource existingResource = resourceService.getResourceById(id);
-        boolean isAdmin = currentUser.getUserType().name().equals("SYSTEM_ADMIN") || 
-                         currentUser.getUserType().name().equals("CONTENT_ADMIN");
-        boolean isOwner = existingResource.getUploadedBy() != null && 
-                         existingResource.getUploadedBy().getId().equals(currentUser.getId());
-        
-        if (!isAdmin && !isOwner) {
-            return ResponseEntity.status(403)
-                .body(new ApiResponse<>("You don't have permission to delete this resource", null));
+    public ResponseEntity<?> deleteResource(@PathVariable Long id) {
+        try {
+            User currentUser = getCurrentUser();
+            Resource existingResource = resourceService.getResourceById(id);
+            if (existingResource == null) {
+                return ResponseEntity.status(404).body(new ApiResponse<>("Resource not found", null));
+            }
+            // Admins can delete any resource; owners can delete their own
+            boolean isAdmin = currentUser != null && (
+                "SYSTEM_ADMIN".equals(currentUser.getUserType().name()) ||
+                "CONTENT_ADMIN".equals(currentUser.getUserType().name()));
+            boolean isOwner = currentUser != null && existingResource.getUploadedBy() != null &&
+                existingResource.getUploadedBy().getId().equals(currentUser.getId());
+            if (!isAdmin && !isOwner) {
+                return ResponseEntity.status(403).body(new ApiResponse<>("No permission to delete this resource", null));
+            }
+            resourceService.deleteResource(id);
+            return ResponseEntity.ok(new ApiResponse<>("Resource deleted successfully", null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ApiResponse<>("Delete failed: " + e.getMessage(), null));
         }
-        
-        resourceService.deleteResource(id);
-        return ResponseEntity.ok(new ApiResponse<>("Resource deleted successfully", null));
     }
 
     @GetMapping("/{id}/download")
@@ -184,8 +201,6 @@ public class ResourceController {
                 System.err.println("Resource not found with id: " + id);
                 return ResponseEntity.status(404).body(new ApiResponse<>("Resource not found", null));
             }
-
-            System.out.println("Downloading resource: " + resource.getFileName() + " from path: " + resource.getFilePath());
 
             // Check if file path is null or empty
             if (resource.getFilePath() == null || resource.getFilePath().isEmpty()) {
@@ -212,7 +227,6 @@ public class ResourceController {
                     .body(fileContent);
         } catch (Exception e) {
             System.err.println("Error downloading file: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>("Error downloading file: " + e.getMessage(), null));
         }
     }
@@ -227,8 +241,6 @@ public class ResourceController {
                 System.err.println("Resource not found with id: " + id);
                 return ResponseEntity.status(404).body(new ApiResponse<>("Resource not found", null));
             }
-
-            System.out.println("Streaming resource: " + resource.getFileName() + " from path: " + resource.getFilePath());
 
             // Check if file path is null or empty
             if (resource.getFilePath() == null || resource.getFilePath().isEmpty()) {
@@ -257,7 +269,6 @@ public class ResourceController {
                     .body(fileContent);
         } catch (Exception e) {
             System.err.println("Error streaming file: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).body(new ApiResponse<>("Error streaming file: " + e.getMessage(), null));
         }
     }

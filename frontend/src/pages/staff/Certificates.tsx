@@ -49,25 +49,7 @@ const Certificates: React.FC = () => {
       setCertificates(mappedCerts);
     } catch (error) {
       console.error('Failed to load certificates:', error);
-      // Set mock data if API fails
-      setCertificates([
-        {
-          id: 1,
-          courseTitle: 'Internal Audit Procedures',
-          certificateNumber: 'CERT-MOR-2026-001',
-          issuedDate: '2026-01-15',
-          score: 95,
-          status: 'active',
-        },
-        {
-          id: 2,
-          courseTitle: 'Tax Policy Updates 2025',
-          certificateNumber: 'CERT-MOR-2025-089',
-          issuedDate: '2025-12-20',
-          score: 92,
-          status: 'active',
-        },
-      ]);
+      setCertificates([]);
     } finally {
       setLoading(false);
     }

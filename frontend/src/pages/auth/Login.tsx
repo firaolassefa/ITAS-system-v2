@@ -48,7 +48,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         'TRAINING_ADMIN': '/admin/training-dashboard',
         'COMM_OFFICER': '/admin/comm-dashboard',
         'MANAGER': '/admin/manager-dashboard',
-        'TAXPAYER': '/taxpayer/dashboard',
+        'TAX_AGENT': '/taxpayer/dashboard',
+        'TAXPAYER': '/resources',
         'MOR_STAFF': '/staff/dashboard',
         'AUDITOR': '/admin/auditor-dashboard',
       };

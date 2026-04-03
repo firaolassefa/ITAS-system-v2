@@ -32,7 +32,7 @@ public class HelpContent {
     @Column(length = 5000)
     private String detailedContent;
     
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> steps = new ArrayList<>();
     
     private String example;

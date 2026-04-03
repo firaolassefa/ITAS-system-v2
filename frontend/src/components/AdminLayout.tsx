@@ -68,7 +68,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
     { text: 'Course Management', icon: <CourseIcon />, path: '/admin/course-management', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Module Content', icon: <CloudUploadIcon />, path: '/admin/module-content', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Resource Management', icon: <CloudUploadIcon />, path: '/admin/resource-upload', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
-    { text: 'Question Management', icon: <QuizIcon />, path: '/admin/question-management', roles: ['CONTENT_ADMIN', 'TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
+    { text: 'Question Management', icon: <QuizIcon />, path: '/admin/question-management', roles: ['CONTENT_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Certificate Management', icon: <CardMembership />, path: '/admin/certificate-management', roles: ['SYSTEM_ADMIN', 'AUDITOR', 'MANAGER'] },
     { text: 'Webinar Management', icon: <UploadIcon />, path: '/admin/webinar-management', roles: ['TRAINING_ADMIN', 'SYSTEM_ADMIN'] },
     { text: 'Notification Center', icon: <SettingsIcon />, path: '/admin/notification-center', roles: ['COMM_OFFICER', 'SYSTEM_ADMIN'] },
@@ -329,11 +329,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, onLogout }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          p: { xs: 2, sm: 3 },
+          width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
           mt: 8,
           minHeight: '100vh',
           bgcolor: 'background.default',
+          overflowX: 'hidden',
         }}
       >
         <Outlet />

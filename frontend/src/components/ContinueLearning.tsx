@@ -13,7 +13,7 @@ import { PlayArrow, School } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('itas_token');

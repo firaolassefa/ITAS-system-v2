@@ -71,7 +71,7 @@ public class WebinarController {
     }
     
     @PostMapping("/{webinarId}/register")
-    @PreAuthorize("hasRole('TAXPAYER')")
+    @PreAuthorize("hasAnyRole('TAXPAYER', 'TAX_AGENT')")
     @Operation(summary = "Register for a webinar")
     public ResponseEntity<ApiResponse<Void>> registerForWebinar(
             @PathVariable Long webinarId,
@@ -132,5 +132,40 @@ public class WebinarController {
     public ResponseEntity<ApiResponse<Object>> getAttendanceReport(@PathVariable Long webinarId) {
         Object report = webinarService.getAttendanceReport(webinarId);
         return ResponseEntity.ok(new ApiResponse<>("Attendance report", report));
+    }
+
+    @PutMapping("/{webinarId}")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @Operation(summary = "Update a webinar")
+    public ResponseEntity<ApiResponse<Webinar>> updateWebinar(
+            @PathVariable Long webinarId,
+            @RequestBody WebinarRequest request) {
+        try {
+            Webinar webinar = webinarService.getWebinarById(webinarId);
+            webinar.setTitle(request.getTitle());
+            webinar.setDescription(request.getDescription());
+            webinar.setScheduleTime(request.getScheduleTime());
+            webinar.setDurationMinutes(request.getDurationMinutes());
+            webinar.setPresenters(request.getPresenters());
+            webinar.setMaxAttendees(request.getMaxAttendees());
+            webinar.setTargetAudience(request.getTargetAudience());
+            webinar.setMeetingLink(request.getMeetingLink());
+            Webinar updated = webinarService.updateWebinar(webinarId, webinar);
+            return ResponseEntity.ok(new ApiResponse<>("Webinar updated successfully", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{webinarId}")
+    @PreAuthorize("hasAnyRole('TRAINING_ADMIN', 'SYSTEM_ADMIN')")
+    @Operation(summary = "Delete a webinar")
+    public ResponseEntity<ApiResponse<Void>> deleteWebinar(@PathVariable Long webinarId) {
+        try {
+            webinarService.deleteWebinar(webinarId);
+            return ResponseEntity.ok(new ApiResponse<>("Webinar deleted successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(e.getMessage(), null));
+        }
     }
 }

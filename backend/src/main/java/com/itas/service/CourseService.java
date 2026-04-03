@@ -37,8 +37,21 @@ public class CourseService {
     @Autowired
     private com.itas.repository.ModuleProgressRepository moduleProgressRepository;
     
-    public List<Course> getAllCourses() {
-        return courseRepository.findAll();
+    public List<Map<String, Object>> getAllCourses() {
+        return courseRepository.findAll().stream().map(course -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", course.getId());
+            item.put("title", course.getTitle());
+            item.put("description", course.getDescription());
+            item.put("category", course.getCategory());
+            item.put("difficulty", course.getDifficulty());
+            item.put("durationHours", course.getDurationHours());
+            item.put("published", course.isPublished());
+            item.put("createdAt", course.getCreatedAt());
+            item.put("updatedAt", course.getUpdatedAt());
+            item.put("moduleCount", moduleRepository.countByCourseId(course.getId()));
+            return item;
+        }).collect(Collectors.toList());
     }
     
     public Course getCourseById(Long id) {
@@ -62,7 +75,6 @@ public class CourseService {
         course.setCategory(courseDetails.getCategory());
         course.setDifficulty(courseDetails.getDifficulty());
         course.setDurationHours(courseDetails.getDurationHours());
-        course.setModules(courseDetails.getModules());
         course.setPublished(courseDetails.isPublished());
         course.setUpdatedAt(LocalDateTime.now());
         
@@ -76,7 +88,7 @@ public class CourseService {
         // Delete related records first to avoid foreign key constraint violations
         
         // 1. Delete all module progress records for modules in this course
-        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByOrderAsc(id);
+        List<com.itas.model.Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(id);
         for (com.itas.model.Module module : modules) {
             moduleProgressRepository.deleteByModuleId(module.getId());
         }
@@ -144,7 +156,6 @@ public class CourseService {
             if (wasNotCompleted) {
                 try {
                     certificateService.generateCertificate(enrollment.getUserId(), enrollment.getCourseId());
-                    System.out.println("Certificate auto-generated for user " + enrollment.getUserId() + " and course " + enrollment.getCourseId());
                 } catch (Exception e) {
                     // Certificate might already exist, log but don't fail
                     System.err.println("Could not generate certificate: " + e.getMessage());
@@ -204,7 +215,7 @@ public class CourseService {
         moduleProgressRepository.save(moduleProgress);
         
         // Calculate overall course progress
-        List<com.itas.model.Module> allModules = moduleRepository.findByCourseIdOrderByOrderAsc(courseId);
+        List<com.itas.model.Module> allModules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
         List<com.itas.model.ModuleProgress> completedModules = moduleProgressRepository
             .findByEnrollmentIdAndCompleted(enrollment.getId(), true);
         
@@ -224,3 +235,4 @@ public class CourseService {
         return result;
     }
 }
+

@@ -187,7 +187,7 @@ export const PermissionUtils = {
   getPermissionsForRole: (role: string): string[] => {
     // Create a mapping from roles to permissions
     const rolePermissionsMap: Record<string, string[]> = {
-      TAX_AGENT: [PERMISSIONS.VIEW_COURSES as string, PERMISSIONS.ENROLL_COURSES as string, PERMISSIONS.VIEW_RESOURCES as string],
+      TAXPAYER: [PERMISSIONS.VIEW_COURSES as string, PERMISSIONS.ENROLL_COURSES as string, PERMISSIONS.VIEW_RESOURCES as string],
       CONTENT_ADMIN: [PERMISSIONS.UPLOAD_RESOURCES as string, PERMISSIONS.UPDATE_RESOURCES as string, PERMISSIONS.VIEW_RESOURCES as string],
       TRAINING_ADMIN: [PERMISSIONS.VIEW_COURSES as string, PERMISSIONS.ENROLL_COURSES as string],
       COMM_OFFICER: [PERMISSIONS.SEND_NOTIFICATIONS as string],

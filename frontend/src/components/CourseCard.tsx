@@ -58,7 +58,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Book fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography variant="body2">{course.modules?.length || 0} modules</Typography>
+            <Typography variant="body2">{course.moduleCount ?? course.modules?.length ?? 0} modules</Typography>
           </Box>
         </Box>
         
