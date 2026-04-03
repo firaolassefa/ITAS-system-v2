@@ -10,9 +10,14 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface ModuleRepository extends JpaRepository<Module, Long> {
+
+    // Batch count modules per course — avoids N+1
+    @Query("SELECT m.courseId AS courseId, COUNT(m) AS moduleCount FROM Module m WHERE m.courseId IN :courseIds GROUP BY m.courseId")
+    List<Map<String, Object>> countByCourseIdIn(@Param("courseIds") List<Long> courseIds);
     @Query(value = "SELECT * FROM modules WHERE course_id = :courseId ORDER BY module_order ASC", nativeQuery = true)
     List<Module> findByCourseIdOrderByModuleOrderAsc(@Param("courseId") Long courseId);
 

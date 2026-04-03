@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -78,11 +81,11 @@ public class DashboardController {
      * Get dashboard stats for TAXPAYER — optimized single-query approach
      */
     @GetMapping("/taxpayer/{userId}")
+    @Cacheable(value = "taxpayerDashboard", key = "#userId")
     public ResponseEntity<?> getTaxpayerDashboard(@PathVariable Long userId) {
         try {
             Map<String, Object> data = new HashMap<>();
 
-            // Single queries — no N+1
             long enrolledCourses = enrollmentRepository.countByUserId(userId);
             long completedCourses = enrollmentRepository.countByUserIdAndProgressGreaterThanEqual(userId, 100);
             long certificates = certificateRepository.countByUserId(userId);
@@ -93,21 +96,31 @@ public class DashboardController {
             data.put("certificates", certificates);
             data.put("averageProgress", avgProgress != null ? (int) Math.round(avgProgress) : 0);
 
-            // Get active enrollments + course data in one go using courseRepository
             List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndProgressLessThan(userId, 100);
             List<Long> courseIds = enrollments.stream()
                 .filter(e -> e.getCourseId() != null)
                 .map(Enrollment::getCourseId)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
-            // Batch load all courses at once
             List<com.itas.model.Course> courses = courseIds.isEmpty()
                 ? java.util.Collections.emptyList()
                 : courseRepository.findAllById(courseIds);
 
             Map<Long, com.itas.model.Course> courseMap = courses.stream()
-                .collect(java.util.stream.Collectors.toMap(
-                    com.itas.model.Course::getId, c -> c));
+                .collect(Collectors.toMap(com.itas.model.Course::getId, c -> c));
+
+            // Batch load module counts — single query instead of N+1
+            Map<Long, Long> moduleCountMap = new HashMap<>();
+            if (!courseIds.isEmpty()) {
+                List<Map<String, Object>> counts = moduleRepository.countByCourseIdIn(courseIds);
+                for (Map<String, Object> row : counts) {
+                    Object id = row.get("courseId");
+                    Object count = row.get("moduleCount");
+                    if (id != null && count != null) {
+                        moduleCountMap.put(((Number) id).longValue(), ((Number) count).longValue());
+                    }
+                }
+            }
 
             List<Map<String, Object>> activeCourses = new java.util.ArrayList<>();
             for (Enrollment enrollment : enrollments) {
@@ -120,7 +133,7 @@ public class DashboardController {
                 courseData.put("category", course.getCategory());
                 int progress = (int) enrollment.getProgress();
                 courseData.put("progress", progress);
-                long totalModules = moduleRepository.countByCourseId(course.getId());
+                long totalModules = moduleCountMap.getOrDefault(course.getId(), 0L);
                 long completedModules = (long) Math.floor(progress / 100.0 * totalModules);
                 courseData.put("totalModules", totalModules);
                 courseData.put("completedModules", completedModules);
@@ -147,6 +160,7 @@ public class DashboardController {
      * Get dashboard stats for MOR_STAFF
      */
     @GetMapping("/staff/{userId}")
+    @Cacheable(value = "staffDashboard", key = "#userId")
     public ResponseEntity<?> getStaffDashboard(@PathVariable Long userId) {
         Map<String, Object> data = new HashMap<>();
         
@@ -169,6 +183,7 @@ public class DashboardController {
      */
     @GetMapping("/content-admin")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'CONTENT_ADMIN')")
+    @Cacheable(value = "contentAdminDashboard")
     public ResponseEntity<?> getContentAdminDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -199,6 +214,7 @@ public class DashboardController {
      */
     @GetMapping("/training-admin")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'TRAINING_ADMIN')")
+    @Cacheable(value = "trainingAdminDashboard")
     public ResponseEntity<?> getTrainingAdminDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -246,6 +262,7 @@ public class DashboardController {
      */
     @GetMapping("/manager")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN', 'MANAGER')")
+    @Cacheable(value = "managerDashboard")
     public ResponseEntity<?> getManagerDashboard() {
         Map<String, Object> data = new HashMap<>();
         
@@ -274,6 +291,7 @@ public class DashboardController {
      */
     @GetMapping("/system-admin")
     @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @Cacheable(value = "systemAdminDashboard")
     public ResponseEntity<?> getSystemAdminDashboard() {
         Map<String, Object> data = new HashMap<>();
         

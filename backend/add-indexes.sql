@@ -33,3 +33,8 @@ CREATE INDEX IF NOT EXISTS idx_notif_read         ON notifications(is_read);
 -- Assessment attempts
 CREATE INDEX IF NOT EXISTS idx_attempts_user      ON assessment_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_def       ON assessment_attempts(assessment_definition_id);
+
+-- Composite indexes for dashboard queries
+CREATE INDEX IF NOT EXISTS idx_enrollments_user_progress ON enrollments(user_id, progress);
+CREATE INDEX IF NOT EXISTS idx_enrollments_progress      ON enrollments(progress);
+CREATE INDEX IF NOT EXISTS idx_modules_course_order      ON modules(course_id, module_order);

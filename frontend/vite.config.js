@@ -7,31 +7,35 @@ export default defineConfig({
     postcss: false
   },
   build: {
-    // Increase chunk size warning limit
     chunkSizeWarningLimit: 1000,
-    // Enable minification
     minify: 'esbuild',
-    // Split vendor chunks for better caching
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Core React
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // MUI core (most used)
-          'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          // MUI icons (large - separate chunk)
-          'mui-icons': ['@mui/icons-material'],
+        manualChunks(id) {
+          // Core React — always needed
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router-dom/')) {
+            return 'react-vendor';
+          }
+          // MUI Icons — split by first letter to avoid one giant chunk
+          if (id.includes('@mui/icons-material')) {
+            const match = id.match(/@mui\/icons-material\/(.)/);
+            if (match) return `mui-icons-${match[1].toLowerCase()}`;
+            return 'mui-icons-misc';
+          }
+          // MUI core
+          if (id.includes('@mui/material') || id.includes('@emotion/react') || id.includes('@emotion/styled')) {
+            return 'mui-core';
+          }
           // Axios
-          'axios': ['axios'],
+          if (id.includes('node_modules/axios/')) {
+            return 'axios';
+          }
         },
       },
     },
-    // Generate source maps only in dev
     sourcemap: false,
-    // Target modern browsers for smaller output
     target: 'es2020',
   },
-  // Optimize deps pre-bundling
   optimizeDeps: {
     include: [
       'react',

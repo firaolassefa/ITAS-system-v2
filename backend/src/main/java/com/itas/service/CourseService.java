@@ -38,7 +38,22 @@ public class CourseService {
     private com.itas.repository.ModuleProgressRepository moduleProgressRepository;
     
     public List<Map<String, Object>> getAllCourses() {
-        return courseRepository.findAll().stream().map(course -> {
+        List<Course> courses = courseRepository.findAll();
+        if (courses.isEmpty()) return java.util.Collections.emptyList();
+
+        // Batch load module counts — single query instead of N+1
+        List<Long> courseIds = courses.stream().map(Course::getId).collect(Collectors.toList());
+        List<Map<String, Object>> moduleCounts = moduleRepository.countByCourseIdIn(courseIds);
+        Map<Long, Long> moduleCountMap = new HashMap<>();
+        for (Map<String, Object> row : moduleCounts) {
+            Object id = row.get("courseId");
+            Object count = row.get("moduleCount");
+            if (id != null && count != null) {
+                moduleCountMap.put(((Number) id).longValue(), ((Number) count).longValue());
+            }
+        }
+
+        return courses.stream().map(course -> {
             Map<String, Object> item = new HashMap<>();
             item.put("id", course.getId());
             item.put("title", course.getTitle());
@@ -49,7 +64,7 @@ public class CourseService {
             item.put("published", course.isPublished());
             item.put("createdAt", course.getCreatedAt());
             item.put("updatedAt", course.getUpdatedAt());
-            item.put("moduleCount", moduleRepository.countByCourseId(course.getId()));
+            item.put("moduleCount", moduleCountMap.getOrDefault(course.getId(), 0L));
             return item;
         }).collect(Collectors.toList());
     }
@@ -168,7 +183,17 @@ public class CourseService {
     
     public List<Map<String, Object>> getUserEnrollments(Long userId) {
         List<Enrollment> enrollments = enrollmentRepository.findByUserId(userId);
-        
+        if (enrollments.isEmpty()) return java.util.Collections.emptyList();
+
+        // Batch load all courses at once — avoids N+1
+        List<Long> courseIds = enrollments.stream()
+            .map(Enrollment::getCourseId)
+            .filter(id -> id != null)
+            .distinct()
+            .collect(Collectors.toList());
+        Map<Long, Course> courseMap = courseRepository.findAllById(courseIds).stream()
+            .collect(Collectors.toMap(Course::getId, c -> c));
+
         return enrollments.stream().map(enrollment -> {
             Map<String, Object> item = new HashMap<>();
             item.put("id", enrollment.getId());
@@ -178,12 +203,10 @@ public class CourseService {
             item.put("progress", enrollment.getProgress());
             item.put("status", enrollment.getStatus());
             item.put("completedAt", enrollment.getCompletedAt());
-            
-            // Get course details
-            courseRepository.findById(enrollment.getCourseId()).ifPresent(course -> {
-                item.put("course", course);
-            });
-            
+            if (enrollment.getCourseId() != null) {
+                Course course = courseMap.get(enrollment.getCourseId());
+                if (course != null) item.put("course", course);
+            }
             return item;
         }).collect(Collectors.toList());
     }
