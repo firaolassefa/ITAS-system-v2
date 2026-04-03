@@ -1,5 +1,0 @@
-# This file intentionally left minimal.
-# All configuration is in application.properties.
-spring:
-  application:
-    name: itas-backend

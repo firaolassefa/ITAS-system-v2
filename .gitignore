@@ -1,2 +1,23 @@
-
+# Frontend
 frontend/nginx.conf
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Backend build artifacts
+backend/target/
+backend/uploads/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
